@@ -93,7 +93,12 @@ class EthLoginController {
         return end()
       })
       .catch((reason) => {
-        return end(new Error('Unable to provide the requested permissions.\n' + reason))
+        res.error = {
+          message: `Application unauthorized to use method ${method}\n${reason}`,
+          // per https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
+          code: 1,
+        }
+        return end(res.error)
       })
     } else {
       return next()
