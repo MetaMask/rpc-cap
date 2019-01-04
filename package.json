@@ -11,5 +11,8 @@
   "license": "ISC",
   "devDependencies": {
     "tape": "^4.9.2"
+  },
+  "dependencies": {
+    "json-rpc-error": "^2.0.0"
   }
 }
