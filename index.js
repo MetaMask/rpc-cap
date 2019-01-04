@@ -43,13 +43,14 @@ class EthLoginController {
 
     const { prereq } = permission
     if (prereq) {
-      const met = prereq(req, res)
+      const met = await prereq(req, res)
       if (!met) {
         res.error = 'Failed to authorize ' + req.method
         throw new Error(res.error)
       }
     }
     res = await this._callMethod(req, res, next)
+    return res
   }
 
   async _callMethod(req, res, next) {

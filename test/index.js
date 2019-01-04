@@ -73,6 +73,36 @@ test('#_callMethod with approved prereqs with no method throw error', async (t) 
   })
 })
 
+test('#requestMethod with rejected prereqs throws error', async (t) => {
+  const WRITE_RESULT = 'impeccable result'
+
+  const ctrl = new LoginController({
+    origin: 'login.metamask.io',
+
+    // safe methods never require approval,
+    // are considered trivial / no risk.
+    // maybe reading should be a permission, though!
+    safeMethods: ['eth_read'],
+
+    permissions: {
+      'eth_write': {
+        method: 'eth_write',
+        prereq: () => Promise.resolve(false),
+      },
+    },
+  })
+
+  try {
+    let result = await ctrl.requestMethod({method: 'eth_write'}, {}, () => {
+      t.false(true, 'next called')
+      t.end()
+    })
+  } catch (error) {
+    t.ok(error)
+    t.end()
+  }
+})
+
 test('#providerMiddlewareFunction, approved prereqs with no method pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
