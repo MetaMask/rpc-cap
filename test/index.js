@@ -25,11 +25,11 @@ test('setup test', async (t) => {
   })
 
   try {
-    let result = await ctrl._callMethod('eth_write', {})
+    let result = await ctrl._callMethod({method: 'eth_write'}, {})
     t.equal(result, WRITE_RESULT, 'write result returned')
   } catch (error) {
-    t.error(reason, 'want no error')
-    t.end(reason)
+    t.error(error, 'want no error')
+    t.end(error)
   }
 
   let req = { method: 'eth_write' }
@@ -43,7 +43,7 @@ test('setup test', async (t) => {
 
   function end(reason) {
     t.error(reason, 'error thrown')
-    t.end(reason)
+    t.end()
   }
 
 })
@@ -64,21 +64,13 @@ test('#_callMethod with approved prereqs with no method throw error', async (t) 
         method: 'eth_write',
         prereq: () => Promise.resolve(true),
       },
-      'eth_write2': {
-        method: 'eth_write2',
-        prereq: () => Promise.resolve(true),
-    }},
-
-    methods: {
-      'eth_write': () => Promise.resolve(WRITE_RESULT)
-    }
+    },
   })
 
-  let result = await ctrl._callMethod('eth_write2', {}, () => {
+  let result = await ctrl._callMethod({method: 'eth_write'}, {}, () => {
     t.ok(true, 'next called')
     t.end()
   })
-
 })
 
 test('#providerMiddlewareFunction, approved prereqs with no method pass through', async (t) => {
@@ -108,7 +100,7 @@ test('#providerMiddlewareFunction, approved prereqs with no method pass through'
 
   function end(reason) {
     t.error(reason)
-    t.end(reason)
+    t.end()
   }
 
 })

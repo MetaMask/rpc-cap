@@ -38,9 +38,9 @@ class EthLoginController {
     res = await this._callMethod(req, res, next)
   }
 
-  async _callMethod(method, params, next) {
-    if (method in this.methods) {
-      return await this.methods[method](params)
+  async _callMethod(req, res, next) {
+    if (req.method in this.methods) {
+      return await this.methods[req.method](req, res)
     } else {
       if (next) {
         next()
