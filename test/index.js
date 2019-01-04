@@ -33,7 +33,7 @@ test('setup test', async (t) => {
   }
 
   let req = { method: 'eth_write' }
-  let res= { foo: 'bar' }
+  let res = {}
   ctrl.providerMiddlewareFunction(req, res, next, end)
 
   function next() {
@@ -43,6 +43,7 @@ test('setup test', async (t) => {
 
   function end(reason) {
     t.error(reason, 'error thrown')
+    t.equal(res.result, WRITE_RESULT)
     t.end()
   }
 
