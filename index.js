@@ -1,19 +1,19 @@
+const ObservableStore = require('obs-store')
 var equal = require('fast-deep-equal')
 
 class EthLoginController {
 
-  constructor({ origin = '', safeMethods = [], permissions = {}, methods = {}}) {
+  constructor({ origin = '', safeMethods = [], initState = {}, methods = {}}) {
     this.origin = origin
     this.safeMethods = safeMethods
-    this.permissions = permissions
     this.methods = methods
 
+    this.store = new ObservableStore(initState)
     this.permissionsRequests = []
   }
 
   serialize () {
-    const { origin, safeMethods, permissions, accounts } = this
-    return { origin, safeMethods, permissions, accounts }
+    return this.store.getState()
   }
 
   async requestPermissions (permissions) {
@@ -21,13 +21,26 @@ class EthLoginController {
   }
 
   async grantNewPermissions (permissions) {
+    // Remove any matching requests from the queue:
     this.permissionsRequests = this.permissionsRequests.filter((request) => {
       return equal(permissions, request)
     })
 
-    permissions.forEach((permission) => {
-      this.permissions[permission.method] = permission
+    // Update the related permission objects:
+    let officialPerms = this._permissions
+    officialPerms.forEach((permission) => {
+      officialPerms[permission.method] = permission
     })
+    this._permissions = officialPerms
+  }
+
+  get _permissions () {
+    const { permissions } = this.store.getState()
+    return permissions
+  }
+
+  set _permissions (permissions) {
+    this.store.putState(permissions)
   }
 
   /*
@@ -35,7 +48,7 @@ class EthLoginController {
    * meet its requirements or not.
    */
   async requestMethod(req, res, next) {
-    const permission = this.permissions[req.method]
+    const permission = this._permissions[req.method]
     if (!permission) {
       res.error = 'Origin unauthorized to use ' + req.method
       throw new Error(res.error)
