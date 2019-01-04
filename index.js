@@ -1,3 +1,5 @@
+var equal = require('fast-deep-equal')
+
 class EthLoginController {
 
   constructor({ origin = '', safeMethods = [], permissions = {}, methods = {}}) {
@@ -5,6 +7,8 @@ class EthLoginController {
     this.safeMethods = safeMethods
     this.permissions = permissions
     this.methods = methods
+
+    this.permissionsRequests = []
   }
 
   serialize () {
@@ -12,8 +16,18 @@ class EthLoginController {
     return { origin, safeMethods, permissions, accounts }
   }
 
-  grantNewPermissions () {
+  async requestPermissions (permissions) {
+    this.permissionsRequests.push(permissions)
+  }
 
+  async grantNewPermissions (permissions) {
+    this.permissionsRequests = this.permissionsRequests.filter((request) => {
+      return equal(permissions, request)
+    })
+
+    permissions.forEach((permission) => {
+      this.permissions[permission.method] = permission
+    })
   }
 
   /*
