@@ -12,10 +12,12 @@ test('setup test', async (t) => {
     // maybe reading should be a permission, though!
     safeMethods: ['eth_read'],
 
-    permissions: {
-      'eth_write': {
-        method: 'eth_write',
-        prereq: () => Promise.resolve(true),
+    initState: {
+      permissions: {
+        'eth_write': {
+          method: 'eth_write',
+          prereq: () => Promise.resolve(true),
+        }
       }
     },
 
@@ -60,10 +62,12 @@ test('#_callMethod with approved prereqs with no method throw error', async (t) 
     // maybe reading should be a permission, though!
     safeMethods: ['eth_read'],
 
-    permissions: {
-      'eth_write': {
-        method: 'eth_write',
-        prereq: () => Promise.resolve(true),
+    initState: {
+      permissions: {
+        'eth_write': {
+          method: 'eth_write',
+          prereq: () => Promise.resolve(true),
+        },
       },
     },
   })
@@ -85,10 +89,12 @@ test('#requestMethod with rejected prereqs throws error', async (t) => {
     // maybe reading should be a permission, though!
     safeMethods: ['eth_read'],
 
-    permissions: {
-      'eth_write': {
-        method: 'eth_write',
-        prereq: () => Promise.resolve(false),
+    initState: {
+      permissions: {
+        'eth_write': {
+          method: 'eth_write',
+          prereq: () => Promise.resolve(false),
+        },
       },
     },
   })
