@@ -177,3 +177,43 @@ test('#providerMiddlewareFunction getPermissions method returns serialized permi
 
 })
 
+test('#providerMiddlewareFunction requestPermissions method adds to requested permissions', {
+  timeout: 500,
+}, async (t) => {
+  const WRITE_RESULT = 'impeccable result'
+
+  const permissions = {}
+  const ctrl = new LoginController({
+    origin: 'login.metamask.io',
+
+    safeMethods: ['eth_read'],
+
+    initState: { permissions },
+  })
+
+  ctrl.memStore.subscribe((memStore) => {
+    const { permissionsRequests } = memStore
+    if ('eth_write2' in permissionsRequests[0]) {
+      t.ok(permissionsRequests, 'permission added to requests')
+      t.end()
+    }
+  })
+
+  let req = {
+    method: 'wallet_requestPermissions',
+    params: [{ 'eth_write2': { method: 'eth_write2' } }]
+  }
+
+  let res = { foo: 'bar' }
+  ctrl.providerMiddlewareFunction(req, res, next, end)
+
+  function next() {
+    t.fail('should not pass through')
+    t.end()
+  }
+
+  function end(reason) {
+    t.error(reason)
+  }
+})
+

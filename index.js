@@ -3,30 +3,45 @@ var equal = require('fast-deep-equal')
 
 class EthLoginController {
 
-  constructor({ origin = '', safeMethods = [], initState = {}, methods = {}}) {
+  constructor({ origin = '', safeMethods = [], initState = {}, methods = {}}, promptUserForPermissions) {
     this.origin = origin
     this.safeMethods = safeMethods
     this.methods = methods
+    this.promptUserForPermissions = promptUserForPermissions
 
     this.internalMethods = {
-      'wallet_getPermissions': this.getPermissions.bind(this),
+      'wallet_getPermissions': this.getPermissionsMiddleware.bind(this),
+      'wallet_requestPermissions': this.requestPermissionsMiddleware.bind(this),
     }
 
     this.store = new ObservableStore(initState)
-    this.permissionsRequests = []
+    this.memStore = new ObservableStore({
+      permissionsRequests: [],
+    })
   }
 
   serialize () {
     return this.store.getState()
   }
 
-  async requestPermissions (permissions) {
-    this.permissionsRequests.push(permissions)
+  get _permissionsRequests () {
+    return this.memStore.getState().permissionsRequests
+  }
+
+  set _permissionsRequests (permissionsRequests) {
+    this.memStore.putState({ permissionsRequests })
+  }
+
+  requestPermissions (params) {
+    // TODO: Validate permissions request
+    const requests = this._permissionsRequests
+    requests.push(params[0])
+    this._permissionsRequests = requests
   }
 
   async grantNewPermissions (permissions) {
     // Remove any matching requests from the queue:
-    this.permissionsRequests = this.permissionsRequests.filter((request) => {
+    this._permissionsRequests = this._permissionsRequests.filter((request) => {
       return equal(permissions, request)
     })
 
@@ -124,9 +139,20 @@ class EthLoginController {
     return permissions
   }
 
-  getPermissions (req, res, next, end) {
+  getPermissionsMiddleware (req, res, next, end) {
     res.result = JSON.stringify(this._permissions)
     end()
+  }
+
+  requestPermissionsMiddleware (req, res, next, end) {
+    const params = req.params
+    this.requestPermissions(params)
+    if (this.promptUserForPermissions) {
+      this.promptUserForPermissions(params, end)
+    } else {
+      res.result = 'Request submitted.'
+      end()
+    }
   }
 
 }
