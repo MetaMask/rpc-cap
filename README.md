@@ -1,52 +1,66 @@
-# Eth Login Controller
+# JSON RPC Engine Capabilities
 
 A module for managing permissions extended to an untrusted domain, and enforcing those permissions over a JSON-RPC API as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
 
 ## Installation
 
-`npm install eth-login-controller -S`
+`npm install json-rpc-engine-capabilities -S`
 
-## Usage
+## Ideal Usage
 
 ```javascript
-const LoginController = require('eth-login-controller')
+const Engine = require('json-rpc-engine')
+const RpcCapabilities = require('json-rpc-engine-capabilities')
 
-// Initialize one per domain you connect to:
-const ctrl = new LoginController({
-  origin: 'login.metamask.io',
+engine.push(new RpcCapabilities({
 
-  // safe methods never require approval,
-  // are considered trivial / no risk.
-  // maybe reading should be a permission, though!
-  safeMethods: ['eth_read'],
+  // Supports passthrough methods:
+  safeMethods: ['get_index']
+  safeCheckingFunction,
 
-  permissions: {
-    'eth_write': {
-      method: 'eth_write',
-      prereq: () => Promise.resolve(true),
+  restrictedMethods: {
+    {
+      'method': 'send_money',
+      validationFunction,
+
+      // Description can be make confirmation UI easier to develop:
+      description: 'Ability to send funds freely.'
+      optionalTypeData,
+      method: this.sendMoney.bind(this, send Money),
     }
   },
 
-  // These are used if available, otherwise permitted methods
-  // are passed through using the json-rpc-engine `next` method,
-  // passing on to subsequent middleware.
-  methods: {
-    'eth_write': () => Promise.resolve(WRITE_RESULT)
-  }
-})
+  requestUserApproval(async (domainInfo, restrictedMethod) => {
+    const ok = await checkIfUserTrusts(domainInfo, restrictedMethod)
+    return ok
+  })
 
-let req = { method: 'eth_write' }
-let res= { foo: 'bar' }
-ctrl.providerMiddlewareFunction(req, res, next, end)
+}))
 
-function next() {
-  t.ok(true, 'next was called')
-  t.end()
-}
+engine.push(finalMiddleware)
+engine.start()
+```
 
-function end(reason) {
-  t.error(reason, 'error thrown')
-  t.end()
+The capabilities system also adds two new methods to the RPC, and you can modify what they are with a prefix of your chocie:
+
+- `getCapabilities()` returns a list of capability descriptors.
+- `requestCapabilities(capabilities)` prompts user approval of some capability.
+- `useCapability(capability, params)` Performs the desired function.
+
+### Important distinction
+
+Some capabilities will prompt user approval. This is different than lacking the capability to perform that action. There are two different capabilities: The ability to perform an action without further confirmation, and the ability to suggest a possible action.
+
+## Object Definitions
+
+A capability descriptor as passed to the requestor in response to `getCapabilities()`:
+
+```
+{
+  method: 'send_money',
+  capability_id: 'STRONG_RANDOM_ID_LINK',
+  description, // string
+  optionalTypeData, // allows easy consumption of these dynamic methods.
 }
 ```
 
