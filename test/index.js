@@ -141,3 +141,39 @@ test('#providerMiddlewareFunction, approved prereqs with no method pass through'
   }
 
 })
+
+test('#providerMiddlewareFunction getPermissions method returns serialized permissions', async (t) => {
+  const WRITE_RESULT = 'impeccable result'
+
+  const permissions = {
+    'eth_write2': {
+      method: 'eth_write2',
+      prereq: () => Promise.resolve(true),
+  }}
+  const serializedPerms = JSON.stringify(permissions)
+
+  const ctrl = new LoginController({
+    origin: 'login.metamask.io',
+
+    safeMethods: ['eth_read'],
+
+    initState: { permissions },
+  })
+
+  let req = { method: 'wallet_getPermissions' }
+  let res = { foo: 'bar' }
+  ctrl.providerMiddlewareFunction(req, res, next, end)
+
+  function next() {
+    t.fail('should not pass through')
+    t.end()
+  }
+
+  function end(reason) {
+    t.error(reason)
+    t.equal(res.result, serializedPerms, 'returns serialized permissions')
+    t.end()
+  }
+
+})
+

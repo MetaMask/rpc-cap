@@ -8,6 +8,10 @@ class EthLoginController {
     this.safeMethods = safeMethods
     this.methods = methods
 
+    this.internalMethods = {
+      'wallet_getPermissions': this.getPermissions.bind(this),
+    }
+
     this.store = new ObservableStore(initState)
     this.permissionsRequests = []
   }
@@ -81,6 +85,10 @@ class EthLoginController {
   providerMiddlewareFunction (req, res, next, end) {
     const method = req.method
 
+    if (method in this.internalMethods) {
+      return this.internalMethods[method](req, res, next, end)
+    }
+
     // skip registered safe/passthrough methods
     if (this.safeMethods.includes(method)) {
       return next()
@@ -115,6 +123,12 @@ class EthLoginController {
 
     return permissions
   }
+
+  getPermissions (req, res, next, end) {
+    res.result = JSON.stringify(this._permissions)
+    end()
+  }
+
 }
 
 module.exports = EthLoginController
