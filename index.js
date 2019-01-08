@@ -1,17 +1,18 @@
 const ObservableStore = require('obs-store')
 var equal = require('fast-deep-equal')
 
-class EthLoginController {
+class JsonRpcCapabilities {
 
-  constructor({ origin = '', safeMethods = [], initState = {}, methods = {}}, promptUserForPermissions) {
+  constructor({ origin = '', safeMethods = [], initState = {}, methods = {}, methodPrefix = ''}, promptUserForPermissions) {
     this.origin = origin
     this.safeMethods = safeMethods
     this.methods = methods
     this.promptUserForPermissions = promptUserForPermissions
 
     this.internalMethods = {
-      'wallet_getPermissions': this.getPermissionsMiddleware.bind(this),
-      'wallet_requestPermissions': this.requestPermissionsMiddleware.bind(this),
+      `${methodPrefix}getPermissions`: this.getPermissionsMiddleware.bind(this),
+      `${methodPrefix}requestPermissions`: this.requestPermissionsMiddleware.bind(this),
+      `${methodPrefix}grantPermissions`: this.grantPermissionsMiddleware.bind(this),
     }
 
     this.store = new ObservableStore(initState)
@@ -24,6 +25,48 @@ class EthLoginController {
     return this.store.getState()
   }
 
+  providerMiddlewareFunction (domain, req, res, next, end) {
+    const methodName = req.method
+
+    // skip registered safe/passthrough methods
+    if (this.safeMethods.includes(methodName)) {
+      return next()
+    }
+
+    if (methodName in this.internalMethods) {
+      return this.internalMethods[methodName](domain, req, res, next, end)
+    }
+
+    // Traverse any permission delegations
+    let method
+    try {
+      method = this._getPermission(domain, methodName)
+    } catch (err) {
+      res.error = {
+        message: err.message,
+        code: 1,
+      }
+      end(res.error)
+    }
+  }
+
+  _getPermissions (domain) {
+    const { domains } = this.store.getState()
+    if (domain in domains) {
+      const { permissions } = domains[domain]
+      return permissions
+    }
+    return {}
+  }
+
+  _getPermission (domain, method) {
+    const permissions = this._getPermissions(domain)
+    if (method in permissions) {
+      return permissions[method]
+    }
+    throw new Error('Domain unauthorized to use method ' + method)
+  }
+
   get _permissionsRequests () {
     return this.memStore.getState().permissionsRequests
   }
@@ -32,11 +75,12 @@ class EthLoginController {
     this.memStore.putState({ permissionsRequests })
   }
 
-  requestPermissions (params) {
+  requestPermissions (req, res, next, end) {
     // TODO: Validate permissions request
     const requests = this._permissionsRequests
     requests.push(params[0])
     this._permissionsRequests = requests
+    this.promptUserForPermissions(req, res, next end)
   }
 
   async grantNewPermissions (permissions) {
@@ -53,39 +97,11 @@ class EthLoginController {
     this._permissions = officialPerms
   }
 
-  get _permissions () {
-    const { permissions } = this.store.getState()
-    return permissions
-  }
-
   set _permissions (permissions) {
     this.store.putState(permissions)
   }
 
-  /*
-   * The method by which middleware filters which methods
-   * meet its requirements or not.
-   */
-  async requestMethod(req, res, next) {
-    const permission = this._permissions[req.method]
-    if (!permission) {
-      res.error = 'Origin unauthorized to use ' + req.method
-      throw new Error(res.error)
-    }
-
-    const { prereq } = permission
-    if (prereq) {
-      const met = await prereq(req, res)
-      if (!met) {
-        res.error = 'Failed to authorize ' + req.method
-        throw new Error(res.error)
-      }
-    }
-    res = await this._callMethod(req, res, next)
-    return res
-  }
-
-  async _callMethod(req, res, next) {
+  async _callMethod(req, res, next, end) {
     if (req.method in this.methods) {
       return await this.methods[req.method](req, res)
     } else {
@@ -94,37 +110,6 @@ class EthLoginController {
       } else {
         throw new Error('Method not found and next unavailable.')
       }
-    }
-  }
-
-  providerMiddlewareFunction (req, res, next, end) {
-    const method = req.method
-
-    if (method in this.internalMethods) {
-      return this.internalMethods[method](req, res, next, end)
-    }
-
-    // skip registered safe/passthrough methods
-    if (this.safeMethods.includes(method)) {
-      return next()
-    }
-
-    if (method in this.methods) {
-      this.requestMethod(req, res, next)
-      .then((result) => {
-        res.result = result
-        return end()
-      })
-      .catch((reason) => {
-        res.error = {
-          message: `Application unauthorized to use method ${method}\n${reason}`,
-          // per https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
-          code: 1,
-        }
-        return end(res.error)
-      })
-    } else {
-      return next()
     }
   }
 
@@ -155,6 +140,12 @@ class EthLoginController {
     }
   }
 
+  grantPermissionsMiddleware (domain, req, res, next, end) {
+    res.error = { message: 'Method not implemented' }
+    end(res.error)
+  }
+
 }
 
-module.exports = EthLoginController
+module.exports = JsonRpcCapabilities
+

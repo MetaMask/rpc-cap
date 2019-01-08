@@ -13,15 +13,19 @@ test('setup test', async (t) => {
     safeMethods: ['eth_read'],
 
     initState: {
-      permissions: {
-        'eth_write': {
-          method: 'eth_write',
-          prereq: () => Promise.resolve(true),
+      domains: {
+        'metamask': {
+          permissions: {
+            'eth_write': {
+              method: 'eth_write',
+              prereq: () => Promise.resolve(true),
+            }
+          }
         }
       }
     },
 
-    methods: {
+    restrictedMethods: {
       'eth_write': () => Promise.resolve(WRITE_RESULT)
     }
   })
@@ -63,10 +67,13 @@ test('#_callMethod with approved prereqs with no method throw error', async (t) 
     safeMethods: ['eth_read'],
 
     initState: {
-      permissions: {
-        'eth_write': {
-          method: 'eth_write',
-          prereq: () => Promise.resolve(true),
+      domains: {
+        'metamask': {
+          permissions: {
+            'eth_write': {
+              method: 'eth_write',
+            },
+          },
         },
       },
     },
@@ -78,7 +85,7 @@ test('#_callMethod with approved prereqs with no method throw error', async (t) 
   })
 })
 
-test('#requestMethod with rejected prereqs throws error', async (t) => {
+test('#requestMethod with rejected prompt throws error', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
   const ctrl = new LoginController({
@@ -90,10 +97,13 @@ test('#requestMethod with rejected prereqs throws error', async (t) => {
     safeMethods: ['eth_read'],
 
     initState: {
-      permissions: {
-        'eth_write': {
-          method: 'eth_write',
-          prereq: () => Promise.resolve(false),
+      domains: {
+        'metamask': {
+          permissions: {
+            'eth_write': {
+              method: 'eth_write',
+            },
+          },
         },
       },
     },
@@ -110,7 +120,7 @@ test('#requestMethod with rejected prereqs throws error', async (t) => {
   }
 })
 
-test('#providerMiddlewareFunction, approved prereqs with no method pass through', async (t) => {
+test('#providerMiddlewareFunction, approved prompt with no method pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
   const ctrl = new LoginController({
@@ -118,11 +128,15 @@ test('#providerMiddlewareFunction, approved prereqs with no method pass through'
 
     safeMethods: ['eth_read'],
 
-    permissions: {
-      'eth_write2': {
-        method: 'eth_write2',
-        prereq: () => Promise.resolve(true),
-    }},
+    domains: {
+      'metamask': {
+        permissions: {
+          'eth_write2': {
+            method: 'eth_write2',
+          },
+        },
+      },
+    },
 
   })
 
@@ -145,19 +159,24 @@ test('#providerMiddlewareFunction, approved prereqs with no method pass through'
 test('#providerMiddlewareFunction getPermissions method returns serialized permissions', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
-  const permissions = {
-    'eth_write2': {
-      method: 'eth_write2',
-      prereq: () => Promise.resolve(true),
-  }}
-  const serializedPerms = JSON.stringify(permissions)
+  const domains = {
+    'metamask': {
+      permissions: {
+        'eth_write2': {
+          method: 'eth_write2',
+        },
+      },
+    },
+  }
+
+  const serializedPerms = JSON.stringify(domains)
 
   const ctrl = new LoginController({
     origin: 'login.metamask.io',
 
     safeMethods: ['eth_read'],
 
-    initState: { permissions },
+    initState: { domains },
   })
 
   let req = { method: 'wallet_getPermissions' }
@@ -171,7 +190,7 @@ test('#providerMiddlewareFunction getPermissions method returns serialized permi
 
   function end(reason) {
     t.error(reason)
-    t.equal(res.result, serializedPerms, 'returns serialized permissions')
+    t.equal(res.result, serializedPerms, 'returns serialized domains')
     t.end()
   }
 
