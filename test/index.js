@@ -1,49 +1,22 @@
 const test = require('tape')
 const LoginController = require('../')
 
-test('setup test', async (t) => {
+// TODO: Standardize!
+// Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
+const USER_REJECTION_CODE = 5
+
+test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
   const ctrl = new LoginController({
-    origin: 'login.metamask.io',
-
-    // safe methods never require approval,
-    // are considered trivial / no risk.
-    // maybe reading should be a permission, though!
-    safeMethods: ['eth_read'],
-
-    // optional prefix for internal methods
-    methodPrefix: 'wallet_',
-
-    initState: {
-      domains: {
-        'metamask': {
-          permissions: {
-            'eth_write': {
-              method: 'eth_write',
-              prereq: () => Promise.resolve(true),
-            }
-          }
-        }
-      }
-    },
-
-    restrictedMethods: {
-      'eth_write': () => Promise.resolve(WRITE_RESULT)
-    }
+    safeMethods: ['public_read'],
   })
 
-  try {
-    let result = await ctrl._callMethod({method: 'eth_write'}, {})
-    t.equal(result, WRITE_RESULT, 'write result returned')
-  } catch (error) {
-    t.error(error, 'want no error')
-    t.end(error)
-  }
-
-  let req = { method: 'eth_write' }
+  const domain = 'login.metamask.io'
+  let req = { method: 'public_read' }
   let res = {}
-  ctrl.providerMiddlewareFunction(req, res, next, end)
+
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
   function next() {
     t.ok(true, 'next was called')
@@ -58,46 +31,118 @@ test('setup test', async (t) => {
 
 })
 
-test('#_callMethod with approved prereqs with no method throw error', async (t) => {
+test('requesting restricted method is rejected', async (t) => {
   const WRITE_RESULT = 'impeccable result'
+  const domain = 'login.metamask.io'
 
   const ctrl = new LoginController({
-    origin: 'login.metamask.io',
 
     // safe methods never require approval,
     // are considered trivial / no risk.
     // maybe reading should be a permission, though!
     safeMethods: ['eth_read'],
 
+    // optional prefix for internal methods
+    methodPrefix: 'wallet_',
+
     initState: {
-      domains: {
-        'metamask': {
-          permissions: {
-            'eth_write': {
-              method: 'eth_write',
-            },
-          },
-        },
-      },
+      domains: {}
     },
+
+    restrictedMethods: {
+      'eth_write': {
+        method: (req, res, next, end) => {
+          res.result = WRITE_RESULT
+        }
+      }
+    }
   })
 
-  let result = await ctrl._callMethod({method: 'eth_write'}, {}, () => {
-    t.ok(true, 'next called')
+  let req = { method: 'eth_write' }
+  let res = {}
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
     t.end()
+  }
+
+  function end(reason) {
+    t.ok(reason, 'error should be thrown')
+    t.ok(res.error, 'should have error object')
+    t.equal(reason.code, 1, 'error code should be 1.')
+    t.equal(res.error.code, 1, 'error code should be 1.')
+    t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.')
+    t.end()
+  }
+
+})
+
+test('requesting restricted method with permission is called', async (t) => {
+  const WRITE_RESULT = 'impeccable result'
+  const domain = 'login.metamask.io'
+
+  const ctrl = new LoginController({
+
+    // safe methods never require approval,
+    // are considered trivial / no risk.
+    // maybe reading should be a permission, though!
+    safeMethods: ['eth_read'],
+
+    // optional prefix for internal methods
+    methodPrefix: 'wallet_',
+
+    initState: {
+      domains: {
+        'login.metamask.io': {
+          permissions: {
+            'eth_write': {
+              date: '0',
+            }
+          }
+        }
+      }
+    },
+
+    restrictedMethods: {
+      'eth_write': {
+        method: (req, res, next, end) => {
+          res.result = WRITE_RESULT
+          return end()
+        }
+      }
+    }
   })
+
+  let req = { method: 'eth_write' }
+  let res = {}
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
+    t.end()
+  }
+
+  function end(reason) {
+    t.error(reason, 'shuld not throw error')
+    t.error(res.error, 'should not have error object')
+    t.equal(res.result, WRITE_RESULT, 'Write result should be assigned.')
+    t.end()
+  }
 })
 
 test('#requestMethod with rejected prompt throws error', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
   const ctrl = new LoginController({
-    origin: 'login.metamask.io',
 
     // safe methods never require approval,
     // are considered trivial / no risk.
     // maybe reading should be a permission, though!
     safeMethods: ['eth_read'],
+
+    // Rejected prompt:
+    requestUserApproval: () => Promise.resolve(false),
 
     initState: {
       domains: {
@@ -112,13 +157,20 @@ test('#requestMethod with rejected prompt throws error', async (t) => {
     },
   })
 
-  try {
-    let result = await ctrl.requestMethod({method: 'eth_write'}, {}, () => {
-      t.false(true, 'next called')
-      t.end()
-    })
-  } catch (error) {
-    t.ok(error)
+  let domain = 'metamask'
+  let req = { method: 'requestPermissions' }
+  let res = {}
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
+    t.end()
+  }
+
+  function end(reason) {
+    t.ok(reason, 'error should be thrown')
+    t.ok(res.error, 'should have error object')
+    t.equal(res.error.code, 1, 'error code should be 1.')
     t.end()
   }
 })
@@ -127,7 +179,6 @@ test('#providerMiddlewareFunction, approved prompt with no method pass through',
   const WRITE_RESULT = 'impeccable result'
 
   const ctrl = new LoginController({
-    origin: 'login.metamask.io',
 
     safeMethods: ['eth_read'],
 
@@ -143,9 +194,10 @@ test('#providerMiddlewareFunction, approved prompt with no method pass through',
 
   })
 
+  const domain = 'metamask'
   let req = { method: 'eth_write' }
   let res= { foo: 'bar' }
-  ctrl.providerMiddlewareFunction(req, res, next, end)
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
   function next() {
     t.ok(true, 'passed through')
@@ -206,7 +258,6 @@ test('#providerMiddlewareFunction requestPermissions method adds to requested pe
 
   const permissions = {}
   const ctrl = new LoginController({
-    origin: 'login.metamask.io',
 
     safeMethods: ['eth_read'],
 
@@ -235,6 +286,7 @@ test('#providerMiddlewareFunction requestPermissions method adds to requested pe
   }
 
   function end(reason) {
+    t.equal(reason.code, USER_REJECTION_CODE, 'Should throw user rejection error code')
     t.error(reason)
   }
 })

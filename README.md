@@ -14,7 +14,7 @@ A module for managing [capability-based security](https://en.wikipedia.org/wiki/
 const Engine = require('json-rpc-engine')
 const RpcCapabilities = require('json-rpc-engine-capabilities')
 
-engine.push(new RpcCapabilities({
+const capabilities = new RpcCapabilities({
 
   // Supports passthrough methods:
   safeMethods: ['get_index']
@@ -24,23 +24,41 @@ engine.push(new RpcCapabilities({
   methodPrefix: 'wallet_',
 
   restrictedMethods: {
-    {
-      'method': 'send_money',
+    'send_money': {
       validationFunction,
 
       // Description can be make confirmation UI easier to develop:
       description: 'Ability to send funds freely.'
       optionalTypeData,
-      method: this.sendMoney.bind(this, send Money),
+      method: this.sendMoney.bind(this),
     }
   },
 
-  requestUserApproval(async (domainInfo, restrictedMethod) => {
-    const ok = await checkIfUserTrusts(domainInfo, restrictedMethod)
+  requestUserApproval: async (domainInfo, req) => {
+    const ok = await checkIfUserTrusts(domainInfo, req)
     return ok
-  })
+  },
 
-}))
+  // Same state that is emitted from `this.store`,
+  // can be used to re-instantiate:
+  initState: {
+    domains: {
+      'login.metamask.io': {
+        permissions: {
+          'eth_write': {
+            date: '0',
+          }
+        }
+      }
+    }
+  }
+
+})
+
+// Unlike normal json-rpc-engine middleware, these methods all require
+// a unique requesting-domain-string as the first argument.
+const domain = 'requestor.thatsite.com'
+engine.push(capabilities.providerMiddlewareFunction.bind(capabilities, domain))
 
 engine.push(finalMiddleware)
 engine.start()
