@@ -175,42 +175,6 @@ test('#requestMethod with rejected prompt throws error', async (t) => {
   }
 })
 
-test('#providerMiddlewareFunction, approved prompt with no method pass through', async (t) => {
-  const WRITE_RESULT = 'impeccable result'
-
-  const ctrl = new LoginController({
-
-    safeMethods: ['eth_read'],
-
-    domains: {
-      'metamask': {
-        permissions: {
-          'eth_write2': {
-            method: 'eth_write2',
-          },
-        },
-      },
-    },
-
-  })
-
-  const domain = 'metamask'
-  let req = { method: 'eth_write' }
-  let res= { foo: 'bar' }
-  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
-
-  function next() {
-    t.ok(true, 'passed through')
-    t.end()
-  }
-
-  function end(reason) {
-    t.error(reason)
-    t.end()
-  }
-
-})
-
 test('#providerMiddlewareFunction getPermissions method returns serialized permissions', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
