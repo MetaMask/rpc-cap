@@ -1,6 +1,6 @@
 # JSON RPC Engine Capabilities
 
-A module for managing permissions extended to an untrusted domain, and enforcing those permissions over a JSON-RPC API as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
+A module for managing [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
 
 ![architecture diagram](./flow-diagram.png)
 
