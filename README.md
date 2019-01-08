@@ -20,6 +20,9 @@ engine.push(new RpcCapabilities({
   safeMethods: ['get_index']
   safeCheckingFunction,
 
+  // optional prefix for internal methods
+  methodPrefix: 'wallet_',
+
   restrictedMethods: {
     {
       'method': 'send_money',

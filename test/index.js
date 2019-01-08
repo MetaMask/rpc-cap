@@ -12,6 +12,9 @@ test('setup test', async (t) => {
     // maybe reading should be a permission, though!
     safeMethods: ['eth_read'],
 
+    // optional prefix for internal methods
+    methodPrefix: 'wallet_',
+
     initState: {
       domains: {
         'metamask': {
