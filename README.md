@@ -2,6 +2,8 @@
 
 A module for managing permissions extended to an untrusted domain, and enforcing those permissions over a JSON-RPC API as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
 
+![architecture diagram](./flow-diagram.png)
+
 ## Installation
 
 `npm install json-rpc-engine-capabilities -S`
