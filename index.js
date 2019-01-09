@@ -1,5 +1,5 @@
 const ObservableStore = require('obs-store')
-var equal = require('fast-deep-equal')
+const equal = require('fast-deep-equal')
 
 const UNAUTHORIZED_ERROR = {
   message: 'Unauthorized to perform action',
@@ -25,7 +25,7 @@ class JsonRpcCapabilities {
     this.internalMethods[`${methodPrefix}revokePermissions`] = this.revokePermissionsMiddleware.bind(this)
     // TODO: Freeze internal methods object.
 
-    this.store = new ObservableStore(initState)
+    this.store = new ObservableStore(initState || {})
     this.memStore = new ObservableStore({
       permissionsRequests: [],
     })
@@ -93,7 +93,7 @@ class JsonRpcCapabilities {
   }
 
   _getPermissions (domain) {
-    const { domains } = this.store.getState()
+    const { domains = {} } = this.store.getState()
     if (domain in domains) {
       const { permissions } = domains[domain]
       return permissions
@@ -158,12 +158,13 @@ class JsonRpcCapabilities {
     this.store.putState(permissions)
   }
 
-  getPermissionsMiddleware (req, res, next, end) {
-    res.result = JSON.stringify(this._permissions)
+  getPermissionsMiddleware (domain, req, res, next, end) {
+    const permissions = this._getPermissions(domain)
+    res.result = permissions
     end()
   }
 
-  requestPermissionsMiddleware (req, res, next, end) {
+  requestPermissionsMiddleware (domain, req, res, next, end) {
     const params = req.params
     this._requestPermissions(req, res, next, end)
     if (this.requestUserApproval) {

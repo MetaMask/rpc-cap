@@ -131,4 +131,3 @@ test('requesting restricted method with permission is called', async (t) => {
   }
 })
 
-

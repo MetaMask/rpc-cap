@@ -1,49 +1,34 @@
 const test = require('tape')
 const LoginController = require('../')
+const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
 // Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
 const USER_REJECTION_CODE = 5
 
-test('#providerMiddlewareFunction requestPermissions method with user rejection does not add to requested permissions', {
-  timeout: 500,
-}, async (t) => {
-  const WRITE_RESULT = 'impeccable result'
 
-  const permissions = {}
-  const ctrl = new LoginController({
+test('getPermissions with none returns empty object', async (t) => {
+  const expected = {}
 
-    safeMethods: ['eth_read'],
-    initState: { permissions },
-    requestUserApproval: () => Promise.resolve(false),
+  const ctrl = new LoginController({})
 
-  })
+  const domain = 'login.metamask.io'
+  let req = { method: 'getPermissions' }
+  let res = {}
 
-  ctrl.memStore.subscribe((memStore) => {
-    const { permissionsRequests } = memStore
-    if ('eth_write2' in permissionsRequests[0]) {
-      t.ok(permissionsRequests, 'permission added to requests')
-      t.end()
-    }
-  })
-
-  let req = {
-    method: 'wallet_requestPermissions',
-    params: [{ 'eth_write2': { method: 'eth_write2' } }]
-  }
-
-  let res = { foo: 'bar' }
-  let domain = 'metamask'
   ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
   function next() {
-    t.fail('should not pass through')
+    t.ok(false, 'next should not be called')
     t.end()
   }
 
   function end(reason) {
-    t.equal(reason.code, USER_REJECTION_CODE, 'Should throw user rejection error code')
-    t.notOk(res.result, 'should have no result')
-    t.error(reason)
+    t.error(reason, 'error thrown')
+    t.ok(equal(res.result, expected), 'should be equal')
+    t.end()
   }
+
 })
+
+
