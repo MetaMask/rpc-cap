@@ -8,7 +8,7 @@ A module for managing [capability-based security](https://en.wikipedia.org/wiki/
 
 `npm install json-rpc-engine-capabilities -S`
 
-## Ideal Usage
+## Usage
 
 ```javascript
 const Engine = require('json-rpc-engine')
@@ -86,4 +86,11 @@ A capability descriptor as passed to the requestor in response to `getCapabiliti
   optionalTypeData, // allows easy consumption of these dynamic methods.
 }
 ```
+
+## Current Status
+
+This module is in progress, and is not ready for production. Currently thigns that need doing:
+
+- Get tests passing.
+- Ensure the internal methods are working.
 
