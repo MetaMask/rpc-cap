@@ -131,7 +131,7 @@ test('requesting restricted method with permission is called', async (t) => {
   }
 })
 
-test('#requestMethod with rejected prompt throws error', async (t) => {
+test('#requestPermissions with rejected prompt throws error', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
   const ctrl = new LoginController({
@@ -142,7 +142,9 @@ test('#requestMethod with rejected prompt throws error', async (t) => {
     safeMethods: ['eth_read'],
 
     // Rejected prompt:
-    requestUserApproval: () => Promise.resolve(false),
+    requestUserApproval: async (domainInfo, req) => {
+      return false
+    },
 
     initState: {
       domains: {
@@ -158,7 +160,14 @@ test('#requestMethod with rejected prompt throws error', async (t) => {
   })
 
   let domain = 'metamask'
-  let req = { method: 'requestPermissions' }
+  let req = {
+    method: 'requestPermissions',
+    params: [{
+      permissions: {
+        'eth_write': {},
+      }
+    }],
+  }
   let res = {}
   ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
@@ -177,6 +186,7 @@ test('#requestMethod with rejected prompt throws error', async (t) => {
 
 test('#providerMiddlewareFunction getPermissions method returns serialized permissions', async (t) => {
   const WRITE_RESULT = 'impeccable result'
+  const domain = 'metamask'
 
   const domains = {
     'metamask': {
@@ -191,16 +201,20 @@ test('#providerMiddlewareFunction getPermissions method returns serialized permi
   const serializedPerms = JSON.stringify(domains)
 
   const ctrl = new LoginController({
-    origin: 'login.metamask.io',
-
-    safeMethods: ['eth_read'],
-
     initState: { domains },
+
+    restrictedMethods: {
+      'eth_write': {
+        method: (req, res, next, end) => {
+          res.result = WRITE_RESULT
+        }
+      }
+    }
   })
 
-  let req = { method: 'wallet_getPermissions' }
-  let res = { foo: 'bar' }
-  ctrl.providerMiddlewareFunction(req, res, next, end)
+  let req = { method: 'getPermissions' }
+  let res = {}
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
   function next() {
     t.fail('should not pass through')
@@ -215,7 +229,7 @@ test('#providerMiddlewareFunction getPermissions method returns serialized permi
 
 })
 
-test('#providerMiddlewareFunction requestPermissions method adds to requested permissions', {
+test('#providerMiddlewareFunction requestPermissions method with user rejection does not add to requested permissions', {
   timeout: 500,
 }, async (t) => {
   const WRITE_RESULT = 'impeccable result'
@@ -224,8 +238,9 @@ test('#providerMiddlewareFunction requestPermissions method adds to requested pe
   const ctrl = new LoginController({
 
     safeMethods: ['eth_read'],
-
     initState: { permissions },
+    requestUserApproval: () => Promise.resolve(false),
+
   })
 
   ctrl.memStore.subscribe((memStore) => {
@@ -242,7 +257,8 @@ test('#providerMiddlewareFunction requestPermissions method adds to requested pe
   }
 
   let res = { foo: 'bar' }
-  ctrl.providerMiddlewareFunction(req, res, next, end)
+  let domain = 'metamask'
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
   function next() {
     t.fail('should not pass through')
@@ -251,6 +267,7 @@ test('#providerMiddlewareFunction requestPermissions method adds to requested pe
 
   function end(reason) {
     t.equal(reason.code, USER_REJECTION_CODE, 'Should throw user rejection error code')
+    t.notOk(res.result, 'should have no result')
     t.error(reason)
   }
 })

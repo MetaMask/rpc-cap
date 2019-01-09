@@ -12,17 +12,17 @@ const METHOD_NOT_FOUND = {
 
 class JsonRpcCapabilities {
 
-  constructor({ safeMethods = [], restrictedMethods = {}, initState = {}, methods = {}, methodPrefix = ''}, promptUserForPermissions) {
+  constructor({ safeMethods = [], restrictedMethods = {}, initState = {}, methods = {}, methodPrefix = '', requestUserApproval}) {
     this.safeMethods = safeMethods
     this.restrictedMethods = restrictedMethods
     this.methods = methods
-    this.promptUserForPermissions = promptUserForPermissions
+    this.requestUserApproval = requestUserApproval
 
     this.internalMethods = {}
-    this[`${methodPrefix}getPermissions`] = this.getPermissionsMiddleware.bind(this)
-    this[`${methodPrefix}requestPermissions`] = this.requestPermissionsMiddleware.bind(this)
-    this[`${methodPrefix}grantPermissions`] = this.grantPermissionsMiddleware.bind(this)
-    this[`${methodPrefix}revokePermissions`] = this.revokePermissionsMiddleware.bind(this)
+    this.internalMethods[`${methodPrefix}getPermissions`] = this.getPermissionsMiddleware.bind(this)
+    this.internalMethods[`${methodPrefix}requestPermissions`] = this.requestPermissionsMiddleware.bind(this)
+    this.internalMethods[`${methodPrefix}grantPermissions`] = this.grantPermissionsMiddleware.bind(this)
+    this.internalMethods[`${methodPrefix}revokePermissions`] = this.revokePermissionsMiddleware.bind(this)
     // TODO: Freeze internal methods object.
 
     this.store = new ObservableStore(initState)
@@ -51,13 +51,13 @@ class JsonRpcCapabilities {
   providerMiddlewareFunction (domain, req, res, next, end) {
     const methodName = req.method
 
-    // skip registered safe/passthrough methods
+    // skip registered safe/passthrough methods.
     if (this.safeMethods.includes(methodName)) {
       return next()
     }
 
+    // handle internal methods before any restricted methods.
     if (methodName in this.internalMethods) {
-      console.log('calling internal method')
       return this.internalMethods[methodName](domain, req, res, next, end)
     }
 
@@ -93,9 +93,7 @@ class JsonRpcCapabilities {
   }
 
   _getPermissions (domain) {
-    console.log('getting permission for ' + domain)
     const { domains } = this.store.getState()
-    console.dir(domains)
     if (domain in domains) {
       const { permissions } = domains[domain]
       return permissions
@@ -105,11 +103,9 @@ class JsonRpcCapabilities {
 
   _getPermission (domain, method) {
     const permissions = this._getPermissions(domain)
-    console.dir(permissions)
     if (method in permissions) {
       return permissions[method]
     }
-    console.dir(permissions)
     throw new Error('Domain unauthorized to use method ' + method)
   }
 
@@ -127,9 +123,21 @@ class JsonRpcCapabilities {
   _requestPermissions (req, res, next, end) {
     // TODO: Validate permissions request
     const requests = this._permissionsRequests
-    requests.push(params[0])
+    requests.push(req)
     this._permissionsRequests = requests
-    this.promptUserForPermissions(req, res, next, end)
+    this.requestUserApproval(req, res, next, end)
+    .then((approved) => {
+      if (!approved) {
+        res.error = UNAUTHORIZED_ERROR
+        return end(UNAUTHORIZED_ERROR)
+      }
+
+      return this.grantNewPermissions(req.params[0])
+    })
+    .catch((reason) => {
+      res.error = reason
+      return end(reason)
+    })
   }
 
   async grantNewPermissions (permissions) {
@@ -158,8 +166,8 @@ class JsonRpcCapabilities {
   requestPermissionsMiddleware (req, res, next, end) {
     const params = req.params
     this._requestPermissions(params)
-    if (this.promptUserForPermissions) {
-      this.promptUserForPermissions(params, end)
+    if (this.requestUserApproval) {
+      this.requestUserApproval(params, end)
     } else {
       res.result = 'Request submitted.'
       end()
