@@ -165,7 +165,7 @@ class JsonRpcCapabilities {
 
   requestPermissionsMiddleware (req, res, next, end) {
     const params = req.params
-    this._requestPermissions(params)
+    this._requestPermissions(req, res, next, end)
     if (this.requestUserApproval) {
       this.requestUserApproval(params, end)
     } else {
