@@ -58,9 +58,10 @@ test('getPermissions with some returns them', async (t) => {
 
   function end(reason) {
     t.error(reason, 'error thrown')
-    console.log(res.result, expected)
     t.ok(equal(res.result, expected), 'should be equal')
     t.end()
   }
 })
+
+
 
