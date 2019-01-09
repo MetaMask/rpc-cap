@@ -140,6 +140,10 @@ class JsonRpcCapabilities {
     })
   }
 
+  /*
+   * Used for granting a new set of permissions,
+   * after the user has approved it.
+   */
   async grantNewPermissions (permissions) {
     // Remove any matching requests from the queue:
     this._permissionsRequests = this._permissionsRequests.filter((request) => {
