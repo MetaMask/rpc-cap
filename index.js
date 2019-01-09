@@ -7,7 +7,13 @@ const UNAUTHORIZED_ERROR = {
 }
 const METHOD_NOT_FOUND = {
   code: -32601,
-  messages: 'Method not found',
+  message: 'Method not found',
+}
+
+// TODO: This error code needs standardization:
+const USER_REJECTED_ERROR = {
+  code: 5,
+  message: 'User rejected the request.',
 }
 
 class JsonRpcCapabilities {
@@ -109,57 +115,64 @@ class JsonRpcCapabilities {
     throw new Error('Domain unauthorized to use method ' + method)
   }
 
+  get _permissions () {
+    const perms = this.memStore.getState().permissions
+    return perms || {}
+  }
+
   get _permissionsRequests () {
-    return this.memStore.getState().permissionsRequests
+    const reqs = this.memStore.getState().permissionsRequests
+    return reqs || {}
   }
 
   set _permissionsRequests (permissionsRequests) {
-    this.memStore.putState({ permissionsRequests })
-  }
-
-  /*
-   * Adds the request to the requestedPermissions array, for user approval.
-   */
-  _requestPermissions (req, res, next, end) {
-    // TODO: Validate permissions request
-    const requests = this._permissionsRequests
-    requests.push(req)
-    this._permissionsRequests = requests
-    this.requestUserApproval(req, res, next, end)
-    .then((approved) => {
-      if (!approved) {
-        res.error = UNAUTHORIZED_ERROR
-        return end(UNAUTHORIZED_ERROR)
-      }
-
-      return this.grantNewPermissions(req.params[0])
-    })
-    .catch((reason) => {
-      res.error = reason
-      return end(reason)
-    })
+    this.memStore.updateState({ permissionsRequests })
   }
 
   /*
    * Used for granting a new set of permissions,
    * after the user has approved it.
+   *
+   * @param {object} permissions - An object describing the granted permissions.
    */
-  async grantNewPermissions (permissions) {
+  grantNewPermissions (domain, permissions, res, end) {
     // Remove any matching requests from the queue:
     this._permissionsRequests = this._permissionsRequests.filter((request) => {
       return equal(permissions, request)
     })
 
     // Update the related permission objects:
-    let officialPerms = this._permissions
-    officialPerms.forEach((permission) => {
-      officialPerms[permission.method] = permission
-    })
-    this._permissions = officialPerms
+    this.setPermissionsFor(domain, permissions)
+    res.result = this._getPermissions(domain)
+    end()
   }
 
-  set _permissions (permissions) {
-    this.store.putState(permissions)
+  get _domains () {
+    const { domains } = this.store.getState()
+    return domains || {}
+  }
+
+  set _domains (domains) {
+    this.store.updateState({ domains })
+  }
+
+  setPermissionsFor (domain, newPermissions) {
+    const domains = this._domains
+
+    // Setup if not yet existent:
+    if (!(domain in domains)) {
+      domains[domain] = { permissions: {} }
+    }
+
+    const config = domains[domain]
+    const permissions = config.permissions
+
+    for (let key in newPermissions) {
+      permissions[key] = newPermissions[key]
+    }
+
+    domains[domain].permissions = permissions
+    this._domains = domains
   }
 
   getPermissionsMiddleware (domain, req, res, next, end) {
@@ -168,15 +181,41 @@ class JsonRpcCapabilities {
     end()
   }
 
+  /*
+   * The capabilities middleware function used for requesting additional permissions from the user.
+   *
+   * @param {object} req - The JSON RPC formatted request object.
+   * @param {Array} req.params - The JSON RPC formatted params array.
+   * @param {object} req.params[0] - An object of the requested permissions.
+   */
   requestPermissionsMiddleware (domain, req, res, next, end) {
-    const params = req.params
-    this._requestPermissions(req, res, next, end)
-    if (this.requestUserApproval) {
-      this.requestUserApproval(params, end)
-    } else {
+
+    // TODO: Validate permissions request
+    const options = req.params[0]
+    const requests = this._permissionsRequests
+    requests.push(options)
+    this._permissionsRequests = requests
+
+    if (!this.requestUserApproval) {
       res.result = 'Request submitted.'
-      end()
+      return end()
     }
+
+    this.requestUserApproval(domain, options)
+    // TODO: Allow user to pass back an object describing
+    // the approved permissions, allowing user-customization.
+    .then((approved) => {
+      if (!approved) {
+        res.error = USER_REJECTED_ERROR
+        return end(USER_REJECTED_ERROR)
+      }
+
+      return this.grantNewPermissions(domain, options, res, end)
+    })
+    .catch((reason) => {
+      res.error = reason
+      return end(reason)
+    })
   }
 
   grantPermissionsMiddleware (domain, req, res, next, end) {

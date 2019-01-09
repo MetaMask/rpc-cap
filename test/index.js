@@ -1,2 +1,3 @@
 const forwarding = require('./forwarding')
-const internal = require('./internal')
+const getPermissions = require('./getPermissions')
+const requestPermissions = require('./requestPermissions')
