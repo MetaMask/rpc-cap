@@ -55,13 +55,15 @@ test('grantPermissions with permission creates permission', async (t) => {
   }
 
   const ctrl = new LoginController({
-     domains: {
-      'login.metamask.io': {
-        permissions: {
-          'restricted': {
-            date: '0',
-          }
-        },
+    initState: {
+      domains: {
+        'login.metamask.io': {
+          permissions: {
+            'restricted': {
+              date: '0',
+            }
+          },
+        }
       }
     }
   })

@@ -219,8 +219,29 @@ class JsonRpcCapabilities {
   }
 
   grantPermissionsMiddleware (domain, req, res, next, end) {
-    res.error = { message: 'Method not implemented' }
-    end(res.error)
+    // TODO: Validate params
+    const [ assignedDomain, requestedPerms ] = req.params
+    const perms = this._getPermissions(domain)
+    const assigned = this._getPermissions(assignedDomain)
+    const newlyGranted = {}
+    for (const key in requestedPerms) {
+      if (key in perms) {
+        const newPerm = {
+          date: Date.now(),
+          grantedBy: domain,
+        }
+        assigned[key] = newPerm
+        newlyGranted[key] = newPerm
+      } else {
+        console.log(`no ${key} in `, perms)
+        res.error = UNAUTHORIZED_ERROR
+        return end(UNAUTHORIZED_ERROR)
+      }
+    }
+
+    this.setPermissionsFor(assignedDomain, assigned)
+    res.response = newlyGranted
+    end()
   }
 
   revokePermissionsMiddleware (domain, req, res, next, end) {
