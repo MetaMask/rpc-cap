@@ -1,3 +1,4 @@
-const forwarding = require('./forwarding')
-const getPermissions = require('./getPermissions')
-const requestPermissions = require('./requestPermissions')
+require('./forwarding')
+require('./getPermissions')
+require('./requestPermissions')
+require('./grantPermissions')
