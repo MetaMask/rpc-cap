@@ -22,6 +22,11 @@
       <summary>Nothing here!</summary>
       Sneaky Hacker Mode:
       <button id="read">Read Profile Without Asking!</button>
+      <button id="delegate">Delegate permissions to danfinlay.com</button>
+      <br>
+      <a href="http://danfinlay.com/mm-capabilities-test-1.html">
+        Visit sample dapp on danfinlay.com domain
+      </a>
     </details>
 
   </body>
@@ -30,8 +35,20 @@
     login.addEventListener('click', requestPerms)
     read.addEventListener('click', readProfile)
     submitName.addEventListener('click', changeName)
+    delegate.addEventListener('click', delegatePerms)
 
     readProfile()
+
+    function delegatePerms () {
+      ethereum.sendAsync({
+        method: 'wallet_grantPermissions',
+        params: ['danfinlay.com', {readYourProfile: {}}],
+      }, (err, result) => {
+        if (err) return alert('error!: ' + err) && rej(err)
+        content.innerText = 'Danfinlay.com can now view your profile.'
+      })
+
+    }
 
     function changeName () {
       const name = nameInput.value

@@ -110,3 +110,5 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 
 This module is in an exploratory MVP state. It probably deserves more testing, scrutiny, consideration, maybe a TypeScript conversion, and a healthy beta period before I'd want to really trust it to a lot of value.
 
+I've got it working with [a branch of metamask](https://github.com/MetaMask/metamask-extension/tree/capabilities-middleware-example) which you can use with [the sample site](https://metamask.github.io/json-rpc-capabilities-middleware/).
+
