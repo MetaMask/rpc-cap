@@ -1,4 +1,4 @@
-# JSON RPC Engine Capabilities
+# JSON RPC Capabilities Middleware
 
 A module for managing [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
 

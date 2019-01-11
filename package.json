@@ -1,6 +1,6 @@
 {
-  "name": "eth-login-controller",
-  "version": "2.1.0",
+  "name": "json-rpc-capabilities-middleware",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
