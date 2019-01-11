@@ -10,13 +10,13 @@ Note: Maybe should move towards compatibility with the [ocap-ld](https://w3c-ccg
 
 ## Installation
 
-`npm install json-rpc-engine-capabilities -S`
+`npm install json-rpc-capabilities-middleware -S`
 
 ## Usage
 
 ```javascript
 const Engine = require('json-rpc-engine')
-const RpcCapabilities = require('json-rpc-engine-capabilities')
+const RpcCapabilities = require('json-rpc-capabilities-middleware')
 
 const capabilities = new RpcCapabilities({
 
