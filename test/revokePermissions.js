@@ -109,12 +109,61 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, 1, 'Auth error returned')
-    t.ok(equal(ctrl._getPermissions(otherDomain), expected), 'should have no permissions now')
-    t.ok(equal(ctrl._getPermissions(domain), expected), 'should have permissions still')
+    t.ok(ctrl._getPermissions(otherDomain), 'should have permissions still')
+    t.ok(ctrl._getPermissions(otherDomain), 'should have permissions still')
     t.end()
   }
 
 })
 
-test('revokePermissions on own permission deletes that permission.', async (t) => { })
+test('revokePermissions on own permission deletes that permission.', async (t) => {
+
+  const ctrl = new LoginController({
+    initState: {
+      "domains": {
+        "login.metamask.io": {
+          "permissions": {
+            "restricted": {
+              "date": "0"
+            }
+          }
+        },
+        "other.domain.com": {
+          "permissions": {
+            "restricted": {
+              "date": 1547176021698,
+              "grantedBy": "unrelated.domain.co"
+            }
+          }
+        }
+      }
+    }
+  })
+
+  const domain = 'login.metamask.io'
+  let req = {
+    method: 'revokePermissions',
+    params: [
+      domain,
+      {
+        'restricted': {},
+      }
+    ]
+  }
+  let res = {}
+
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
+    t.end()
+  }
+
+  function end(reason) {
+    t.error(reason, 'error should not be thrown')
+    t.ok(equal(ctrl._getPermissions(domain), {}), 'should have deleted permissions')
+    t.end()
+  }
+
+})
 

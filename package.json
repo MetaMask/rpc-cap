@@ -13,6 +13,7 @@
     "tape": "^4.9.2"
   },
   "dependencies": {
+    "clone": "^2.1.2",
     "fast-deep-equal": "^2.0.1",
     "json-rpc-error": "^2.0.0",
     "obs-store": "^3.0.2"

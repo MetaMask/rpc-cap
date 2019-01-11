@@ -1,5 +1,6 @@
 const ObservableStore = require('obs-store')
 const equal = require('fast-deep-equal')
+const clone = require('clone')
 
 const UNAUTHORIZED_ERROR = {
   message: 'Unauthorized to perform action',
@@ -107,6 +108,9 @@ class JsonRpcCapabilities {
     return {}
   }
 
+  /*
+   * Get the parent-most permission granting the requested domain's method permission.
+   */
   _getPermission (domain, method) {
     // TODO: Aggregate & Enforce Caveats at each step.
     // https://w3c-ccg.github.io/ocap-ld/#caveats
@@ -123,6 +127,22 @@ class JsonRpcCapabilities {
 
     return undefined
   }
+
+  /*
+   * Get the permission for that domain and method, not following grantedBy links.
+   */
+  _getPermissionUnTraversed (domain, method) {
+    // TODO: Aggregate & Enforce Caveats at each step.
+    // https://w3c-ccg.github.io/ocap-ld/#caveats
+
+    let permissions = this._getPermissions(domain)
+    if (permissions && method in permissions) {
+      return permissions[method]
+    }
+
+    return undefined
+  }
+
 
   get _permissions () {
     const perms = this.memStore.getState().permissions
@@ -151,7 +171,7 @@ class JsonRpcCapabilities {
     })
 
     // Update the related permission objects:
-    this.setPermissionsFor(domain, permissions)
+    this._setPermissionsFor(domain, permissions)
     res.result = this._getPermissions(domain)
     end()
   }
@@ -165,7 +185,7 @@ class JsonRpcCapabilities {
     this.store.updateState({ domains })
   }
 
-  setPermissionsFor (domain, newPermissions) {
+  _getDomainSettings (domain) {
     const domains = this._domains
 
     // Setup if not yet existent:
@@ -173,15 +193,41 @@ class JsonRpcCapabilities {
       domains[domain] = { permissions: {} }
     }
 
-    const config = domains[domain]
-    const permissions = config.permissions
+    return domains[domain]
+  }
+
+  _setDomain (domain, domainSettings) {
+    const domains = this._domains
+    domains[domain] = domainSettings
+    const state = this.store.getState()
+    state.domains = domains
+    this.store.putState(state)
+  }
+
+  _setPermissionsFor (domainName, newPermissions) {
+    const domain = this._getDomainSettings(domainName)
+
+    const { permissions } = domain
 
     for (let key in newPermissions) {
       permissions[key] = newPermissions[key]
     }
 
-    domains[domain].permissions = permissions
-    this._domains = domains
+    domain.permissions = permissions
+    this._setDomain(domainName, domain)
+  }
+
+  _removePermissionsFor (domainName , permissionsToRemove) {
+    const domain = this._getDomainSettings(domainName)
+
+    const { permissions } = domain
+
+    permissionsToRemove.forEach((key) => {
+      delete permissions[key]
+    })
+
+    domain.permissions = permissions
+    this._setDomain(domainName, domain)
   }
 
   getPermissionsMiddleware (domain, req, res, next, end) {
@@ -248,14 +294,35 @@ class JsonRpcCapabilities {
       }
     }
 
-    this.setPermissionsFor(assignedDomain, assigned)
+    this._setPermissionsFor(assignedDomain, assigned)
     res.response = newlyGranted
     end()
   }
 
   revokePermissionsMiddleware (domain, req, res, next, end) {
-    res.error = { message: 'Method not implemented' }
-    end(res.error)
+    // TODO: Validate params
+    const [ assignedDomain, requestedPerms ] = req.params
+    const perms = this._getPermissions(domain)
+    const assigned = this._getPermissions(assignedDomain)
+    const newlyRevoked = []
+    for (const methodName in requestedPerms) {
+      const perm = this._getPermissionUnTraversed(assignedDomain, methodName)
+      if (perm &&
+          // Grantors can revoke what they have granted:
+         ((perm.grantedBy && perm.grantedBy === domain)
+          // Domains can revoke their own permissions:
+          || (assignedDomain === domain))) {
+
+        newlyRevoked.push(methodName)
+      } else {
+        res.error = UNAUTHORIZED_ERROR
+        return end(UNAUTHORIZED_ERROR)
+      }
+    }
+
+    this._removePermissionsFor(assignedDomain, newlyRevoked)
+    res.response = newlyRevoked
+    end()
   }
 }
 
