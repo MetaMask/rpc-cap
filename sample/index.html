@@ -31,6 +31,8 @@
     read.addEventListener('click', readProfile)
     submitName.addEventListener('click', changeName)
 
+    readProfile()
+
     function changeName () {
       const name = nameInput.value
       ethereum.sendAsync({
@@ -38,7 +40,7 @@
         params: ['name', name],
       }, (err, result) => {
         if (err) return alert('error!: ' + err) && rej(err)
-        readProfile
+        readProfile()
       })
     }
 
@@ -74,20 +76,21 @@
           message = 'Site is unauthorized to read profile.'
         } else {
           message = `Welcome, ${result.result.name}` // JSON.stringify(result.result)
+          inputZone.style.display = 'block'
         }
         content.innerText = message
       })
     }
 
     async function writeProfile (key, value) {
-      return new Promise ((res, rej) => {
-        ethereum.sendAsync({
-          method: 'readYourProfile',
-          params: [],
-        }, (err, res) => {
-          if (err) return alert('error!: ' + err)
-          content.innerText = JSON.stringify(res.result)
-        })
+      console.log('writing to profile,')
+      ethereum.sendAsync({
+        method: 'writeToYourProfile',
+        params: [],
+      }, (err, res) => {
+        if (err) return alert('error!: ' + err)
+        console.log('written', res)
+        readProfile()
       })
     }
   </script>
