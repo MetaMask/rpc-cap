@@ -6,6 +6,12 @@ For an intro to capability based security and why it makes sense, [I recommend t
 
 Note: Maybe should move towards compatibility with the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) standard.
 
+Currently is an MVP capabilities system, with some certain usage assumptions:
+
+- The consuming context is able to provide a `domain` to the middleware that is pre-authenticated. The library does not handle authentication, and trusts the `domain` parameter to the `providerMiddlewareFunction` is accurate and has been verified. (This was made initially as an MVP for proposing a simple capabilities system around [the MetaMask provider API](https://metamask.github.io/metamask-docs/API_Reference/Ethereum_Provider)).
+
+This means the capabilities are not valuable without a connection to the granting server, which is definitely fairly acceptable for many contexts (just not like, issuing capabilities intended for redemption in a cryptographically verified smart contract).
+
 ![architecture diagram](./flow-diagram.png)
 
 ## Installation
@@ -13,6 +19,10 @@ Note: Maybe should move towards compatibility with the [ocap-ld](https://w3c-ccg
 `npm install json-rpc-capabilities-middleware -S`
 
 ## Usage
+
+The capability system is initialized with a variety of options.
+
+It will simply pass-through methods that are listed in the `safeMethods` array, but otherwise will require the requesting domain to have a permissions object, either granted by user, by approval on request, or by delegation from another domain that has the desired permission.
 
 ```javascript
 const Engine = require('json-rpc-engine')
@@ -68,26 +78,24 @@ engine.push(finalMiddleware)
 engine.start()
 ```
 
-The capabilities system also adds two new methods to the RPC, and you can modify what they are with a prefix of your chocie:
+## Internal RPC Methods
 
-- `getCapabilities()` returns a list of capability descriptors.
-- `requestCapabilities(capabilities)` prompts user approval of some capability.
-- `useCapability(capability, params)` Performs the desired function.
+The capabilities system adds new methods to the RPC, and you can modify what they are with a prefix of your chocie with the constructor param `methodPrefix`:
 
-### Important distinction
-
-Some capabilities will prompt user approval. This is different than lacking the capability to perform that action. There are two different capabilities: The ability to perform an action without further confirmation, and the ability to suggest a possible action.
+- getPermissions() - Returns the available (otherwise restricted) capabilities for the domain.
+- requestPermissions(options) - Triggers the authroization flow, probably prompting user response, and creating the requested permissions objects if approved.
+- grantPermissions(targetDomain, permissions) - Delegates some of the requesting domain's permissions to the `targetDomain`, if those permissions exist.
+- revokePermissions(targetDomain, permissions) - Revokes a set of permissions if they are self-owned or were delegated by the requesting domain.
 
 ## Object Definitions
 
-A capability descriptor as passed to the requestor in response to `getCapabilities()`:
+### Permissions Object
 
 ```
 {
   method: 'send_money',
-  capability_id: 'STRONG_RANDOM_ID_LINK',
-  description, // string
-  optionalTypeData, // allows easy consumption of these dynamic methods.
+  date: 0, // unix time of creation
+  grantedBy: 'another.domain.com', // another domain string if this permission was created by delegation.
 }
 ```
 
