@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node test && npm run lint",
-    "lint": "./node_modules/.bin/eslint index.js"
+    "lint": "./node_modules/.bin/eslint index.js",
+    "lint-fix": "./node_modules/.bin/eslint index.js --fix"
   },
   "keywords": [],
   "author": "",
