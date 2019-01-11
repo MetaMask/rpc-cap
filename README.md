@@ -26,34 +26,42 @@ It will simply pass-through methods that are listed in the `safeMethods` array, 
 
 ```javascript
 const Engine = require('json-rpc-engine')
-const RpcCapabilities = require('json-rpc-capabilities-middleware')
+const Capabilities = require('json-rpc-capabilities-middleware')
 
-const capabilities = new RpcCapabilities({
+const capabilities = new Capabilities({
 
   // Supports passthrough methods:
   safeMethods: ['get_index']
-  safeCheckingFunction,
 
   // optional prefix for internal methods
   methodPrefix: 'wallet_',
 
   restrictedMethods: {
-    'send_money': {
-      validationFunction,
 
-      // Description can be make confirmation UI easier to develop:
-      description: 'Ability to send funds freely.'
-      optionalTypeData,
-      method: this.sendMoney.bind(this),
+    // Restricted methods themselves are defined as
+    // json-rpc-engine middleware functions.
+    'send_money': (req, res, next, end) => {
+
     }
   },
 
+  /*
+  * A promise-returning callback used to determine whether to approve
+  * permissions requests or not.
+  *
+  * Currently only returns a boolean, but eventually should return any specific parameters or amendments to the permissions.
+  *
+  * @param {string} domain - The requesting domain string
+  * @param {string} req - The request object sent in to the `requestPermissions` method.
+  * @returns {Promise<bool>} approved - Whether the user approves the request or not.
+  */
   requestUserApproval: async (domainInfo, req) => {
     const ok = await checkIfUserTrusts(domainInfo, req)
     return ok
   },
 
-  // Same state that is emitted from `this.store`,
+  // Same state that is emitted from `this.store.subscribe((state) => {})`,
+  // Following the `obs-store` module framework.
   // can be used to re-instantiate:
   initState: {
     domains: {
@@ -92,8 +100,7 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 ### Permissions Object
 
 ```
-{
-  method: 'send_money',
+'restrictedMethodName': {
   date: 0, // unix time of creation
   grantedBy: 'another.domain.com', // another domain string if this permission was created by delegation.
 }
@@ -101,8 +108,5 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 
 ## Current Status
 
-This module is in progress, and is not ready for production. Currently thigns that need doing:
-
-- Get tests passing.
-- Ensure the internal methods are working.
+This module is in an exploratory MVP state. It probably deserves more testing, scrutiny, consideration, maybe a TypeScript conversion, and a healthy beta period before I'd want to really trust it to a lot of value.
 
