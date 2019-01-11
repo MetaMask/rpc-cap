@@ -4,7 +4,7 @@ A module for managing [capability-based security](https://en.wikipedia.org/wiki/
 
 For an intro to capability based security and why it makes sense, [I recommend this video](https://www.youtube.com/watch?v=2H-Azm8tM24).
 
-Note: Maybe should consider using the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) standard instead.
+Note: Maybe should move towards compatibility with the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) standard.
 
 ![architecture diagram](./flow-diagram.png)
 
