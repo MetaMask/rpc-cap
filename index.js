@@ -108,11 +108,20 @@ class JsonRpcCapabilities {
   }
 
   _getPermission (domain, method) {
-    const permissions = this._getPermissions(domain)
-    if (method in permissions) {
-      return permissions[method]
+    // TODO: Aggregate & Enforce Caveats at each step.
+    // https://w3c-ccg.github.io/ocap-ld/#caveats
+
+    let permissions = this._getPermissions(domain)
+
+    while (permissions && method in permissions) {
+      if ('grantedBy' in permissions[method]) {
+        permissions = this._getPermissions(permissions[method].grantedBy)
+      } else {
+        return permissions[method]
+      }
     }
-    throw new Error('Domain unauthorized to use method ' + method)
+
+    return undefined
   }
 
   get _permissions () {
@@ -224,16 +233,16 @@ class JsonRpcCapabilities {
     const perms = this._getPermissions(domain)
     const assigned = this._getPermissions(assignedDomain)
     const newlyGranted = {}
-    for (const key in requestedPerms) {
-      if (key in perms) {
+    for (const methodName in requestedPerms) {
+      const perm = this._getPermission(domain, methodName)
+      if (perm) {
         const newPerm = {
           date: Date.now(),
           grantedBy: domain,
         }
-        assigned[key] = newPerm
-        newlyGranted[key] = newPerm
+        assigned[methodName] = newPerm
+        newlyGranted[methodName] = newPerm
       } else {
-        console.log(`no ${key} in `, perms)
         res.error = UNAUTHORIZED_ERROR
         return end(UNAUTHORIZED_ERROR)
       }

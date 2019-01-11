@@ -102,4 +102,46 @@ test('grantPermissions with permission creates permission', async (t) => {
   }
 })
 
+test('grantPermissions with permission whose grantor does not exist results in auth error', async (t) => {
+  const ctrl = new LoginController({
+    initState: {
+      domains: {
+        'login.metamask.io': {
+          permissions: {
+            'restricted': {
+              grantedBy: 'other.domain2.io',
+              date: '0',
+            }
+          },
+        }
+      }
+    }
+  })
+
+  const domain = 'login.metamask.io'
+  const otherDomain = 'other.domain.com'
+  let req = {
+    method: 'grantPermissions',
+    params: [
+      otherDomain,
+      {
+        'restricted': {},
+      }
+    ]
+  }
+  let res = {}
+
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
+    t.end()
+  }
+
+  function end(reason) {
+    t.ok(reason, 'error thrown')
+    t.equal(reason.code, 1, 'Auth error returned')
+    t.end()
+  }
+})
 
