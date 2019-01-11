@@ -91,8 +91,8 @@ class JsonRpcCapabilities {
   _executeMethod(req, res, next, end) {
     const methodName = req.method
     if (methodName in this.restrictedMethods
-       && typeof this.restrictedMethods[methodName].method === 'function') {
-      return this.restrictedMethods[methodName].method(req, res, next, end)
+       && typeof this.restrictedMethods[methodName] === 'function') {
+      return this.restrictedMethods[methodName](req, res, next, end)
     }
 
     res.error = METHOD_NOT_FOUND
