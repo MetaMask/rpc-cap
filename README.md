@@ -40,9 +40,15 @@ const capabilities = new Capabilities({
 
     // Restricted methods themselves are defined as
     // json-rpc-engine middleware functions.
-    'send_money': (req, res, next, end) => {
+  'send_money': {
+    description: 'Allows sending your money away freely.',
+      method: (req, res, next, end) => {
+        sendMoney()
+        res.result = 'Success!'
+        end()
+      }
+    },
 
-    }
   },
 
   /*
