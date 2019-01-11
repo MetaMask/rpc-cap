@@ -21,8 +21,12 @@
     <details>
       <summary>Nothing here!</summary>
       Sneaky Hacker Mode:
+      <br>
       <button id="read">Read Profile Without Asking!</button>
+      <br>
       <button id="delegate">Delegate permissions to danfinlay.com</button>
+      <br>
+      <button id="revoke">Revoke permissions from danfinlay.com</button>
       <br>
       <a href="http://danfinlay.com/mm-capabilities-test-1.html">
         Visit sample dapp on danfinlay.com domain
@@ -36,8 +40,19 @@
     read.addEventListener('click', readProfile)
     submitName.addEventListener('click', changeName)
     delegate.addEventListener('click', delegatePerms)
+    revoke.addEventListener('click', revokePerms)
 
     readProfile()
+
+    function revokePerms () {
+      ethereum.sendAsync({
+        method: 'wallet_revokePermissions',
+        params: ['danfinlay.com', {readYourProfile: {}}],
+      }, (err, result) => {
+        if (err) return alert('error!: ' + err) && rej(err)
+        content.innerText = 'Danfinlay.com can no longer view your profile.'
+      })
+    }
 
     function delegatePerms () {
       ethereum.sendAsync({
@@ -57,6 +72,9 @@
         params: ['name', name],
       }, (err, result) => {
         if (err) return alert('error!: ' + err) && rej(err)
+        if (result.error) {
+          return showError(result)
+        }
         readProfile()
       })
     }
@@ -73,7 +91,7 @@
         if (err) return alert('error!: ' + err)
 
         if (res.error) {
-          return content.innerText = `Had a problem: ${res.error}`
+          return showError(result)
         }
 
         inputZone.style.display = 'block'
@@ -106,9 +124,16 @@
         params: [],
       }, (err, res) => {
         if (err) return alert('error!: ' + err)
-        console.log('written', res)
+
+        if (res.error) {
+          return showError(res)
+        }
         readProfile()
       })
+    }
+
+    function showError (res) {
+      content.innerText = `Had a problem: ${res.error}`
     }
   </script>
 

@@ -295,7 +295,7 @@ class JsonRpcCapabilities {
     }
 
     this._setPermissionsFor(assignedDomain, assigned)
-    res.response = newlyGranted
+    res.result = newlyGranted
     end()
   }
 
@@ -321,7 +321,7 @@ class JsonRpcCapabilities {
     }
 
     this._removePermissionsFor(assignedDomain, newlyRevoked)
-    res.response = newlyRevoked
+    res.result = newlyRevoked
     end()
   }
 }
