@@ -4,6 +4,8 @@ A module for managing [capability-based security](https://en.wikipedia.org/wiki/
 
 For an intro to capability based security and why it makes sense, [I recommend this video](https://www.youtube.com/watch?v=2H-Azm8tM24).
 
+To understand how this fits together with MetaMask, I recommend watching [this talk at the Internet Archive, January 2019)[https://youtu.be/hYH2Z1A0x3c?t=1305].
+
 Note: Maybe should move towards compatibility with the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) standard.
 
 Currently is an MVP capabilities system, with some certain usage assumptions:
