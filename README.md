@@ -109,6 +109,9 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 'restrictedMethodName': {
   date: 0, // unix time of creation
   grantedBy: 'another.domain.com', // another domain string if this permission was created by delegation.
+  caveats: { // An optional object describing limitations on the method reference.
+    onlyStatic: 'Always this!', // The onlyStatic caveat only returns the specified static response.
+  }
 }
 ```
 

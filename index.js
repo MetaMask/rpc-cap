@@ -85,13 +85,22 @@ class JsonRpcCapabilities {
       return end(UNAUTHORIZED_ERROR)
     }
 
-    this._executeMethod(req, res, next, end)
+    this._executeMethod(domain, req, res, next, end)
   }
 
-  _executeMethod(req, res, next, end) {
+  _executeMethod(domain, req, res, next, end) {
     const methodName = req.method
+    const permission = this._getPermission(domain, methodName)
     if (methodName in this.restrictedMethods
        && typeof this.restrictedMethods[methodName].method === 'function') {
+      const restrictedMethod = this.restrictedMethods[methodName]
+
+      // Support onlyStatic caveat:
+      if (permission.caveats && permission.caveats.onlyStatic) {
+        res.result = permission.caveats.onlyStatic
+        return end()
+      }
+
       return this.restrictedMethods[methodName].method(req, res, next, end)
     }
 
@@ -167,7 +176,9 @@ class JsonRpcCapabilities {
   grantNewPermissions (domain, permissions, res, end) {
     // Remove any matching requests from the queue:
     this._permissionsRequests = this._permissionsRequests.filter((request) => {
-      return equal(permissions, request)
+      const sameDomain = request.domain === domain
+      const samePerms = equal(Object.keys(request.options), Object.keys(permissions))
+      return !(sameDomain && samePerms)
     })
 
     // Update the related permission objects:
@@ -248,7 +259,10 @@ class JsonRpcCapabilities {
     // TODO: Validate permissions request
     const options = req.params[0]
     const requests = this._permissionsRequests
-    requests.push(options)
+    requests.push({
+      domain,
+      options,
+    })
     this._permissionsRequests = requests
 
     if (!this.requestUserApproval) {
@@ -260,12 +274,19 @@ class JsonRpcCapabilities {
     // TODO: Allow user to pass back an object describing
     // the approved permissions, allowing user-customization.
     .then((approved) => {
+
       if (!approved) {
         res.error = USER_REJECTED_ERROR
         return end(USER_REJECTED_ERROR)
       }
 
-      return this.grantNewPermissions(domain, options, res, end)
+      // If user approval is boolean, the request is wholly approved
+      if (typeof approved === 'boolean') {
+        return this.grantNewPermissions(domain, options, res, end)
+      }
+
+      // If user approval is different, use it as the permissions:
+      this.grantNewPermissions(domain, approved, res, end)
     })
     .catch((reason) => {
       res.error = reason
