@@ -102,9 +102,10 @@ test('requestPermissions with returned stub object defines future responses', as
     requestUserApproval: async (domain, req) => {
       return {
         viewAccounts: {
-          caveats: {
-            onlyStatic: expected,
-          },
+          caveats: [{
+            type: 'static',
+            value: expected,
+          }],
         },
       }
     },

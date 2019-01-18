@@ -95,10 +95,14 @@ class JsonRpcCapabilities {
        && typeof this.restrictedMethods[methodName].method === 'function') {
       const restrictedMethod = this.restrictedMethods[methodName]
 
-      // Support onlyStatic caveat:
-      if (permission.caveats && permission.caveats.onlyStatic) {
-        res.result = permission.caveats.onlyStatic
-        return end()
+      // Support static caveat:
+      if (permission.caveats) {
+        const statics = permission.caveats.filter(c => c.type === 'static')
+
+        if (statics.length > 0) {
+          res.result = statics[statics.length - 1].value
+          return end()
+        }
       }
 
       return this.restrictedMethods[methodName].method(req, res, next, end)
