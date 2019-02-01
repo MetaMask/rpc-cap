@@ -2,6 +2,7 @@ const ObservableStore = require('obs-store')
 const equal = require('fast-deep-equal')
 const clone = require('clone')
 
+
 const UNAUTHORIZED_ERROR = {
   message: 'Unauthorized to perform action',
   code: 1,
@@ -270,7 +271,7 @@ class JsonRpcCapabilities {
     this._permissionsRequests = requests
 
     if (!this.requestUserApproval) {
-      res.result = 'Request submitted.'
+      res.result = 'Request submitted, no user approval callback provided.'
       return end()
     }
 

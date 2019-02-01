@@ -85,13 +85,14 @@
         params: [{
           readYourProfile: {},
           writeToYourProfile: {},
+          'eth_accounts': {},
         }],
       }, (err, res) => {
         console.dir({ err, res })
         if (err) return alert('error!: ' + err)
 
         if (res.error) {
-          return showError(result)
+          return showError(res)
         }
 
         inputZone.style.display = 'block'
