@@ -1,5 +1,5 @@
 const test = require('tape')
-const LoginController = require('../')
+const createPermissions = require('../')
 
 // TODO: Standardize!
 // Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
@@ -8,7 +8,7 @@ const USER_REJECTION_CODE = 5
 test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result'
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissions({
     safeMethods: ['public_read'],
   })
 
@@ -35,7 +35,7 @@ test('requesting restricted method is rejected', async (t) => {
   const WRITE_RESULT = 'impeccable result'
   const domain = 'login.metamask.io'
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissions({
 
     // safe methods never require approval,
     // are considered trivial / no risk.
@@ -82,7 +82,7 @@ test('requesting restricted method with permission is called', async (t) => {
   const WRITE_RESULT = 'impeccable result'
   const domain = 'login.metamask.io'
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissions({
 
     // safe methods never require approval,
     // are considered trivial / no risk.

@@ -65,7 +65,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     // Traverse any permission delegations
     let permission;
     try {
-      permission = that.getPermission(domain, methodName);
+      permission = getPermission(domain, methodName);
     } catch (err) {
       res.error = {
         message: err.message,
@@ -106,7 +106,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     return end(METHOD_NOT_FOUND);
   };
 
-  that.getPermissions = function (domain) {
+  that.getPermissionsForDomain = function (domain) {
     const { domains = {} } = that.store.getState();
     if (domain in domains) {
       const { permissions } = domains[domain];
@@ -118,15 +118,15 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   /*
    * Get the parent-most permission granting the requested domain's method permission.
    */
-  that.getPermission = function (domain, method) {
+  function getPermission (domain, method) {
     // TODO: Aggregate & Enforce Caveats at each step.
     // https://w3c-ccg.github.io/ocap-ld/#caveats
 
-    let permissions = that.getPermissions(domain);
+    let permissions = that.getPermissionsForDomain(domain);
 
     while (permissions && method in permissions) {
       if ('grantedBy' in permissions[method]) {
-        permissions = that.getPermissions(permissions[method].grantedBy);
+        permissions = that.getPermissionsForDomain(permissions[method].grantedBy);
       } else {
         return permissions[method];
       }
@@ -134,6 +134,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
 
     return undefined;
   };
+  that.getPermission = getPermission
 
   /*
    * Get the permission for that domain and method, not following grantedBy links.
@@ -142,14 +143,13 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     // TODO: Aggregate & Enforce Caveats at each step.
     // https://w3c-ccg.github.io/ocap-ld/#caveats
 
-    let permissions = that.getPermissions(domain);
+    let permissions = that.getPermissionsForDomain(domain);
     if (permissions && method in permissions) {
       return permissions[method];
     }
 
     return undefined;
   };
-
 
   that.getPermissions = function () {
     const perms = that.memStore.getState().permissions;
@@ -173,7 +173,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
    */
   that.grantNewPermissions = function (domain, permissions, res, end) {
     // Remove any matching requests from the queue:
-    that.permissionsRequests = that.getPermissionsRequests.filter((request) => {
+    that.permissionsRequests = that.getPermissionsRequests().filter((request) => {
       const sameDomain = request.domain === domain;
       const samePerms = equal(Object.keys(request.options), Object.keys(permissions));
       return !(sameDomain && samePerms);
@@ -181,7 +181,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
 
     // Update the related permission objects:
     that.setPermissionsFor(domain, permissions);
-    res.result = that.getPermissions(domain);
+    res.result = that.getPermissionsForDomain(domain);
     end();
   };
 
@@ -240,7 +240,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   };
 
   that.getPermissionsMiddleware = function (domain, req, res, next, end) {
-    const permissions = that.getPermissions(domain);
+    const permissions = that.getPermissionsForDomain(domain);
     res.result = permissions;
     end();
   };
@@ -256,7 +256,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
 
     // TODO: Validate permissions request
     const options = req.params[0];
-    const requests = that.getPermissionsRequests;
+    const requests = that.getPermissionsRequests();
     requests.push({
       domain,
       options,
@@ -295,8 +295,8 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   that.grantPermissionsMiddleware = function (domain, req, res, next, end) {
     // TODO: Validate params
     const [ assignedDomain, requestedPerms ] = req.params;
-    const perms = that.getPermissions(domain);
-    const assigned = that.getPermissions(assignedDomain);
+    const perms = that.getPermissionsForDomain(domain);
+    const assigned = that.getPermissionsForDomain(assignedDomain);
     const newlyGranted = {};
     for (const methodName in requestedPerms) {
       const perm = that.getPermission(domain, methodName);
@@ -321,8 +321,8 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   that.revokePermissionsMiddleware = function (domain, req, res, next, end) {
     // TODO: Validate params
     const [ assignedDomain, requestedPerms ] = req.params;
-    const perms = that.getPermissions(domain);
-    const assigned = that.getPermissions(assignedDomain);
+    const perms = that.getPermissionsForDomain(domain);
+    const assigned = that.getPermissionsForDomain(assignedDomain);
     const newlyRevoked = [];
     for (const methodName in requestedPerms) {
       const perm = that.getPermissionUnTraversed(assignedDomain, methodName);
@@ -354,7 +354,5 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   return that;
 }
 
-module.exports = function (opts) {
-  return createJsonRpcCapabilities(opts);
-};
+module.exports = createJsonRpcCapabilities;
 
