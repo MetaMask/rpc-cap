@@ -1,5 +1,5 @@
 const test = require('tape')
-const LoginController = require('../')
+const createPermissionsMiddleware = require('../')
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!  Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
@@ -9,7 +9,7 @@ test('revokePermissions on granted permission deletes that permission', async (t
 
   const expected = {}
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissionsMiddleware({
     initState: {
       "domains": {
         "login.metamask.io": {
@@ -53,8 +53,8 @@ test('revokePermissions on granted permission deletes that permission', async (t
 
   function end(reason) {
     t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl._getPermissions(otherDomain), expected), 'should have no permissions now')
-    t.ok(ctrl._getPermissions(domain), 'should have permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), expected), 'should have no permissions now')
+    t.ok(ctrl.getPermissionsForDomain(domain), 'should have permissions still')
     t.end()
   }
 })
@@ -64,7 +64,7 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
 
   const expected = {}
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissionsMiddleware({
     initState: {
       "domains": {
         "login.metamask.io": {
@@ -109,8 +109,8 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, 1, 'Auth error returned')
-    t.ok(ctrl._getPermissions(otherDomain), 'should have permissions still')
-    t.ok(ctrl._getPermissions(otherDomain), 'should have permissions still')
+    t.ok(ctrl.getPermissionsForDomain(otherDomain), 'should have permissions still')
+    t.ok(ctrl.getPermissionsForDomain(otherDomain), 'should have permissions still')
     t.end()
   }
 
@@ -118,7 +118,7 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
 
 test('revokePermissions on own permission deletes that permission.', async (t) => {
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissionsMiddleware({
     initState: {
       "domains": {
         "login.metamask.io": {
@@ -161,7 +161,7 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
 
   function end(reason) {
     t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl._getPermissions(domain), {}), 'should have deleted permissions')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain), {}), 'should have deleted permissions')
     t.end()
   }
 
