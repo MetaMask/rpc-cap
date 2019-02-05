@@ -26,9 +26,9 @@ It will simply pass-through methods that are listed in the `safeMethods` array, 
 
 ```javascript
 const Engine = require('json-rpc-engine')
-const Capabilities = require('json-rpc-capabilities-middleware')
+const createCapabilities = require('json-rpc-capabilities-middleware')
 
-const capabilities = new Capabilities({
+const capabilities = createCapabilities({
 
   // Supports passthrough methods:
   safeMethods: ['get_index']
