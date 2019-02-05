@@ -1,5 +1,5 @@
 const test = require('tape')
-const LoginController = require('../')
+const createPermissionsMiddleware = require('../')
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -9,7 +9,7 @@ const USER_REJECTION_CODE = 5
 test('grantPermissions with no permission creates no permissions', async (t) => {
   const expected = {}
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissionsMiddleware({
   })
 
   const domain = 'login.metamask.io'
@@ -35,8 +35,8 @@ test('grantPermissions with no permission creates no permissions', async (t) => 
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, 1, 'Auth error returned')
-    t.ok(equal(ctrl._getPermissions(otherDomain), expected), 'should have no permissions still')
-    t.ok(equal(ctrl._getPermissions(domain), expected), 'should have no permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), expected), 'should have no permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have no permissions still')
     t.end()
   }
 })
@@ -54,7 +54,7 @@ test('grantPermissions with permission creates permission', async (t) => {
     }
   }
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissionsMiddleware({
     initState: {
       domains: {
         'login.metamask.io': {
@@ -93,7 +93,7 @@ test('grantPermissions with permission creates permission', async (t) => {
     t.notOk(reason, 'should throw no error')
     t.notOk(res.error, 'should assign no error')
 
-    const otherPerms = ctrl._getPermissions(otherDomain)
+    const otherPerms = ctrl.getPermissionsForDomain(otherDomain)
 
     for (let key in req.params[1]) {
       t.ok(key in otherPerms, 'The requested permission was created.')
@@ -103,7 +103,7 @@ test('grantPermissions with permission creates permission', async (t) => {
 })
 
 test('grantPermissions with permission whose grantor does not exist results in auth error', async (t) => {
-  const ctrl = new LoginController({
+  const ctrl = createPermissionsMiddleware({
     initState: {
       domains: {
         'login.metamask.io': {
