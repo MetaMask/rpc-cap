@@ -174,7 +174,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   that.grantNewPermissions = function (domain, permissions, res, end) {
     // Remove any matching requests from the queue:
     that.setPermissionsRequests(that.getPermissionsRequests().filter((request) => {
-      const sameDomain = request.domain === domain;
+      const sameDomain = request.origin === domain;
       const samePerms = equal(Object.keys(request.options), Object.keys(permissions));
       return !(sameDomain && samePerms);
     }));
@@ -253,12 +253,17 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
    * @param {object} req.params[0] - An object of the requested permissions.
    */
   that.requestPermissionsMiddleware = function (domain, req, res, next, end) {
+    const metadata = req.metadata || {
+      origin: domain,
+      siteTitle: domain,
+    }
 
     // TODO: Validate permissions request
     const options = req.params[0];
     const requests = that.getPermissionsRequests();
     requests.push({
-      domain,
+      origin: domain,
+      metadata,
       options,
     });
     that.setPermissionsRequests(requests);
@@ -268,7 +273,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
       return end();
     }
 
-    that.requestUserApproval(domain, options)
+    that.requestUserApproval(metadata, options)
     // TODO: Allow user to pass back an object describing
     // the approved permissions, allowing user-customization.
     .then((approved) => {
