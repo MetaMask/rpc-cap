@@ -1,5 +1,5 @@
 const test = require('tape')
-const LoginController = require('../')
+const createPermissionsMiddleware = require('../')
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -9,7 +9,7 @@ const USER_REJECTION_CODE = 5
 test('getPermissions with none returns empty object', async (t) => {
   const expected = {}
 
-  const ctrl = new LoginController({})
+  const ctrl = createPermissionsMiddleware({})
 
   const domain = 'login.metamask.io'
   let req = { method: 'getPermissions' }
@@ -35,7 +35,7 @@ test('getPermissions with some returns them', async (t) => {
     'restricted2': { foo: 'bar' }
   }
 
-  const ctrl = new LoginController({
+  const ctrl = createPermissionsMiddleware({
     initState: {
       domains: {
         'login.metamask.io': {
