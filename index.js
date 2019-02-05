@@ -27,10 +27,10 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   that.methods = methods;
   that.requestUserApproval = requestUserApproval;
 
-  that.store = new ObservableStore(initState || {});
-  that.memStore = new ObservableStore({
+  that.store = Reflect.construct(ObservableStore, [initState || {}]);
+  that.memStore = Reflect.construct(ObservableStore, [{
     permissionsRequests: [],
-  });
+  }]);
 
   that.serialize = function () {
     return that.store.getState();
@@ -58,7 +58,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     }
 
     // handle internal methods before any restricted methods.
-    if (methodName in that.internalMethods) {
+    if (Object.keys(that.internalMethods).includes(methodName)) {
       return that.internalMethods[methodName](domain, req, res, next, end);
     }
 
@@ -85,7 +85,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   that.executeMethod = function (domain, req, res, next, end) {
     const methodName = req.method;
     const permission = that.getPermission(domain, methodName);
-    if (methodName in that.restrictedMethods
+    if (Object.keys(that.restrictedMethods).includes(methodName)
        && typeof that.restrictedMethods[methodName].method === 'function') {
       const restrictedMethod = that.restrictedMethods[methodName];
 
@@ -108,7 +108,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
 
   that.getPermissionsForDomain = function (domain) {
     const { domains = {} } = that.store.getState();
-    if (domain in domains) {
+    if (Object.keys(domains).includes(domain)) {
       const { permissions } = domains[domain];
       return permissions;
     }
@@ -124,8 +124,8 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
 
     let permissions = that.getPermissionsForDomain(domain);
 
-    while (permissions && method in permissions) {
-      if ('grantedBy' in permissions[method]) {
+    while (permissions && Object.keys(permissions).includes(method)) {
+      if (Object.keys(permissions[method]).includes('grantedBy')) {
         permissions = that.getPermissionsForDomain(permissions[method].grantedBy);
       } else {
         return permissions[method];
@@ -134,7 +134,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
 
     return undefined;
   };
-  that.getPermission = getPermission
+  that.getPermission = getPermission;
 
   /*
    * Get the permission for that domain and method, not following grantedBy links.
@@ -144,7 +144,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     // https://w3c-ccg.github.io/ocap-ld/#caveats
 
     let permissions = that.getPermissionsForDomain(domain);
-    if (permissions && method in permissions) {
+    if (permissions && Object.keys(permissions).includes(method)) {
       return permissions[method];
     }
 
@@ -198,7 +198,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     const domains = that.getDomains;
 
     // Setup if not yet existent:
-    if (!(domain in domains)) {
+    if (!(Object.keys(domains).includes(domain))) {
       domains[domain] = { permissions: {} };
     }
 
@@ -218,9 +218,9 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
 
     const { permissions } = domain;
 
-    for (let key in newPermissions) {
+    Object.keys(newPermissions).forEach(function (key) {
       permissions[key] = newPermissions[key];
-    }
+    });
 
     domain.permissions = permissions;
     that.setDomain(domainName, domain);
@@ -298,7 +298,8 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     const perms = that.getPermissionsForDomain(domain);
     const assigned = that.getPermissionsForDomain(assignedDomain);
     const newlyGranted = {};
-    for (const methodName in requestedPerms) {
+
+    Object.keys(requestedPerms).forEach((methodName) => {
       const perm = that.getPermission(domain, methodName);
       if (perm) {
         const newPerm = {
@@ -311,7 +312,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
         res.error = UNAUTHORIZED_ERROR;
         return end(UNAUTHORIZED_ERROR);
       }
-    }
+    });
 
     that.setPermissionsFor(assignedDomain, assigned);
     res.result = newlyGranted;
@@ -324,7 +325,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     const perms = that.getPermissionsForDomain(domain);
     const assigned = that.getPermissionsForDomain(assignedDomain);
     const newlyRevoked = [];
-    for (const methodName in requestedPerms) {
+    Object.keys(requestedPerms).forEach((methodName) => {
       const perm = that.getPermissionUnTraversed(assignedDomain, methodName);
       if (perm &&
           // Grantors can revoke what they have granted:
@@ -337,7 +338,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
         res.error = UNAUTHORIZED_ERROR;
         return end(UNAUTHORIZED_ERROR);
       }
-    }
+    });
 
     that.removePermissionsFor(assignedDomain, newlyRevoked);
     res.result = newlyRevoked;
