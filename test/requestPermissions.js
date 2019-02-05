@@ -9,7 +9,7 @@ const USER_REJECTION_CODE = 5
 test('requestPermissions with user rejection creates no permissions', async (t) => {
   const expected = {}
 
-  const ctrl = new LoginController({
+  const ctrl = LoginController({
     requestUserApproval: () => Promise.resolve(false),
   })
 
@@ -34,7 +34,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, 5, 'Rejection error returned')
-    t.ok(equal(ctrl._getPermissions(domain), expected), 'should have no permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have no permissions still')
     t.end()
   }
 })
@@ -53,7 +53,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
   }
 
 
-  const ctrl = new LoginController({
+  const ctrl = LoginController({
     requestUserApproval: () => Promise.resolve(true),
   })
 
@@ -87,7 +87,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
 test('requestPermissions with returned stub object defines future responses', async (t) => {
   const expected = ['Account 1']
 
-  const ctrl = new LoginController({
+  const ctrl = LoginController({
 
     restrictedMethods: {
       'viewAccounts': {
@@ -133,7 +133,7 @@ test('requestPermissions with returned stub object defines future responses', as
 
     t.equal(accounts.length, 1, 'returns one account')
     t.ok(equal(accounts, expected, 'returns expected account'))
-    t.equal(ctrl._permissionsRequests.length, 0, 'no permissions requests remain')
+    t.equal(ctrl.getPermissionsRequests().length, 0, 'no permissions requests remain')
 
     t.end()
 

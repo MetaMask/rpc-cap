@@ -173,11 +173,11 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
    */
   that.grantNewPermissions = function (domain, permissions, res, end) {
     // Remove any matching requests from the queue:
-    that.permissionsRequests = that.getPermissionsRequests().filter((request) => {
+    that.setPermissionsRequests(that.getPermissionsRequests().filter((request) => {
       const sameDomain = request.domain === domain;
       const samePerms = equal(Object.keys(request.options), Object.keys(permissions));
       return !(sameDomain && samePerms);
-    });
+    }));
 
     // Update the related permission objects:
     that.setPermissionsFor(domain, permissions);
