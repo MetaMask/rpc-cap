@@ -331,6 +331,8 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     const perms = that.getPermissionsForDomain(domain);
     const assigned = that.getPermissionsForDomain(assignedDomain);
     const newlyRevoked = [];
+
+    let ended = false
     Object.keys(requestedPerms).forEach((methodName) => {
       const perm = that.getPermissionUnTraversed(assignedDomain, methodName);
       if (perm &&
@@ -342,9 +344,14 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
         newlyRevoked.push(methodName);
       } else {
         res.error = UNAUTHORIZED_ERROR;
+        ended = true
         return end(UNAUTHORIZED_ERROR);
       }
     });
+
+    if (ended) {
+      return
+    }
 
     that.removePermissionsFor(assignedDomain, newlyRevoked);
     res.result = newlyRevoked;
