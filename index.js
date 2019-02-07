@@ -30,6 +30,12 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
   that.store = Reflect.construct(ObservableStore, [initState || {}]);
   that.memStore = Reflect.construct(ObservableStore, [{
     permissionsRequests: [],
+    permissionsDescriptions: Object.keys(restrictedMethods).map((methodName) => {
+      return {
+        method: methodName,
+        description: restrictedMethods[methodName].description,
+      }
+    }),
   }]);
 
   that.serialize = function () {
