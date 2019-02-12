@@ -34,7 +34,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
       return {
         method: methodName,
         description: restrictedMethods[methodName].description,
-      }
+      };
     }),
   }]);
 
@@ -262,7 +262,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     const metadata = req.metadata || {
       origin: domain,
       siteTitle: domain,
-    }
+    };
 
     // TODO: Validate permissions request
     const options = req.params[0];
@@ -310,7 +310,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     const assigned = that.getPermissionsForDomain(assignedDomain);
     const newlyGranted = {};
 
-    let ended = false
+    let ended = false;
     Object.keys(requestedPerms).forEach((methodName) => {
       const perm = that.getPermission(domain, methodName);
       if (perm) {
@@ -322,13 +322,13 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
         newlyGranted[methodName] = newPerm;
       } else {
         res.error = UNAUTHORIZED_ERROR;
-        ended = true
+        ended = true;
         return end(UNAUTHORIZED_ERROR);
       }
     });
 
     if (ended) {
-      return
+      return;
     }
 
     that.setPermissionsFor(assignedDomain, assigned);
@@ -343,7 +343,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
     const assigned = that.getPermissionsForDomain(assignedDomain);
     const newlyRevoked = [];
 
-    let ended = false
+    let ended = false;
     Object.keys(requestedPerms).forEach((methodName) => {
       const perm = that.getPermissionUnTraversed(assignedDomain, methodName);
       if (perm &&
@@ -355,13 +355,13 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
         newlyRevoked.push(methodName);
       } else {
         res.error = UNAUTHORIZED_ERROR;
-        ended = true
+        ended = true;
         return end(UNAUTHORIZED_ERROR);
       }
     });
 
     if (ended) {
-      return
+      return;
     }
 
     that.removePermissionsFor(assignedDomain, newlyRevoked);
