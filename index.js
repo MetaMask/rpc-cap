@@ -1,6 +1,7 @@
 const ObservableStore = require('obs-store');
 const equal = require('fast-deep-equal');
 const clone = require('clone');
+const generateRandomString = require('crypto-random-string');
 
 
 const UNAUTHORIZED_ERROR = {
@@ -260,6 +261,7 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
    */
   that.requestPermissionsMiddleware = function (domain, req, res, next, end) {
     const metadata = req.metadata || {
+      id: generateRandomString(16),
       origin: domain,
       siteTitle: domain,
     };
