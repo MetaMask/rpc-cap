@@ -261,10 +261,13 @@ function createJsonRpcCapabilities ({ safeMethods = [], restrictedMethods = {}, 
    */
   that.requestPermissionsMiddleware = function (domain, req, res, next, end) {
     const metadata = req.metadata || {
-      id: generateRandomString(16),
       origin: domain,
       siteTitle: domain,
     };
+
+    if (!metadata.id) {
+      metadata.id = generateRandomString(16)
+    }
 
     // TODO: Validate permissions request
     const options = req.params[0];
