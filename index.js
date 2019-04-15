@@ -127,6 +127,12 @@ function createJsonRpcCapabilities ({
   /**
    * Get the parent-most permission granting the requested domain's method permission.
    * Follows the granter chain of the first matching permission found.
+   * 
+   * TODO:? Is the granter-chain following here sound? It could be that the same permission 
+   * has been granted by different domains with different root permission requests.
+   * 
+   * @param {string} domain - The domain whose permission to retrieve.
+   * @param {string} method - The method
    */
   function getPermission (domain, method) {
     // TODO: Aggregate & Enforce Caveats at each step.
@@ -210,7 +216,7 @@ function createJsonRpcCapabilities ({
     }));
 
     // Update the related permission objects:
-    that.setPermissionsFor(domain, permissions);
+    that.addPermissionsFor(domain, permissions);
     res.result = that.getPermissionsForDomain(domain);
     end();
   };
@@ -244,21 +250,20 @@ function createJsonRpcCapabilities ({
   };
 
   /**
-   * Sets permissions for the given domain. Removes existing identical
-   * permissions (same domain, method, and granter).
+   * Adds permissions to the given domain. Overwrites existing identical
+   * permissions (same domain, method, and granter). Other existing permissions
+   * remain unaffected.
+   * 
+   * TODO:?
+   * Permissions are effectively overwritten here. DO we need to consider
+   * caveats?
    * 
    * @param {string} domainName - The grantee domain.
    * @param {Array} newPermissions - The new permissions for the grantee domain.
    */
-  that.setPermissionsFor = function (domainName, newPermissions) {
+  that.addPermissionsFor = function (domainName, newPermissions) {
     const domain = that.getDomainSettings(domainName);
 
-    /**
-     * TODO:F
-     * permissions are effectively overwritten here
-     * is this what we want to do? what about caveats?
-     * should caveats be explicitly defined each time a permission is defined?
-     */
     // remove old permissions that will be overwritten
     domain.permissions = domain.permissions.filter(oldPerm => {
       let isReplaced = false;
@@ -380,7 +385,6 @@ function createJsonRpcCapabilities ({
   that.grantPermissionsMiddleware = function (granter, req, res, next, end) {
     // TODO: Validate params
     const [ grantee, requestedPerms ] = req.params;
-    // const granteePerms = [ ...that.getPermissionsForDomain(grantee)];
     const newlyGranted = [];
 
     let ended = false;
@@ -394,7 +398,6 @@ function createJsonRpcCapabilities ({
           id: uuid(),
           method: methodName,
         };
-        // granteePerms.push(newPerm);
         newlyGranted.push(newPerm);
       } else {
         res.error = UNAUTHORIZED_ERROR;
@@ -407,8 +410,7 @@ function createJsonRpcCapabilities ({
       return;
     }
 
-    // that.setPermissionsFor(grantee, granteePerms);
-    that.setPermissionsFor(grantee, newlyGranted);
+    that.addPermissionsFor(grantee, newlyGranted);
     res.result = newlyGranted;
     end();
   };
