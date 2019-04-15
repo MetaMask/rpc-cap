@@ -7,27 +7,29 @@ const USER_REJECTION_CODE = 5
 
 test('revokePermissions on granted permission deletes that permission', async (t) => {
 
-  const expected = {}
+  const expected = []
 
   const ctrl = createPermissionsMiddleware({
     initState: {
-      "domains": {
-        "login.metamask.io": {
-          "permissions": {
-            "restricted": {
-              "date": "0"
+      'domains': {
+        'login.metamask.io': {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: '0',
             }
-          }
+          ]
         },
-        "other.domain.com": {
-          "permissions": {
-            "restricted": {
-              "date": 1547176021698,
-              "grantedBy": "login.metamask.io"
+        'other.domain.com': {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: 1547176021698,
+              'granter': 'login.metamask.io'
             }
-          }
+          ]
         }
-      }
+      },
     }
   })
 
@@ -37,9 +39,11 @@ test('revokePermissions on granted permission deletes that permission', async (t
     method: 'revokePermissions',
     params: [
       otherDomain,
-      {
-        'restricted': {},
-      }
+      [
+        {
+          method: 'restricted',
+        },
+      ],
     ]
   }
   let res = {}
@@ -62,27 +66,29 @@ test('revokePermissions on granted permission deletes that permission', async (t
 
 test('revokePermissions on unrelated permission returns auth error', async (t) => {
 
-  const expected = {}
+  const expected = []
 
   const ctrl = createPermissionsMiddleware({
     initState: {
-      "domains": {
-        "login.metamask.io": {
-          "permissions": {
-            "restricted": {
-              "date": "0"
+      'domains': {
+        'login.metamask.io': {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: '0',
             }
-          }
+          ]
         },
-        "other.domain.com": {
-          "permissions": {
-            "restricted": {
-              "date": 1547176021698,
-              "grantedBy": "unrelated.domain.co"
+        'other.domain.com': {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: 1547176021698,
+              'granter': 'unrelated.metamask.co'
             }
-          }
+          ]
         }
-      }
+      },
     }
   })
 
@@ -92,9 +98,11 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
     method: 'revokePermissions',
     params: [
       otherDomain,
-      {
-        'restricted': {},
-      }
+      [
+        {
+          method: 'restricted',
+        },
+      ],
     ]
   }
   let res = {}
@@ -118,25 +126,29 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
 
 test('revokePermissions on own permission deletes that permission.', async (t) => {
 
+  const expected = []
+
   const ctrl = createPermissionsMiddleware({
     initState: {
-      "domains": {
-        "login.metamask.io": {
-          "permissions": {
-            "restricted": {
-              "date": "0"
+      'domains': {
+         'login.metamask.io': {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: '0'
             }
-          }
+          ]
         },
-        "other.domain.com": {
-          "permissions": {
-            "restricted": {
-              "date": 1547176021698,
-              "grantedBy": "unrelated.domain.co"
+        'other.domain.com': {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: 1547176021698,
+              'granter': 'unrelated.metamask.co'
             }
-          }
+          ]
         }
-      }
+      },
     }
   })
 
@@ -145,9 +157,11 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
     method: 'revokePermissions',
     params: [
       domain,
-      {
-        'restricted': {},
-      }
+      [
+        {
+          method: 'restricted',
+        },
+      ],
     ]
   }
   let res = {}
@@ -161,9 +175,177 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
 
   function end(reason) {
     t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl.getPermissionsForDomain(domain), {}), 'should have deleted permissions')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have deleted permissions')
+    t.end()
+  }
+})
+
+test('revokePermissions on specific granter and method deletes only the single intended permission', async (t) => {
+
+  const expected = [
+    {
+      method: 'restricted',
+      date: '0'
+    }
+  ]
+  const otherExpected = [
+    {
+      method: 'restricted',
+      date: 1547176021698,
+      'granter': 'unrelated.metamask.co'
+    }
+  ]
+
+  const domain = 'login.metamask.io'
+  const otherDomain = 'other.domain.com'
+
+  const ctrl = createPermissionsMiddleware({
+    initState: {
+      'domains': {
+         [domain]: {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: '0'
+            },
+            {
+              method: 'restricted',
+              date: '0',
+              granter: otherDomain,
+            }
+          ]
+        },
+        [otherDomain]: {
+          'permissions': [
+            {
+              method: 'restricted',
+              date: 1547176021698,
+              'granter': 'unrelated.metamask.co'
+            }
+          ]
+        }
+      },
+    }
+  })
+
+  let req = {
+    method: 'revokePermissions',
+    params: [
+      domain,
+      [
+        {
+          method: 'restricted',
+          granter: otherDomain,
+        },
+      ],
+    ]
+  }
+  let res = {}
+
+  ctrl.providerMiddlewareFunction(otherDomain, req, res, next, () => {})
+
+  t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have deleted target permission only')
+
+  req = {
+    method: 'revokePermissions',
+    params: [
+      domain,
+      [
+        {
+          method: 'restricted',
+        },
+      ],
+    ]
+  }
+
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
     t.end()
   }
 
+  function end(reason) {
+    t.error(reason, 'error should not be thrown')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain), []), 'should have deleted the other permission')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), otherExpected), 'other domain unaffected')
+    t.end()
+  }
 })
 
+test('revokePermissions deletes multiple permissions in single request', async (t) => {
+
+  const expected = []
+
+  const otherExpected = [
+    {
+      method: 'restricted1',
+      date: 1547176021698,
+      granter: 'somedomain.xyz.co'
+    },
+    {
+      method: 'restricted2',
+      date: 1547176021698,
+      granter: 'somedomain.xyz.co'
+    }
+  ]
+
+  const domain = 'login.metamask.io'
+  const otherDomain = 'other.domain.com'
+
+  const ctrl = createPermissionsMiddleware({
+    initState: {
+      'domains': {
+         [domain]: {
+          'permissions': [
+            {
+              method: 'restricted1',
+              date: '0',
+              granter: otherDomain,
+            },
+            {
+              method: 'restricted2',
+              date: '0',
+              granter: otherDomain,
+            }
+          ]
+        },
+        [otherDomain]: {
+          permissions: otherExpected,
+        }
+      },
+    }
+  })
+
+  let req = {
+    method: 'revokePermissions',
+    params: [
+      domain,
+      [
+        {
+          method: 'restricted1',
+          granter: otherDomain,
+        },
+        {
+          method: 'restricted2',
+          granter: otherDomain,
+        },
+      ],
+    ]
+  }
+  let res = {}
+
+  ctrl.providerMiddlewareFunction(otherDomain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
+    t.end()
+  }
+
+  function end(reason) {
+    t.error(reason, 'error should not be thrown')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have deleted both permissions')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), otherExpected), 'other domain unaffected')
+    t.end()
+  }
+})

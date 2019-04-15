@@ -51,7 +51,7 @@ const capabilities = createCapabilities({
 
   },
 
-  /*
+  /**
   * A promise-returning callback used to determine whether to approve
   * permissions requests or not.
   *
@@ -72,11 +72,12 @@ const capabilities = createCapabilities({
   initState: {
     domains: {
       'login.metamask.io': {
-        permissions: {
-          'eth_write': {
+        permissions: [
+          {
+            method: 'eth_write',
             date: '0',
           }
-        }
+        ]
       }
     }
   }
@@ -106,11 +107,13 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 ### Permissions Object
 
 ```
-'restrictedMethodName': {
+{
+  id: '63b225d0-414e-4a2d-8067-c34499c984c7', // uuid string
+  method: 'restrictedMethodName'
   date: 0, // unix time of creation
-  grantedBy: 'another.domain.com', // another domain string if this permission was created by delegation.
+  granter: 'another.domain.com', // another domain string if this permission was created by delegation.
   caveats: { // An optional object describing limitations on the method reference.
-    onlyStatic: 'Always this!', // The onlyStatic caveat only returns the specified static response.
+    static: 'Always this!', // The static caveat only returns the specified static response.
   }
 }
 ```

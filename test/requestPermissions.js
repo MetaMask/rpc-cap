@@ -7,7 +7,7 @@ const equal = require('fast-deep-equal')
 const USER_REJECTION_CODE = 5
 
 test('requestPermissions with user rejection creates no permissions', async (t) => {
-  const expected = {}
+  const expected = []
 
   const ctrl = LoginController({
     requestUserApproval: () => Promise.resolve(false),
@@ -17,9 +17,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   let req = {
     method: 'requestPermissions',
     params: [
-      {
-        'restricted': {},
-      }
+        ['restricted']
     ]
   }
   let res = {}
@@ -40,14 +38,16 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
 })
 
 test('requestPermissions with user approval creates permission', async (t) => {
+
   const expected = {
      domains: {
       'login.metamask.io': {
-        permissions: {
-          'restricted': {
+        permissions: [
+          {
+            method: 'restricted',
             date: '0',
           }
-        }
+        ]
       }
     }
   }
@@ -61,9 +61,11 @@ test('requestPermissions with user approval creates permission', async (t) => {
   let req = {
     method: 'requestPermissions',
     params: [
-      {
-        'restricted': {},
-      }
+      [
+        {
+          method: 'restricted'
+        }
+      ]
     ]
   }
   let res = {}
@@ -101,12 +103,11 @@ test('requestPermissions with returned stub object defines future responses', as
 
     requestUserApproval: async (domain, req) => {
       return {
-        viewAccounts: {
-          caveats: [{
-            type: 'static',
-            value: expected,
-          }],
-        },
+        method: 'viewAccounts',
+        caveats: [{
+          type: 'static',
+          value: expected,
+        }],
       }
     },
   })
@@ -115,9 +116,11 @@ test('requestPermissions with returned stub object defines future responses', as
   let req = {
     method: 'requestPermissions',
     params: [
-      {
-        'viewAccounts': {},
-      }
+        [
+          {
+            method: 'viewAccounts'
+          }
+        ]
     ]
   }
 
@@ -125,7 +128,7 @@ test('requestPermissions with returned stub object defines future responses', as
     let res = await sendRpcMethodWithResponse(ctrl, domain, req)
 
     let accountsReq = {
-      method: Object.keys(req.params[0])[0], // 'viewAccounts'
+      method: req.params[0][0]['method'], // 'viewAccounts'
     }
 
     let result = await sendRpcMethodWithResponse(ctrl, domain, accountsReq)

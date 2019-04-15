@@ -6,8 +6,23 @@ const equal = require('fast-deep-equal')
 // Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
 const USER_REJECTION_CODE = 5
 
+const arbitraryCaps = [
+    {
+      domain: 'bar',
+      method: 'restricted',
+      granter: 'baz',
+      id: 'abc',
+    },
+    {
+      domain: 'baz',
+      method: 'restricted2',
+      granter: 'bar',
+      id: 'xyz',
+    },
+  ]
+
 test('getPermissions with none returns empty object', async (t) => {
-  const expected = {}
+  const expected = []
 
   const ctrl = createPermissionsMiddleware({})
 
@@ -30,10 +45,7 @@ test('getPermissions with none returns empty object', async (t) => {
 })
 
 test('getPermissions with some returns them', async (t) => {
-  const expected = {
-    'restricted': {},
-    'restricted2': { foo: 'bar' }
-  }
+  const expected = arbitraryCaps
 
   const ctrl = createPermissionsMiddleware({
     initState: {
