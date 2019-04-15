@@ -48,7 +48,6 @@ const capabilities = createCapabilities({
         end()
       }
     },
-
   },
 
   /**
@@ -81,7 +80,6 @@ const capabilities = createCapabilities({
       }
     }
   }
-
 })
 
 // Unlike normal json-rpc-engine middleware, these methods all require
