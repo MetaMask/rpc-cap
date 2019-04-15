@@ -235,7 +235,6 @@ test('revokePermissions on specific granter and method deletes only the single i
       [
         {
           method: 'restricted',
-          granter: otherDomain,
         },
       ],
     ]
@@ -243,6 +242,11 @@ test('revokePermissions on specific granter and method deletes only the single i
   let res = {}
 
   ctrl.providerMiddlewareFunction(otherDomain, req, res, next, () => {})
+  console.log('-------------------------')
+  console.log(ctrl.getPermissionsForDomain(domain))
+  console.log('-------------------------')
+  console.log(ctrl.getPermissionsForDomain(otherDomain))
+  console.log('-------------------------')
 
   t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have deleted target permission only')
 
@@ -324,11 +328,9 @@ test('revokePermissions deletes multiple permissions in single request', async (
       [
         {
           method: 'restricted1',
-          granter: otherDomain,
         },
         {
           method: 'restricted2',
-          granter: otherDomain,
         },
       ],
     ]

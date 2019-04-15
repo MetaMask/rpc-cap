@@ -159,7 +159,7 @@ function createJsonRpcCapabilities ({
   that.getPermission = getPermission;
 
   /**
-   * Get the permission for that domain and method, not following granter links.
+   * Get the permission for that domain, granter, and method, not following granter links.
    * Returns the first such permission found.
    */
   that.getPermissionUnTraversed = function (domain, method, granter = undefined) {
@@ -167,11 +167,10 @@ function createJsonRpcCapabilities ({
     // https://w3c-ccg.github.io/ocap-ld/#caveats
 
     let permissions = that.getPermissionsForDomain(domain).filter(p => {
-      let out = p.method === method;
-      if (granter !== undefined) {
-        out = out && p.granter === granter;
-      }
-      return out;
+      return p.method === method && (
+        (p.granter === undefined && granter === domain) || // own permission
+        (p.granter !== undefined && p.granter === granter) // granted permission
+      );
     });
     if (permissions.length > 0) { return permissions.shift(); }
 
@@ -424,7 +423,7 @@ function createJsonRpcCapabilities ({
     requestedPerms.forEach((reqPerm) => {
       const methodName = reqPerm.method;
       const perm = that.getPermissionUnTraversed(
-        assignedDomain, methodName, reqPerm.granter
+        assignedDomain, methodName, domain
       );
       if (
             perm && (
