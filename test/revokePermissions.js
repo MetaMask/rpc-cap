@@ -182,12 +182,13 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
 
 test('revokePermissions on specific granter and method deletes only the single intended permission', async (t) => {
 
-  const expected = [
+  const expected1 = [
     {
       method: 'restricted',
       date: '0'
     }
   ]
+  const expected2 = []
   const otherExpected = [
     {
       method: 'restricted',
@@ -243,7 +244,7 @@ test('revokePermissions on specific granter and method deletes only the single i
 
   ctrl.providerMiddlewareFunction(otherDomain, req, res, next, () => {})
 
-  t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have deleted target permission only')
+  t.ok(equal(ctrl.getPermissionsForDomain(domain), expected1), 'should have deleted target permission only')
 
   req = {
     method: 'revokePermissions',
@@ -266,7 +267,7 @@ test('revokePermissions on specific granter and method deletes only the single i
 
   function end(reason) {
     t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl.getPermissionsForDomain(domain), []), 'should have deleted the other permission')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected2), 'should have deleted the other permission')
     t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), otherExpected), 'other domain unaffected')
     t.end()
   }

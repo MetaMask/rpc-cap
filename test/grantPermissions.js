@@ -212,7 +212,6 @@ test('grantPermissions accumulates the same permission from different granters',
       [
         {
           method: 'restricted',
-          date: '0',
         },
       ],
     ]

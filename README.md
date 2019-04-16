@@ -110,8 +110,11 @@ The capabilities system adds new methods to the RPC, and you can modify what the
   id: '63b225d0-414e-4a2d-8067-c34499c984c7', // UUID string
   date: 0, // unix time of creation
   granter: 'another.domain.com', // Another domain string if this permission was created by delegation.
-  caveats: [ // An optional object describing limitations on the method reference.
-    static: 'Always this!', // The static caveat only returns the specified static response.
+  caveats: [ // An optional array of objects describing limitations on the method reference.
+    {
+      type: 'static', // The static caveat only returns the specified static response value.
+      value: 'Always this!'
+    }
   ]
 }
 ```

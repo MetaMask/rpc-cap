@@ -3,10 +3,7 @@
     "parserOptions": {
         "ecmaVersion": 6,
         "sourceType": "module",
-        "ecmaFeatures": {
-          "arrowFunctions": true
-        }
-    },
-    "env": { "es6": true }
+        "ecmaFeatures": {}
+    }
 }
 

@@ -95,8 +95,7 @@ function createJsonRpcCapabilities ({
     const methodName = req.method;
     const permission = that.getPermission(domain, methodName);
     if (Object.keys(that.restrictedMethods).includes(methodName)
-       && typeof that.restrictedMethods[methodName].method === 'function') {
-      const restrictedMethod = that.restrictedMethods[methodName];
+        && typeof that.restrictedMethods[methodName].method === 'function') {
 
       // Support static caveat:
       if (permission.caveats) {
@@ -126,10 +125,10 @@ function createJsonRpcCapabilities ({
 
   /**
    * Get the parent-most permission granting the requested domain's method permission.
-   * Follows the granter chain of the first matching permission found.
+   * Follows the delegation chain of the first matching permission found.
    * 
-   * TODO:? Is the granter-chain following here sound? It could be that the same permission 
-   * has been granted by different domains with different root permission requests.
+   * TODO: Enable getPermission for domain and permission id, to extract parent
+   * of specific permission.
    * 
    * @param {string} domain - The domain whose permission to retrieve.
    * @param {string} method - The method
@@ -138,9 +137,12 @@ function createJsonRpcCapabilities ({
     // TODO: Aggregate & Enforce Caveats at each step.
     // https://w3c-ccg.github.io/ocap-ld/#caveats
 
+    const methodFilter = p => p.method === method;
+
     let perm;
     let permissions = that.getPermissionsForDomain(domain).filter(
       p => p.method === method
+      // p => p.id === id
     );
 
     while (permissions.length > 0) {
@@ -253,12 +255,8 @@ function createJsonRpcCapabilities ({
    * permissions (same domain, method, and granter). Other existing permissions
    * remain unaffected.
    * 
-   * TODO:?
-   * Permissions are effectively overwritten here. DO we need to consider
-   * caveats?
-   * 
    * @param {string} domainName - The grantee domain.
-   * @param {Array} newPermissions - The new permissions for the grantee domain.
+   * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
   that.addPermissionsFor = function (domainName, newPermissions) {
     const domain = that.getDomainSettings(domainName);
@@ -383,8 +381,19 @@ function createJsonRpcCapabilities ({
 
   that.grantPermissionsMiddleware = function (granter, req, res, next, end) {
     // TODO: Validate params
-    const [ grantee, requestedPerms ] = req.params;
+    // TODO: Allow objects in requestedPerms to specify permission id
+    let [ grantee, requestedPerms ] = req.params;
     const newlyGranted = [];
+
+    // remove duplicates from requestedPerms
+    const methodNames = {};
+    requestedPerms = requestedPerms.filter(p => {
+      if (!methodNames[p.method]) {
+        methodNames[p.method] = true;
+        return true;
+      }
+      return false;
+    });
 
     let ended = false;
     requestedPerms.forEach((reqPerm) => {
@@ -397,6 +406,7 @@ function createJsonRpcCapabilities ({
           id: uuid(),
           method: methodName,
         };
+        if (perm.caveats) { newPerm.caveats = perm.caveats; }
         newlyGranted.push(newPerm);
       } else {
         res.error = UNAUTHORIZED_ERROR;
