@@ -95,11 +95,12 @@ test('requesting restricted method with permission is called', async (t) => {
     initState: {
       domains: {
         'login.metamask.io': {
-          permissions: {
-            'eth_write': {
+          permissions: [
+            {
+              method: 'eth_write',
               date: '0',
             }
-          }
+          ]
         }
       }
     },
@@ -124,7 +125,7 @@ test('requesting restricted method with permission is called', async (t) => {
   }
 
   function end(reason) {
-    t.error(reason, 'shuld not throw error')
+    t.error(reason, 'should not throw error')
     t.error(res.error, 'should not have error object')
     t.equal(res.result, WRITE_RESULT, 'Write result should be assigned.')
     t.end()
