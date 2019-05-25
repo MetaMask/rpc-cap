@@ -24,12 +24,12 @@
       <br>
       <button id="read">Read Profile Without Asking!</button>
       <br>
-      <button id="delegate">Delegate permissions to danfinlay.com</button>
+      <button id="delegate">Delegate permissions to localhost</button>
       <br>
-      <button id="revoke">Revoke permissions from danfinlay.com</button>
+      <button id="revoke">Revoke permissions from localhost</button>
       <br>
-      <a href="http://danfinlay.com/mm-capabilities-test-1.html">
-        Visit sample dapp on danfinlay.com domain
+      <a href="http://localhost/mm-capabilities-test-1.html">
+        Visit sample dapp on localhost domain
       </a>
     </details>
 
@@ -44,10 +44,48 @@
 
     readProfile()
 
+    async function requestPerms () {
+      ethereum.sendAsync({
+        method: 'wallet_requestPermissions',
+        jsonrpc: '2.0',
+        id: Math.floor(Math.random() * 100),
+        params: [
+            [
+              {
+                method: 'readYourProfile'
+              },
+              {
+                method: 'writeToYourProfile'
+              },
+              {
+                method: 'eth_accounts'
+              },
+            ],
+        ],
+      }, (err, res) => {
+        console.dir({ err, res })
+        if (err) return alert('error!: ' + err)
+
+        if (res.error) {
+          return showError(res)
+        }
+
+        inputZone.style.display = 'block'
+        readProfile()
+      })
+    }
+
     function revokePerms () {
       ethereum.sendAsync({
         method: 'wallet_revokePermissions',
-        params: ['danfinlay.com', {readYourProfile: {}}],
+        params: [
+          'localhost',
+          [
+            {
+              method: 'readYourProfile'
+            },
+          ],
+        ],
       }, (err, result) => {
         if (err) return alert('error!: ' + err) && rej(err)
         content.innerText = 'Danfinlay.com can no longer view your profile.'
@@ -57,7 +95,14 @@
     function delegatePerms () {
       ethereum.sendAsync({
         method: 'wallet_grantPermissions',
-        params: ['danfinlay.com', {readYourProfile: {}}],
+        params: [
+          'localhost',
+          [
+            {
+              method: 'readYourProfile'
+            },
+          ],
+        ],
       }, (err, result) => {
         if (err) return alert('error!: ' + err) && rej(err)
         content.innerText = 'Danfinlay.com can now view your profile.'
@@ -75,27 +120,6 @@
         if (result.error) {
           return showError(result)
         }
-        readProfile()
-      })
-    }
-
-    async function requestPerms () {
-      ethereum.sendAsync({
-        method: 'wallet_requestPermissions',
-        params: [{
-          readYourProfile: {},
-          writeToYourProfile: {},
-          'eth_accounts': {},
-        }],
-      }, (err, res) => {
-        console.dir({ err, res })
-        if (err) return alert('error!: ' + err)
-
-        if (res.error) {
-          return showError(res)
-        }
-
-        inputZone.style.display = 'block'
         readProfile()
       })
     }
@@ -119,11 +143,11 @@
     }
 
     async function writeProfile (key, value) {
-      console.log('writing to profile,')
       ethereum.sendAsync({
         method: 'writeToYourProfile',
         params: [],
       }, (err, res) => {
+        console.dir({ message: 'writeToYourProfile callback', err, result })
         if (err) return alert('error!: ' + err)
 
         if (res.error) {
@@ -134,7 +158,7 @@
     }
 
     function showError (res) {
-      content.innerText = `Had a problem: ${res.error}`
+      content.innerText = `Had a problem: ${res.error.message}`
     }
   </script>
 

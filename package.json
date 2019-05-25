@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node test && npm run lint",
     "lint": "./node_modules/.bin/eslint index.js",
-    "lint-fix": "./node_modules/.bin/eslint index.js --fix"
+    "lint-fix": "./node_modules/.bin/eslint index.js --fix",
+    "serve": "http-server www"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "babel-eslint": "^10.0.1",
     "eslint": "^5.12.0",
     "eslint-config-jessie": "0.0.3",
+    "http-server": "^0.11.1",
     "tape": "^4.9.2"
   },
   "dependencies": {

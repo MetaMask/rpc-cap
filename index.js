@@ -140,16 +140,13 @@ function createJsonRpcCapabilities ({
     const methodFilter = p => p.method === method;
 
     let perm;
-    let permissions = that.getPermissionsForDomain(domain).filter(
-      p => p.method === method
-      // p => p.id === id
-    );
+    let permissions = that.getPermissionsForDomain(domain).filter(methodFilter);
 
     while (permissions.length > 0) {
       perm = permissions.shift();
       if (perm.granter) {
         permissions = that.getPermissionsForDomain(perm.granter).filter(
-          p => p.method === method
+          methodFilter
         );
       } else {
         return perm;
