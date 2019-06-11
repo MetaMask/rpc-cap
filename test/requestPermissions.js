@@ -1,5 +1,5 @@
 const test = require('tape')
-const RpcCap = require('../')
+const CapabilitiesController = require('../').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -9,7 +9,7 @@ const USER_REJECTION_CODE = 5
 test('requestPermissions with user rejection creates no permissions', async (t) => {
   const expected = []
 
-  const ctrl = new RpcCap({
+  const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve(false),
   })
 
@@ -53,7 +53,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
   }
 
 
-  const ctrl = new RpcCap({
+  const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve(true),
   })
 
@@ -89,7 +89,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
 test('requestPermissions with returned stub object defines future responses', async (t) => {
   const expected = ['Account 1']
 
-  const ctrl = new RpcCap({
+  const ctrl = new CapabilitiesController({
 
     restrictedMethods: {
       'viewAccounts': {

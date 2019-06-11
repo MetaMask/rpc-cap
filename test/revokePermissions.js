@@ -1,5 +1,5 @@
 const test = require('tape')
-const RpcCap = require('../')
+const CapabilitiesController = require('../').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!  Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
@@ -9,7 +9,7 @@ test('revokePermissions on granted permission deletes that permission', async (t
 
   const expected = []
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     'domains': {
       'login.metamask.io': {
@@ -67,7 +67,7 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
 
   const expected = []
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     'domains': {
       'login.metamask.io': {
@@ -126,7 +126,7 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
 
   const expected = []
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     'domains': {
         'login.metamask.io': {
@@ -197,7 +197,7 @@ test('revokePermissions on specific granter and method deletes only the single i
   const domain = 'login.metamask.io'
   const otherDomain = 'other.domain.com'
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     'domains': {
         [domain]: {
@@ -289,7 +289,7 @@ test('revokePermissions deletes multiple permissions in single request', async (
   const domain = 'login.metamask.io'
   const otherDomain = 'other.domain.com'
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     'domains': {
         [domain]: {

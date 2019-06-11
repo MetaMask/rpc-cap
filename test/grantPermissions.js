@@ -1,5 +1,5 @@
 const test = require('tape')
-const RpcCap = require('../')
+const CapabilitiesController = require('../').CapabilitiesController;
 const equal = require('fast-deep-equal')
 const uuid = require('uuid/v4')
 
@@ -10,7 +10,7 @@ const USER_REJECTION_CODE = 5
 test('grantPermissions with no permission creates no permissions', async (t) => {
   const expected = []
 
-  const ctrl = new RpcCap({
+  const ctrl = new CapabilitiesController({
   })
 
   const domain = 'login.metamask.io'
@@ -67,7 +67,7 @@ test('grantPermissions with permission creates permission', async (t) => {
     }
   }
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     domains: {
       'login.metamask.io': {
@@ -116,7 +116,7 @@ test('grantPermissions with permission creates permission', async (t) => {
 })
 
 test('grantPermissions with permission whose granter does not exist results in auth error', async (t) => {
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     domains: {
       'login.metamask.io': {
@@ -179,7 +179,7 @@ test('grantPermissions accumulates the same permission from different granters',
     }
   ]
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     domains: {
       [grantee]: {
@@ -253,7 +253,7 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     granter: granter,
   }
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     domains: {
       [grantee]: {

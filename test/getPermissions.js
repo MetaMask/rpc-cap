@@ -1,5 +1,5 @@
 const test = require('tape')
-const RpcCap = require('../')
+const CapabilitiesController = require('../').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -24,7 +24,7 @@ const arbitraryCaps = [
 test('getPermissions with none returns empty object', async (t) => {
   const expected = []
 
-  const ctrl = new RpcCap({})
+  const ctrl = new CapabilitiesController({})
 
   const domain = 'login.metamask.io'
   let req = { method: 'getPermissions' }
@@ -47,7 +47,7 @@ test('getPermissions with none returns empty object', async (t) => {
 test('getPermissions with some returns them', async (t) => {
   const expected = arbitraryCaps
 
-  const ctrl = new RpcCap({},
+  const ctrl = new CapabilitiesController({},
   {
     domains: {
       'login.metamask.io': {
