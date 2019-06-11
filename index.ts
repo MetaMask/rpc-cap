@@ -1,33 +1,90 @@
-const ObservableStore = require('obs-store');
-const equal = require('fast-deep-equal');
-const uuid = require('uuid/v4');
+/// <reference path="./src/interfaces/json-rpc-2.d.ts" />
+
+import ObservableStore from 'obs-store';
+import equal from 'fast-deep-equal';
+import uuid from 'uuid/v4';
+import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
+import BaseController, { BaseConfig, BaseState } from 'gaba/src/BaseController';
 
 
-const UNAUTHORIZED_ERROR = {
+
+const UNAUTHORIZED_ERROR: JsonRpcError<null> = {
   message: 'Unauthorized to perform action',
   code: 1,
 };
-const METHOD_NOT_FOUND = {
+
+const METHOD_NOT_FOUND: JsonRpcError<null> = {
   code: -32601,
   message: 'Method not found',
 };
 
 // TODO: This error code needs standardization:
-const USER_REJECTED_ERROR = {
+const USER_REJECTED_ERROR: JsonRpcError<null> = {
   code: 5,
   message: 'User rejected the request.',
 };
 
+interface JsonRpcMiddleware {
+  (
+    req: JsonRpcRequest<any[]>,
+    res: JsonRpcResponse<any[]>,
+    next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
+    end: (error?: JsonRpcError<any>) => void,
+  ) : void;
+}
+
+interface UserApprovalPrompt {
+  requestUserApproval: (metadata: Object, permissions: Object[]) => Promise<boolean>;
+}
+
+interface CapabilitiesConfig extends BaseConfig {
+  safeMethods?: string[];
+  restrictedMethods?: RestrictedMethodMap;
+  initState?: CapabilitiesConfig;
+  methodPrefix?: string;
+  requestUserApproval: UserApprovalPrompt;
+}
+
+interface CapabilitiesState extends BaseState {
+
+}
+
+interface RestrictedMethodEntry {
+  description: string;
+  method: JsonRpcMiddleware;
+} 
+
+interface RestrictedMethodMap {
+  [key: string]: RestrictedMethodEntry;
+}
+
+export class CapabilitiesController extends BaseController<CapabilitiesConfig, CapabilitiesState> {
+  private safeMethods: string[];
+  private restrictedMethods: RestrictedMethodMap;
+  private requestUserApproval: UserApprovalPrompt;
+
+  constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
+    super();
+
+    this.safeMethods = config.safeMethods || [];
+    this.restrictedMethods = config.restrictedMethods || {};
+    this.requestUserApproval = config.requestUserApproval;
+
+    if (config.requestUserApproval) {
+      this.requestUserApproval = config.requestUserApproval;
+    }
+  }
+}
+
 function createJsonRpcCapabilities ({
   safeMethods = [], restrictedMethods = {}, initState = {},
-  methods = {}, methodPrefix = '', requestUserApproval
+  methodPrefix = '', requestUserApproval
 }) {
 
   const that = {};
 
   that.safeMethods = safeMethods;
   that.restrictedMethods = restrictedMethods;
-  that.methods = methods;
   that.requestUserApproval = requestUserApproval;
 
   that.store = Reflect.construct(ObservableStore, [initState || {}]);
