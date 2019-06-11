@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "node test && npm run lint",
-    "build": "tsc index.ts",
+    "build": "tsc index.ts --target ES5 --esModuleInterop",
     "lint": "./node_modules/.bin/eslint index.js",
     "lint-fix": "./node_modules/.bin/eslint index.js --fix",
     "serve": "http-server www"
