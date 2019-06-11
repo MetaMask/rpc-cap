@@ -1,11 +1,12 @@
 {
   "name": "json-rpc-capabilities-middleware",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "ts-node test",
-    "build": "tsc",
+    "build": "rm -rf dist && tsc && cp package.json dist/.",
+    "build:watch": "npm run build && tsc -w",
     "lint": "./node_modules/.bin/eslint index.js",
     "lint-fix": "./node_modules/.bin/eslint index.js --fix",
     "serve": "http-server www"
