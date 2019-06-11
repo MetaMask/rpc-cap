@@ -1,5 +1,5 @@
 const test = require('tape')
-const CapabilitiesController = require('../').CapabilitiesController;
+const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -90,6 +90,7 @@ test('requestPermissions with returned stub object defines future responses', as
   const expected = ['Account 1']
 
   const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
 
     restrictedMethods: {
       'viewAccounts': {

@@ -120,7 +120,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   public memStore: ObservableStore;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
-    super();
+    super(config, state || {});
 
     this.safeMethods = config.safeMethods || [];
     this.restrictedMethods = config.restrictedMethods || {};

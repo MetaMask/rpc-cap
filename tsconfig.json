@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts", "index.ts", "test/*.ts"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
@@ -9,6 +9,18 @@
     "declaration": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "downlevelIteration": true
+    "downlevelIteration": true,
+		"experimentalDecorators": true,
+		"importHelpers": false,
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"noImplicitAny": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"outDir": "dist",
+		"removeComments": false,
+		"sourceMap": true,
+		"strict": true,
+		"target": "es6"
   }
 }

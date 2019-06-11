@@ -1,5 +1,6 @@
 const test = require('tape');
-const CapabilitiesController = require('../').CapabilitiesController;
+const CapabilitiesController = require('../dist').CapabilitiesController
+// import CapabilitiesController from '../';
 
 // TODO: Standardize!
 // Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
@@ -10,7 +11,8 @@ test('safe method should pass through', async (t) => {
 
   const ctrl = new CapabilitiesController({
     safeMethods: ['public_read'],
-  })
+    requestUserApproval: noop,
+  }, {})
 
   const domain = 'login.metamask.io'
   let req = { method: 'public_read' }
@@ -52,6 +54,8 @@ test('requesting restricted method is rejected', async (t) => {
         }
       }
     },
+
+    requestUserApproval: noop,
 },
 {
   domains: {}
@@ -97,7 +101,8 @@ test('requesting restricted method with permission is called', async (t) => {
           return end()
         }
       }
-    }
+    },
+    requestUserApproval: noop,
   },
   {
     domains: {
@@ -129,3 +134,4 @@ test('requesting restricted method with permission is called', async (t) => {
   }
 })
 
+function noop () {}

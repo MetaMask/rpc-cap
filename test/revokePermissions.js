@@ -1,5 +1,5 @@
 const test = require('tape')
-const CapabilitiesController = require('../').CapabilitiesController;
+const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!  Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
@@ -9,7 +9,9 @@ test('revokePermissions on granted permission deletes that permission', async (t
 
   const expected = []
 
-  const ctrl = new CapabilitiesController({},
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
   {
     'domains': {
       'login.metamask.io': {
@@ -67,7 +69,9 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
 
   const expected = []
 
-  const ctrl = new CapabilitiesController({},
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
   {
     'domains': {
       'login.metamask.io': {
@@ -126,7 +130,9 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
 
   const expected = []
 
-  const ctrl = new CapabilitiesController({},
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
   {
     'domains': {
         'login.metamask.io': {
@@ -197,7 +203,9 @@ test('revokePermissions on specific granter and method deletes only the single i
   const domain = 'login.metamask.io'
   const otherDomain = 'other.domain.com'
 
-  const ctrl = new CapabilitiesController({},
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
   {
     'domains': {
         [domain]: {
@@ -289,7 +297,9 @@ test('revokePermissions deletes multiple permissions in single request', async (
   const domain = 'login.metamask.io'
   const otherDomain = 'other.domain.com'
 
-  const ctrl = new CapabilitiesController({},
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
   {
     'domains': {
         [domain]: {
