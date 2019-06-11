@@ -4,7 +4,7 @@ import ObservableStore from 'obs-store';
 import equal from 'fast-deep-equal';
 import uuid from 'uuid/v4';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
-import BaseController, { BaseConfig, BaseState } from 'gaba/src/BaseController';
+import BaseController, { BaseConfig, BaseState } from 'gaba/BaseController';
 
 
 const UNAUTHORIZED_ERROR: JsonRpcError<null> = {
@@ -68,7 +68,7 @@ interface CapabilitiesConfig extends BaseConfig {
 }
 
 interface CapabilitiesState extends BaseState {
-
+  domains: { [domain:string]: RpcCapPermission[] };
 }
 
 interface RestrictedMethodEntry {

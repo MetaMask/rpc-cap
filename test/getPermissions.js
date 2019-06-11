@@ -1,5 +1,5 @@
 const test = require('tape')
-const createPermissionsMiddleware = require('../')
+const RpcCap = require('../')
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -24,7 +24,7 @@ const arbitraryCaps = [
 test('getPermissions with none returns empty object', async (t) => {
   const expected = []
 
-  const ctrl = createPermissionsMiddleware({})
+  const ctrl = new RpcCap({})
 
   const domain = 'login.metamask.io'
   let req = { method: 'getPermissions' }
@@ -47,13 +47,12 @@ test('getPermissions with none returns empty object', async (t) => {
 test('getPermissions with some returns them', async (t) => {
   const expected = arbitraryCaps
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      domains: {
-        'login.metamask.io': {
-          permissions: expected,
-        },
-      }
+  const ctrl = new RpcCap({},
+  {
+    domains: {
+      'login.metamask.io': {
+        permissions: expected,
+      },
     }
   })
 
