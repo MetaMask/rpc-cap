@@ -570,6 +570,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
 
     this.removePermissionsFor(assignedDomain, newlyRevoked);
     res.result = newlyRevoked;
+    end();
   }
 }
 
