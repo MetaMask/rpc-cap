@@ -4,8 +4,7 @@ import ObservableStore from 'obs-store';
 import equal from 'fast-deep-equal';
 import uuid from 'uuid/v4';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
-import BaseController, { BaseConfig, BaseState } from 'gaba/BaseController';
-
+import BaseController from 'gaba/BaseController';
 
 const UNAUTHORIZED_ERROR: JsonRpcError<null> = {
   message: 'Unauthorized to perform action',
@@ -23,12 +22,14 @@ const USER_REJECTED_ERROR: JsonRpcError<null> = {
   message: 'User rejected the request.',
 };
 
+type JsonRpcEngineEndCallback = (error?: JsonRpcError<any>) => void;
+
 interface JsonRpcMiddleware {
   (
     req: JsonRpcRequest<any[]>,
     res: JsonRpcResponse<any[]>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
-    end: (error?: JsonRpcError<any>) => void,
+    end: JsonRpcEngineEndCallback,
   ) : void;
 }
 
@@ -38,7 +39,7 @@ interface AuthenticatedJsonRpcMiddleware {
     req: JsonRpcRequest<any[]>,
     res: JsonRpcResponse<any[]>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
-    end: (error?: JsonRpcError<any>) => void,
+    end: JsonRpcEngineEndCallback,
   ) : void;
 }
 
@@ -51,6 +52,10 @@ interface RpcCapCaveat {
   value?: any;
 }
 
+interface RpcCapDomainEntry {
+  permissions?: RpcCapPermission[];
+}
+
 interface RpcCapPermission {
   method: string;
   id?: string;
@@ -59,7 +64,7 @@ interface RpcCapPermission {
   caveats?: RpcCapCaveat[];
 }
 
-interface CapabilitiesConfig extends BaseConfig {
+interface CapabilitiesConfig {
   safeMethods?: string[];
   restrictedMethods?: RestrictedMethodMap;
   initState?: CapabilitiesConfig;
@@ -67,8 +72,10 @@ interface CapabilitiesConfig extends BaseConfig {
   requestUserApproval: UserApprovalPrompt;
 }
 
-interface CapabilitiesState extends BaseState {
-  domains: { [domain:string]: RpcCapPermission[] };
+type RpcCapDomainRegistry = { [domain:string]: RpcCapDomainEntry[] };
+
+interface CapabilitiesState {
+  domains: RpcCapDomainRegistry;
 }
 
 interface RestrictedMethodEntry {
@@ -80,8 +87,30 @@ interface RestrictedMethodMap {
   [key: string]: RestrictedMethodEntry;
 }
 
-export class CapabilitiesController extends
-BaseController<CapabilitiesConfig, CapabilitiesState> {
+interface RpcCapInterface {
+  providerMiddlewareFunction: AuthenticatedJsonRpcMiddleware;
+  executeMethod: AuthenticatedJsonRpcMiddleware;
+  getPermissionsForDomain: (domain: string) => RpcCapPermission[];
+  getPermission: (domain: string, method: string) => RpcCapPermission;
+  getPermissionUnTraversed: (domain:string, method:string, granter?: string) => RpcCapPermission[];
+  getPermissions: () => RpcCapPermission[];
+  getPermissionsRequests: () => Object[];
+  grantNewPermissions: (domain: string, permissions: RpcCapPermission[], res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback) => void;
+  getDomains: () => RpcCapDomainRegistry;
+  setDomains: (domains: RpcCapDomainRegistry) => void;
+  getDomainSettings: (domain: string) => RpcCapDomainEntry;
+  setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
+  addPermissionsFor: (domainName: string, newPermissions: RpcCapPermission[]) => void;
+  removePermissionsFor: (domain: string, permissionsToRemove: RpcCapPermission[]) => void;
+
+  // Injected permissions-handling methods:
+  getPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
+  requestPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
+  grantPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
+  revokePermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
+}
+
+export class CapabilitiesController extends BaseController implements RpcCapInterface {
   private safeMethods: string[];
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
@@ -212,7 +241,7 @@ BaseController<CapabilitiesConfig, CapabilitiesState> {
    * @param {string} domain - The domain whose permission to retrieve.
    * @param {string} method - The method
    */
-  private getPermission (domain, method) {
+  getPermission (domain, method) {
     // TODO: Aggregate & Enforce Caveats at each step.
     // https://w3c-ccg.github.io/ocap-ld/#caveats
 
@@ -254,11 +283,18 @@ BaseController<CapabilitiesConfig, CapabilitiesState> {
     return undefined;
   }
 
+  /*
+  * Returns all stored permissions objects.
+  */
   getPermissions () {
     const perms = this.memStore.getState().permissions;
     return perms || [];
   }
 
+  /**
+   * Gets current permissions request objects.
+   * Useful for displaying information for user consent.
+   */
   getPermissionsRequests () {
     const reqs = this.memStore.getState().permissionsRequests;
     return reqs || [];
@@ -333,12 +369,13 @@ BaseController<CapabilitiesConfig, CapabilitiesState> {
    * @param {string} domainName - The grantee domain.
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
-  addPermissionsFor (domainName: string, newPermissions: RpcCapPermission[]) {
+  addPermissionsFor (domainName, newPermissions) {
     const domain = this.getDomainSettings(domainName);
 
     // remove old permissions this will be overwritten
     domain.permissions = domain.permissions.filter((oldPerm: RpcCapPermission) => {
       let isReplaced = false;
+
       for (let newPerm of newPermissions) {
         if (
           oldPerm.method === newPerm.method &&
