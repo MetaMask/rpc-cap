@@ -6,10 +6,14 @@ import uuid from 'uuid/v4';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
 import BaseController from 'gaba/BaseController';
 
-const UNAUTHORIZED_ERROR: JsonRpcError<null> = {
-  message: 'Unauthorized to perform action',
-  code: 1,
-};
+function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
+  const UNAUTHORIZED_ERROR: JsonRpcError<JsonRpcRequest<any>> = {
+    message: 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
+    code: 1,
+    data: request,
+  };
+  return UNAUTHORIZED_ERROR;
+}
 
 const METHOD_NOT_FOUND: JsonRpcError<null> = {
   code: -32601,
@@ -192,8 +196,8 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
     }
 
     if (!permission) {
-      res.error = UNAUTHORIZED_ERROR;
-      return end(UNAUTHORIZED_ERROR);
+      res.error = unauthorized(req.method);
+      return end(res.error);
     }
 
     this.executeMethod(domain, req, res, next, end);
@@ -522,9 +526,9 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
         if (perm.caveats) { newPerm.caveats = perm.caveats; }
         newlyGranted.push(newPerm);
       } else {
-        res.error = UNAUTHORIZED_ERROR;
+        res.error = unauthorized(req);
         ended = true;
-        return end(UNAUTHORIZED_ERROR);
+        return end(res.error);
       }
     });
 
@@ -558,9 +562,9 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
           ) {
         newlyRevoked.push(perm);
       } else {
-        res.error = UNAUTHORIZED_ERROR;
+        res.error = unauthorized(req);
         ended = true;
-        return end(UNAUTHORIZED_ERROR);
+        return end(res.error);
       }
     });
 
