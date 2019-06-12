@@ -1,5 +1,5 @@
 const test = require('tape')
-const createPermissionsMiddleware = require('../')
+const CapabilitiesController = require('../dist').CapabilitiesController
 const equal = require('fast-deep-equal')
 const uuid = require('uuid/v4')
 
@@ -10,7 +10,8 @@ const USER_REJECTION_CODE = 5
 test('grantPermissions with no permission creates no permissions', async (t) => {
   const expected = []
 
-  const ctrl = createPermissionsMiddleware({
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: noop,
   })
 
   const domain = 'login.metamask.io'
@@ -67,17 +68,18 @@ test('grantPermissions with permission creates permission', async (t) => {
     }
   }
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      domains: {
-        'login.metamask.io': {
-          permissions: [
-            {
-              method: 'restricted',
-              date: '0',
-            }
-          ],
-        }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: noop,
+  },
+  {
+    domains: {
+      'login.metamask.io': {
+        permissions: [
+          {
+            method: 'restricted',
+            date: '0',
+          }
+        ],
       }
     }
   })
@@ -117,18 +119,19 @@ test('grantPermissions with permission creates permission', async (t) => {
 })
 
 test('grantPermissions with permission whose granter does not exist results in auth error', async (t) => {
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      domains: {
-        'login.metamask.io': {
-          permissions: [
-            {
-              method: 'restricted',
-              granter: 'other.granter2.io',
-              date: '0',
-            }
-          ],
-        }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: noop,
+  },
+  {
+    domains: {
+      'login.metamask.io': {
+        permissions: [
+          {
+            method: 'restricted',
+            granter: 'other.granter2.io',
+            date: '0',
+          }
+        ],
       }
     }
   })
@@ -181,27 +184,28 @@ test('grantPermissions accumulates the same permission from different granters',
     }
   ]
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      domains: {
-        [grantee]: {
-          permissions: [
-            {
-              method: 'restricted',
-              date: '0',
-              granter: granter1,
-            }
-          ],
-        },
-        [granter2]: {
-          permissions: [
-            {
-              method: 'restricted',
-              date: '0',
-            }
-          ],
-        },
-      }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: noop,
+  },
+  {
+    domains: {
+      [grantee]: {
+        permissions: [
+          {
+            method: 'restricted',
+            date: '0',
+            granter: granter1,
+          }
+        ],
+      },
+      [granter2]: {
+        permissions: [
+          {
+            method: 'restricted',
+            date: '0',
+          }
+        ],
+      },
     }
   })
 
@@ -256,24 +260,25 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     granter: granter,
   }
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      domains: {
-        [grantee]: {
-          permissions: [
-            oldPerm
-          ],
-        },
-        [granter]: {
-          permissions: [
-            {
-              method: 'restricted',
-              date: '0',
-              id: uuid(),
-            }
-          ],
-        },
-      }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: noop,
+  },
+  {
+    domains: {
+      [grantee]: {
+        permissions: [
+          oldPerm
+        ],
+      },
+      [granter]: {
+        permissions: [
+          {
+            method: 'restricted',
+            date: '0',
+            id: uuid(),
+          }
+        ],
+      },
     }
   })
 
@@ -317,3 +322,4 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     t.end()
   }
 })
+function noop () {};

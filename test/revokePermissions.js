@@ -1,5 +1,5 @@
 const test = require('tape')
-const createPermissionsMiddleware = require('../')
+const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!  Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
@@ -9,28 +9,29 @@ test('revokePermissions on granted permission deletes that permission', async (t
 
   const expected = []
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      'domains': {
-        'login.metamask.io': {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: '0',
-            }
-          ]
-        },
-        'other.domain.com': {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: 1547176021698,
-              'granter': 'login.metamask.io'
-            }
-          ]
-        }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
+  {
+    'domains': {
+      'login.metamask.io': {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: '0',
+          }
+        ]
       },
-    }
+      'other.domain.com': {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: 1547176021698,
+            'granter': 'login.metamask.io'
+          }
+        ]
+      }
+    },
   })
 
   const domain = 'login.metamask.io'
@@ -68,28 +69,29 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
 
   const expected = []
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      'domains': {
-        'login.metamask.io': {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: '0',
-            }
-          ]
-        },
-        'other.domain.com': {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: 1547176021698,
-              'granter': 'unrelated.metamask.co'
-            }
-          ]
-        }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
+  {
+    'domains': {
+      'login.metamask.io': {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: '0',
+          }
+        ]
       },
-    }
+      'other.domain.com': {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: 1547176021698,
+            'granter': 'unrelated.metamask.co'
+          }
+        ]
+      }
+    },
   })
 
   const domain = 'login.metamask.io'
@@ -128,28 +130,29 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
 
   const expected = []
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      'domains': {
-         'login.metamask.io': {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: '0'
-            }
-          ]
-        },
-        'other.domain.com': {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: 1547176021698,
-              'granter': 'unrelated.metamask.co'
-            }
-          ]
-        }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
+  {
+    'domains': {
+        'login.metamask.io': {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: '0'
+          }
+        ]
       },
-    }
+      'other.domain.com': {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: 1547176021698,
+            'granter': 'unrelated.metamask.co'
+          }
+        ]
+      }
+    },
   })
 
   const domain = 'login.metamask.io'
@@ -200,33 +203,34 @@ test('revokePermissions on specific granter and method deletes only the single i
   const domain = 'login.metamask.io'
   const otherDomain = 'other.domain.com'
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      'domains': {
-         [domain]: {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: '0'
-            },
-            {
-              method: 'restricted',
-              date: '0',
-              granter: otherDomain,
-            }
-          ]
-        },
-        [otherDomain]: {
-          'permissions': [
-            {
-              method: 'restricted',
-              date: 1547176021698,
-              'granter': 'unrelated.metamask.co'
-            }
-          ]
-        }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
+  {
+    'domains': {
+        [domain]: {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: '0'
+          },
+          {
+            method: 'restricted',
+            date: '0',
+            granter: otherDomain,
+          }
+        ]
       },
-    }
+      [otherDomain]: {
+        'permissions': [
+          {
+            method: 'restricted',
+            date: 1547176021698,
+            'granter': 'unrelated.metamask.co'
+          }
+        ]
+      }
+    },
   })
 
   let req = {
@@ -293,28 +297,29 @@ test('revokePermissions deletes multiple permissions in single request', async (
   const domain = 'login.metamask.io'
   const otherDomain = 'other.domain.com'
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      'domains': {
-         [domain]: {
-          'permissions': [
-            {
-              method: 'restricted1',
-              date: '0',
-              granter: otherDomain,
-            },
-            {
-              method: 'restricted2',
-              date: '0',
-              granter: otherDomain,
-            }
-          ]
-        },
-        [otherDomain]: {
-          permissions: otherExpected,
-        }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
+  },
+  {
+    'domains': {
+        [domain]: {
+        'permissions': [
+          {
+            method: 'restricted1',
+            date: '0',
+            granter: otherDomain,
+          },
+          {
+            method: 'restricted2',
+            date: '0',
+            granter: otherDomain,
+          }
+        ]
       },
-    }
+      [otherDomain]: {
+        permissions: otherExpected,
+      }
+    },
   })
 
   let req = {

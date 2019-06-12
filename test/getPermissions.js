@@ -1,5 +1,5 @@
 const test = require('tape')
-const createPermissionsMiddleware = require('../')
+const CapabilitiesController = require('../dist').CapabilitiesController
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -24,7 +24,9 @@ const arbitraryCaps = [
 test('getPermissions with none returns empty object', async (t) => {
   const expected = []
 
-  const ctrl = createPermissionsMiddleware({})
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: noop,
+  })
 
   const domain = 'login.metamask.io'
   let req = { method: 'getPermissions' }
@@ -47,13 +49,14 @@ test('getPermissions with none returns empty object', async (t) => {
 test('getPermissions with some returns them', async (t) => {
   const expected = arbitraryCaps
 
-  const ctrl = createPermissionsMiddleware({
-    initState: {
-      domains: {
-        'login.metamask.io': {
-          permissions: expected,
-        },
-      }
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: noop,
+  },
+  {
+    domains: {
+      'login.metamask.io': {
+        permissions: expected,
+      },
     }
   })
 
@@ -75,5 +78,5 @@ test('getPermissions with some returns them', async (t) => {
   }
 })
 
-
+function noop () {};
 

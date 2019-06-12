@@ -1,5 +1,5 @@
 const test = require('tape')
-const LoginController = require('../')
+const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
 // TODO: Standardize!
@@ -9,7 +9,7 @@ const USER_REJECTION_CODE = 5
 test('requestPermissions with user rejection creates no permissions', async (t) => {
   const expected = []
 
-  const ctrl = LoginController({
+  const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve(false),
   })
 
@@ -53,7 +53,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
   }
 
 
-  const ctrl = LoginController({
+  const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve(true),
   })
 
@@ -80,7 +80,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
   function end(reason) {
     t.error(reason, 'error should not be thrown')
     t.error(res.error, 'error should not be thrown')
-    const endState = ctrl.store.getState()
+    const endState = ctrl.state
     t.ok(equal(endState.domains[domain].permissions, req.params[0]), 'should have the requested permissions')
     t.end()
   }
@@ -89,7 +89,8 @@ test('requestPermissions with user approval creates permission', async (t) => {
 test('requestPermissions with returned stub object defines future responses', async (t) => {
   const expected = ['Account 1']
 
-  const ctrl = LoginController({
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve(true),
 
     restrictedMethods: {
       'viewAccounts': {
