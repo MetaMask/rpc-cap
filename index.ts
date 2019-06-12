@@ -116,7 +116,6 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
   private methodPrefix: string;
-  public store: ObservableStore;
   public memStore: ObservableStore;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
@@ -131,8 +130,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
     }
     this.requestUserApproval = config.requestUserApproval;
 
-    this.store = Reflect.construct(ObservableStore, [state || {}]);
-    this.memStore = Reflect.construct(ObservableStore, [{
+    this.defaultState = {
       permissionsRequests: [],
       permissionsDescriptions: Object.keys(this.restrictedMethods).map((methodName) => {
         return {
@@ -140,17 +138,19 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
           description: this.restrictedMethods[methodName].description,
         };
       }),
-    }]);
+    }
 
     this.internalMethods = {};
     this.internalMethods[`${this.methodPrefix}getPermissions`] = this.getPermissionsMiddleware.bind(this);
     this.internalMethods[`${this.methodPrefix}requestPermissions`] = this.requestPermissionsMiddleware.bind(this);
     this.internalMethods[`${this.methodPrefix}grantPermissions`] = this.grantPermissionsMiddleware.bind(this);
     this.internalMethods[`${this.methodPrefix}revokePermissions`] = this.revokePermissionsMiddleware.bind(this);
+
+    this.initialize();
   }
 
   serialize () {
-    return this.store.getState();
+    return this.state;
   }
 
   /**
@@ -223,7 +223,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   }
 
   getPermissionsForDomain (domain) {
-    const { domains = {} } = this.store.getState();
+    const { domains = {} } = this.state;
     if (Object.keys(domains).includes(domain)) {
       const { permissions } = domains[domain];
       return permissions;
@@ -268,7 +268,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
    * Get the permission for this domain, granter, and method, not following granter links.
    * Returns the first such permission found.
    */
-  getPermissionUnTraversed (domain, method, granter = undefined) {
+  getPermissionUnTraversed (domain, method, granter) {
     // TODO: Aggregate & Enforce Caveats at each step.
     // https://w3c-ccg.github.io/ocap-ld/#caveats
 
@@ -287,7 +287,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   * Returns all stored permissions objects.
   */
   getPermissions () {
-    const perms = this.memStore.getState().permissions;
+    const perms = this.state.permissions;
     return perms || [];
   }
 
@@ -296,12 +296,12 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
    * Useful for displaying information for user consent.
    */
   getPermissionsRequests () {
-    const reqs = this.memStore.getState().permissionsRequests;
+    const reqs = this.state.permissionsRequests;
     return reqs || [];
   }
 
   setPermissionsRequests (permissionsRequests) {
-    this.memStore.updateState({ permissionsRequests });
+    this.update({ permissionsRequests });
   }
 
   /**
@@ -334,12 +334,12 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   }
 
   getDomains () {
-    const { domains } = this.store.getState();
+    const { domains } = this.state;
     return domains || {};
   }
 
   setDomains = function (domains) {
-    this.store.updateState({ domains });
+    this.update({ domains });
   }
 
   getDomainSettings (domain) {
@@ -356,9 +356,9 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   setDomain (domain, domainSettings) {
     const domains = this.getDomains();
     domains[domain] = domainSettings;
-    const state = this.store.getState();
+    const state = this.state;
     state.domains = domains;
-    this.store.putState(state);
+    this.update(state, true);
   }
 
   /**

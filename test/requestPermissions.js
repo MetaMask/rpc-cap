@@ -80,7 +80,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
   function end(reason) {
     t.error(reason, 'error should not be thrown')
     t.error(res.error, 'error should not be thrown')
-    const endState = ctrl.store.getState()
+    const endState = ctrl.state
     t.ok(equal(endState.domains[domain].permissions, req.params[0]), 'should have the requested permissions')
     t.end()
   }
