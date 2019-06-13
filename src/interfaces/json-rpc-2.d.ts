@@ -14,6 +14,7 @@ export type JsonRpcId = number | string | void;
 
 interface JsonRpcRequest<T> {
   jsonrpc: JsonRpcVersion;
+  method: string;
   id: JsonRpcId;
   params?: T; 
 }

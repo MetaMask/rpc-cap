@@ -10,7 +10,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   const expected = []
 
   const ctrl = new CapabilitiesController({
-    requestUserApproval: () => Promise.resolve(false),
+    requestUserApproval: () => Promise.resolve({}),
   })
 
   const domain = 'login.metamask.io'
@@ -54,7 +54,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
 
 
   const ctrl = new CapabilitiesController({
-    requestUserApproval: () => Promise.resolve(true),
+    requestUserApproval: () => Promise.resolve(expected.domains['login.metamask.io']),
   })
 
   const domain = 'login.metamask.io'
@@ -90,7 +90,6 @@ test('requestPermissions with returned stub object defines future responses', as
   const expected = ['Account 1']
 
   const ctrl = new CapabilitiesController({
-    requestUserApproval: () => Promise.resolve(true),
 
     restrictedMethods: {
       'viewAccounts': {
@@ -104,8 +103,7 @@ test('requestPermissions with returned stub object defines future responses', as
 
     requestUserApproval: async (domain, req) => {
       return {
-        method: 'viewAccounts',
-        caveats: [{
+        'viewAccounts': [{
           type: 'static',
           value: expected,
         }],
@@ -117,11 +115,11 @@ test('requestPermissions with returned stub object defines future responses', as
   let req = {
     method: 'requestPermissions',
     params: [
-        [
-          {
-            method: 'viewAccounts'
-          }
-        ]
+      [
+        {
+          method: 'viewAccounts'
+        }
+      ]
     ]
   }
 
