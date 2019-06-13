@@ -1,7 +1,6 @@
 /// <reference path="./src/interfaces/json-rpc-2.d.ts" />
 
 import ObservableStore from 'obs-store';
-import equal from 'fast-deep-equal';
 import uuid from 'uuid/v4';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
 import BaseController from 'gaba/BaseController';
@@ -500,9 +499,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   getPermissionsMiddleware (
     domain: IOriginMetadata,
-    req: JsonRpcRequest<any>,
+    _req: JsonRpcRequest<any>,
     res: JsonRpcResponse<any>,
-    next: JsonRpcEngineNextCallback,
+    _next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback)
   {
     const permissions = this.getPermissionsForDomain(domain.origin);
@@ -517,7 +516,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     metadata: IOriginMetadata,
     req: JsonRpcRequest<any>,
     res: JsonRpcResponse<any>,
-    next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
+    _next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void {
 
@@ -573,7 +572,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     metadata: IOriginMetadata,
     req: JsonRpcRequest<any>,
     res: JsonRpcResponse<any>,
-    next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
+    _next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void {
     const granter: IOriginString = metadata.origin;
@@ -632,7 +631,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     domain: IOriginMetadata,
     req: JsonRpcRequest<any>,
     res: JsonRpcResponse<any>,
-    next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
+    _next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void {
 
