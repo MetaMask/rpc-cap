@@ -14,7 +14,7 @@ test('safe method should pass through', async (t) => {
     requestUserApproval: noop,
   }, {})
 
-  const domain = 'login.metamask.io'
+  const domain = {origin: 'login.metamask.io'}
   let req = { method: 'public_read' }
   let res = {}
 
@@ -35,7 +35,7 @@ test('safe method should pass through', async (t) => {
 
 test('requesting restricted method is rejected', async (t) => {
   const WRITE_RESULT = 'impeccable result'
-  const domain = 'login.metamask.io'
+  const domain = {origin: 'login.metamask.io'}
 
   const ctrl = new CapabilitiesController({
 
@@ -83,7 +83,7 @@ test('requesting restricted method is rejected', async (t) => {
 
 test('requesting restricted method with permission is called', async (t) => {
   const WRITE_RESULT = 'impeccable result'
-  const domain = 'login.metamask.io'
+  const domain = {origin: 'login.metamask.io'}
 
   const ctrl = new CapabilitiesController({
 

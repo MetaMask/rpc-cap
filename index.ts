@@ -1,11 +1,11 @@
-/// <reference path="./src/interfaces/json-rpc-2.d.ts" />
-/// <reference path="./src/interfaces/obs-store.d.ts" />
-/// <reference path="./src/interfaces/gaba.d.ts" />
-/// <reference path="./src/interfaces/json-rpc-engine.d.ts" />
+/// <reference path="./src/@types/json-rpc-2.d.ts" />
+/// <reference path="./src/@types/gaba.d.ts" />
+/// <reference path="./src/@types/json-rpc-engine.d.ts" />
 
 import uuid from 'uuid/v4';
-import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
-import BaseController from 'gaba/BaseController';
+import { BaseController } from 'gaba';
+import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
+import { JsonRpcEngineNextCallback, JsonRpcEngineEndCallback, JsonRpcMiddleware } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
 
 function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
   const UNAUTHORIZED_ERROR: JsonRpcError<JsonRpcRequest<any>> = {
@@ -83,7 +83,7 @@ interface RpcCapCaveat {
 }
 
 interface RpcCapDomainEntry {
-  permissions?: RpcCapPermission[];
+  permissions: RpcCapPermission[];
 }
 
 type IOriginString = string;
@@ -131,6 +131,7 @@ interface RpcCapInterface {
   getDomains: () => RpcCapDomainRegistry;
   setDomains: (domains: RpcCapDomainRegistry) => void;
   getDomainSettings: (domain: string) => RpcCapDomainEntry;
+  getOrCreateDomainSettings: (domain: string) => RpcCapDomainEntry;
   setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
   addPermissionsFor: (domainName: string, newPermissions: RpcCapPermission[]) => void;
   removePermissionsFor: (domain: string, permissionsToRemove: RpcCapPermission[]) => void;
@@ -392,6 +393,15 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.update({ domains });
   }
 
+  getOrCreateDomainSettings (domain: string): RpcCapDomainEntry {
+    const entry = this.getDomainSettings(domain);
+    if (entry === undefined) {
+      return { permissions: [] };
+    } else {
+      return entry;
+    }
+  }
+
   getDomainSettings (domain: string): RpcCapDomainEntry {
     const domains = this.getDomains();
 
@@ -422,11 +432,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
   addPermissionsFor (domainName: string, newPermissions: RpcCapPermission[]) {
-    let domain = this.getDomainSettings(domainName);
-
-    if (domain === undefined) {
-      domain = { permissions: [] };
-    }
+    const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
 
     // remove old permissions this will be overwritten
     domain.permissions = domain.permissions.filter((oldPerm: RpcCapPermission) => {

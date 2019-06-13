@@ -17,7 +17,6 @@
 		"noImplicitAny": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-    "no-unused-variable": [true, {"ignore-pattern": "^_"}].
 		"outDir": "dist",
 		"removeComments": false,
 		"sourceMap": true,
