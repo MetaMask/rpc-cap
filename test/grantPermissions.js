@@ -298,7 +298,6 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     t.notOk(res.error, 'should assign no error')
 
     const granteePerms = ctrl.getPermissionsForDomain(grantee.origin)
-    console.log(granteePerms)
     t.ok(granteePerms.length === 1, 'grantee domain has a single permission')
 
     const newPerm = granteePerms[0]
@@ -313,4 +312,5 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     t.end()
   }
 })
+
 function noop () {};

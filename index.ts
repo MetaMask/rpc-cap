@@ -21,9 +21,13 @@ const METHOD_NOT_FOUND: JsonRpcError<null> = {
   message: 'Method not found',
 };
 
-const INVALID_REQUEST: JsonRpcError<null> = {
-  code: -32602,
-  message: 'Invalid request.'
+function invalidReq (req?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
+  const INVALID_REQUEST: JsonRpcError<JsonRpcRequest<any>> = {
+    code: -32602,
+    message: 'Invalid request.',
+    data: req,
+  }
+  return INVALID_REQUEST;
 }
 
 // TODO: This error code needs standardization:
@@ -476,20 +480,17 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return;
     }
 
-    domain.permissions = domain.permissions.reduce((acc: RpcCapPermission[], perm: RpcCapPermission) => {
-      let keep = true;
+    domain.permissions = domain.permissions.filter((perm: RpcCapPermission) => {
       for (let r of permissionsToRemove) {
         if (
           r.method === perm.method &&
           r.granter === perm.granter
         ) {
-          keep = false;
-          break;
+          return false;
         }
       }
-      if (keep) { acc.push(perm); }
-      return acc;
-    }, []);
+      return true;
+    });
 
     this.setDomain(domainName, domain);
   }
@@ -523,8 +524,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       req.params[0] === undefined ||
       typeof req.params[0] !== 'object'
     ) {
-      res.error = INVALID_REQUEST;
-      return end(INVALID_REQUEST);
+      res.error = invalidReq(req);
+      return end(res.error);
     }
 
     if (!metadata.id) {
@@ -582,8 +583,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       typeof req.params[0] !== 'string' ||
       typeof req.params[1] !== 'object'
     ) {
-      res.error = INVALID_REQUEST;
-      return end(INVALID_REQUEST);
+      res.error = invalidReq(req);
+      return end(res.error);
     }
 
     const grantee: IOriginString = req.params[0];
@@ -639,8 +640,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       typeof req.params[0] !== 'string' ||
       typeof req.params[1] !== 'object'
     ) {
-      res.error = INVALID_REQUEST;
-      return end(INVALID_REQUEST);
+      res.error = invalidReq(req);
+      return end(res.error);
     }
 
     const assignedDomain: IOriginString = req.params[0];
@@ -654,13 +655,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         assignedDomain, methodName, domain.origin
       );
       if (
-            perm && (
-              // Granters can revoke what they have granted:
-              (perm.granter && perm.granter === domain.origin) ||
-              // Domains can revoke their own permissions:
-              (assignedDomain === domain.origin)
-            )
-          ) {
+          perm && (
+            // Granters can revoke what they have granted:
+            (perm.granter && perm.granter === domain.origin) ||
+            // Domains can revoke their own permissions:
+            (assignedDomain === domain.origin)
+          )
+        ) {
         newlyRevoked.push(perm);
       } else {
         res.error = unauthorized(req);
