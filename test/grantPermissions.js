@@ -20,11 +20,9 @@ test('grantPermissions with no permission creates no permissions', async (t) => 
     method: 'grantPermissions',
     params: [
       otherDomain.origin,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      {
+        method: 'restricted',
+      },
     ]
   }
   let res = {}
@@ -109,7 +107,7 @@ test('grantPermissions with permission creates permission', async (t) => {
 
     const granteePerms = ctrl.getPermissionsForDomain(grantee.origin)
 
-    t.ok(granteePerms[0].method === req.params[1][0].method, 'The requested permission was created.')
+    t.ok(granteePerms[0].method === Object.keys(req.params[1])[0], 'The requested permission was created.')
     t.end()
   }
 })
@@ -137,12 +135,10 @@ test('grantPermissions with permission whose granter does not exist results in a
   let req = {
     method: 'grantPermissions',
     params: [
-        otherDomain.origin,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      otherDomain.origin,
+      {
+        method: 'restricted',
+      },
     ]
   }
   let res = {}
@@ -208,12 +204,10 @@ test('grantPermissions accumulates the same permission from different granters',
   let req = {
     method: 'grantPermissions',
     params: [
-        grantee.origin,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      grantee.origin,
+      {
+        restricted: {},
+      },
     ]
   }
   let res = {}
@@ -253,11 +247,13 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     method: 'restricted',
     id: uuid(),
     date: Date.now(),
-    granter: granter,
+    granter: granter.origin,
   }
 
   const ctrl = new CapabilitiesController({
-    requestUserApproval: noop,
+    requestUserApproval: () => {
+      return { restricted: {} };
+    },
   },
   {
     domains: {
@@ -282,11 +278,9 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     method: 'grantPermissions',
     params: [
       grantee.origin,
-      [
-        {
-          method: 'restricted'
-        },
-      ],
+      {
+        restricted: {},
+      },
     ]
   }
   let res = {}
@@ -304,6 +298,7 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     t.notOk(res.error, 'should assign no error')
 
     const granteePerms = ctrl.getPermissionsForDomain(grantee.origin)
+    console.log(granteePerms)
     t.ok(granteePerms.length === 1, 'grantee domain has a single permission')
 
     const newPerm = granteePerms[0]

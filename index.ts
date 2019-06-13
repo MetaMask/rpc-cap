@@ -655,7 +655,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       );
       if (
             perm && (
-              // Grantors can revoke what they have granted:
+              // Granters can revoke what they have granted:
               (perm.granter && perm.granter === domain.origin) ||
               // Domains can revoke their own permissions:
               (assignedDomain === domain.origin)
