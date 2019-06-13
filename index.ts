@@ -3,9 +3,8 @@
 import ObservableStore from 'obs-store';
 import equal from 'fast-deep-equal';
 import uuid from 'uuid/v4';
-import { JsonRpcRequest, JsonRpcResponse, JsonRpcError, JsonRpcFailure } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
+import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
 import BaseController from 'gaba/BaseController';
-import { request } from 'http';
 
 function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
   const UNAUTHORIZED_ERROR: JsonRpcError<JsonRpcRequest<any>> = {
@@ -38,7 +37,7 @@ type JsonRpcEngineNextCallback = (returnFlightCallback?: (res: JsonRpcResponse<a
 interface JsonRpcMiddleware {
   (
     req: JsonRpcRequest<any>,
-    res: JsonRpcResponse<any> | JsonRpcFailure<any>,
+    res: JsonRpcResponse<any>,
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void;
@@ -47,8 +46,8 @@ interface JsonRpcMiddleware {
 interface AuthenticatedJsonRpcMiddleware {
   (
     domain: IOriginMetadata,
-    req: JsonRpcRequest<any[]>,
-    res: JsonRpcResponse<any> | JsonRpcFailure<any>,
+    req: JsonRpcRequest<any>,
+    res: JsonRpcResponse<any>,
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void;
@@ -155,7 +154,7 @@ interface RpcCapInterface {
   executeMethod: AuthenticatedJsonRpcMiddleware;
 }
 
-export class CapabilitiesController extends BaseController implements RpcCapInterface {
+export class CapabilitiesController extends BaseController<any, any> implements RpcCapInterface {
   private safeMethods: string[];
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
@@ -206,8 +205,8 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
    */
   providerMiddlewareFunction (
     domain: IOriginMetadata,
-    req: JsonRpcRequest<any[]>,
-    res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
+    req: JsonRpcRequest<any>,
+    res: JsonRpcResponse<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
@@ -246,7 +245,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   executeMethod (
     domain: IOriginMetadata,
     req: JsonRpcRequest<any>,
-    res: JsonRpcFailure<any> | JsonRpcResponse<any>,
+    res: JsonRpcResponse<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
@@ -516,8 +515,8 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
    */
   requestPermissionsMiddleware (
     metadata: IOriginMetadata,
-    req: JsonRpcRequest<any[]>,
-    res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
+    req: JsonRpcRequest<any>,
+    res: JsonRpcResponse<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
@@ -572,8 +571,8 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
 
   grantPermissionsMiddleware (
     metadata: IOriginMetadata,
-    req: JsonRpcRequest<any[]>,
-    res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
+    req: JsonRpcRequest<any>,
+    res: JsonRpcResponse<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
@@ -631,8 +630,8 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
 
   revokePermissionsMiddleware (
     domain: IOriginMetadata,
-    req: JsonRpcRequest<any[]>,
-    res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
+    req: JsonRpcRequest<any>,
+    res: JsonRpcResponse<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
