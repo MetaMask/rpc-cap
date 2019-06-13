@@ -28,7 +28,7 @@ test('getPermissions with none returns empty object', async (t) => {
     requestUserApproval: noop,
   })
 
-  const domain = 'login.metamask.io'
+  const domain = {origin: 'login.metamask.io'}
   let req = { method: 'getPermissions' }
   let res = {}
 
@@ -60,7 +60,7 @@ test('getPermissions with some returns them', async (t) => {
     }
   })
 
-  const domain = 'login.metamask.io'
+  const domain = {origin: 'login.metamask.io'}
   let req = { method: 'getPermissions' }
   let res = {}
 

@@ -13,7 +13,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
     requestUserApproval: () => Promise.resolve({}),
   })
 
-  const domain = 'login.metamask.io'
+  const domain = { origin: 'login.metamask.io' }
   let req = {
     method: 'requestPermissions',
     params: [
@@ -32,7 +32,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, 5, 'Rejection error returned')
-    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have no permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still')
     t.end()
   }
 })
@@ -57,7 +57,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
     requestUserApproval: () => Promise.resolve(expected.domains['login.metamask.io']),
   })
 
-  const domain = 'login.metamask.io'
+  const domain = { origin: 'login.metamask.io' }
   let req = {
     method: 'requestPermissions',
     params: [
@@ -81,7 +81,7 @@ test('requestPermissions with user approval creates permission', async (t) => {
     t.error(reason, 'error should not be thrown')
     t.error(res.error, 'error should not be thrown')
     const endState = ctrl.state
-    t.ok(equal(endState.domains[domain].permissions, req.params[0]), 'should have the requested permissions')
+    t.ok(equal(endState.domains[domain.origin].permissions, req.params[0]), 'should have the requested permissions')
     t.end()
   }
 })
@@ -111,7 +111,7 @@ test('requestPermissions with returned stub object defines future responses', as
     },
   })
 
-  const domain = 'login.metamask.io'
+  const domain = { origin: 'login.metamask.io' }
   let req = {
     method: 'requestPermissions',
     params: [

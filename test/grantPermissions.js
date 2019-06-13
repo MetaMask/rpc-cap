@@ -14,8 +14,8 @@ test('grantPermissions with no permission creates no permissions', async (t) => 
     requestUserApproval: noop,
   })
 
-  const domain = 'login.metamask.io'
-  const otherDomain = 'other.domain.com'
+  const domain = {origin: 'login.metamask.io'}
+  const otherDomain = {origin: 'other.domain.com'}
   let req = {
     method: 'grantPermissions',
     params: [
@@ -39,8 +39,8 @@ test('grantPermissions with no permission creates no permissions', async (t) => 
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, 1, 'Auth error returned')
-    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), expected), 'should have no permissions still')
-    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have no permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain.origin), expected), 'should have no permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still')
     t.end()
   }
 })
@@ -84,8 +84,8 @@ test('grantPermissions with permission creates permission', async (t) => {
     }
   })
 
-  const granter = 'login.metamask.io'
-  const grantee = 'other.domain.com'
+  const domain = {origin: 'login.metamask.io'}
+  const grantee = { origin: 'other.domain.com' }
   let req = {
     method: 'grantPermissions',
     params: [
@@ -111,7 +111,7 @@ test('grantPermissions with permission creates permission', async (t) => {
     t.notOk(reason, 'should throw no error')
     t.notOk(res.error, 'should assign no error')
 
-    const granteePerms = ctrl.getPermissionsForDomain(grantee)
+    const granteePerms = ctrl.getPermissionsForDomain(grantee.origin)
 
     t.ok(granteePerms[0].method === req.params[1][0].method, 'The requested permission was created.')
     t.end()
@@ -136,12 +136,12 @@ test('grantPermissions with permission whose granter does not exist results in a
     }
   })
 
-  const domain = 'login.metamask.io'
-  const otherDomain = 'other.domain.com'
+  const domain = {origin: 'login.metamask.io'}
+  const otherDomain = { origin: 'login.metamask.io' }
   let req = {
     method: 'grantPermissions',
     params: [
-      otherDomain,
+        otherDomain,
       [
         {
           method: 'restricted',
@@ -167,20 +167,20 @@ test('grantPermissions with permission whose granter does not exist results in a
 
 test('grantPermissions accumulates the same permission from different granters', async (t) => {
 
-  const grantee = 'login.metamask.io'
-  const granter1 = 'xyz.co.uk'
-  const granter2 = 'abc.se'
+  const grantee = { origin: 'login.metamask.io' }
+  const granter1 = { origin: 'xyz.co.uk' }
+  const granter2 = { origin: 'abc.se' }
 
   const expected = [
     {
       method: 'restricted',
       date: '0',
-      granter: granter1,
+      granter: granter1.origin,
     },
     {
       method: 'restricted',
       date: '0',
-      granter: granter2,
+      granter: granter2.origin,
     }
   ]
 
@@ -189,16 +189,16 @@ test('grantPermissions accumulates the same permission from different granters',
   },
   {
     domains: {
-      [grantee]: {
+      [grantee.origin]: {
         permissions: [
           {
             method: 'restricted',
             date: '0',
-            granter: granter1,
+            granter: granter1.origin,
           }
         ],
       },
-      [granter2]: {
+      [granter2.origin]: {
         permissions: [
           {
             method: 'restricted',
@@ -212,7 +212,7 @@ test('grantPermissions accumulates the same permission from different granters',
   let req = {
     method: 'grantPermissions',
     params: [
-      grantee,
+        grantee,
       [
         {
           method: 'restricted',
@@ -234,13 +234,13 @@ test('grantPermissions accumulates the same permission from different granters',
     t.notOk(reason, 'should throw no error')
     t.notOk(res.error, 'should assign no error')
 
-    const otherPerms = ctrl.getPermissionsForDomain(grantee)
+    const otherPerms = ctrl.getPermissionsForDomain(grantee.origin)
 
     let result
     for (let perm of otherPerms) {
         result = perm.method === 'restricted' && (
-          perm.granter === granter1 ||
-          perm.granter === granter2
+          perm.granter === granter1.origin ||
+          perm.granter === granter2.origin
         )
     }
     t.ok(result, 'the requested permission was created')
@@ -250,8 +250,8 @@ test('grantPermissions accumulates the same permission from different granters',
 
 test('grantPermissions replaces duplicate permissions', async (t) => {
 
-  const grantee = 'login.metamask.io'
-  const granter = 'xyz.co.uk'
+  const grantee = { origin: 'login.metamask.io' }
+  const granter = { origin: 'xyz.co.uk' }
 
   const oldPerm = {
     method: 'restricted',
@@ -265,12 +265,12 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
   },
   {
     domains: {
-      [grantee]: {
+      [grantee.origin]: {
         permissions: [
           oldPerm
         ],
       },
-      [granter]: {
+      [granter.origin]: {
         permissions: [
           {
             method: 'restricted',
@@ -307,7 +307,7 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
     t.notOk(reason, 'should throw no error')
     t.notOk(res.error, 'should assign no error')
 
-    const granteePerms = ctrl.getPermissionsForDomain(grantee)
+    const granteePerms = ctrl.getPermissionsForDomain(grantee.origin)
     t.ok(granteePerms.length === 1, 'grantee domain has a single permission')
 
     const newPerm = granteePerms[0]
