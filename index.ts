@@ -1,6 +1,8 @@
 /// <reference path="./src/interfaces/json-rpc-2.d.ts" />
+/// <reference path="./src/interfaces/obs-store.d.ts" />
+/// <reference path="./src/interfaces/gaba.d.ts" />
+/// <reference path="./src/interfaces/json-rpc-engine.d.ts" />
 
-import ObservableStore from 'obs-store';
 import uuid from 'uuid/v4';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/interfaces/json-rpc-2';
 import BaseController from 'gaba/BaseController';
@@ -30,17 +32,6 @@ const USER_REJECTED_ERROR: JsonRpcError<null> = {
   message: 'User rejected the request.',
 };
 
-type JsonRpcEngineEndCallback = (error?: JsonRpcError<any>) => void;
-type JsonRpcEngineNextCallback = (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void;
-
-interface JsonRpcMiddleware {
-  (
-    req: JsonRpcRequest<any>,
-    res: JsonRpcResponse<any>,
-    next: JsonRpcEngineNextCallback,
-    end: JsonRpcEngineEndCallback,
-  ) : void;
-}
 
 interface AuthenticatedJsonRpcMiddleware {
   (
@@ -159,7 +150,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
   private methodPrefix: string;
-  public memStore: ObservableStore;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
     super(config, state || {});
