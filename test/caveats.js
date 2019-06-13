@@ -1,67 +1,56 @@
+/// <reference path="../index.ts" />
+
 const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController
-// import CapabilitiesController from '../';
 
-// TODO: Standardize!
-// Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
-const USER_REJECTION_CODE = 5
-
-test('safe method should pass through', async (t) => {
+test('caveat defined at setup can be used', async (t) => {
   const WRITE_RESULT = 'impeccable result'
+  const domain = 'login.metamask.io'
 
   const ctrl = new CapabilitiesController({
-    safeMethods: ['public_read'],
-    requestUserApproval: noop,
-  }, {})
-
-  const domain = {origin: 'login.metamask.io'}
-  let req = { method: 'public_read' }
-  let res = {}
-
-  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
-
-  function next() {
-    t.ok(true, 'next was called')
-    t.end()
-  }
-
-  function end(reason) {
-    t.error(reason, 'error thrown')
-    t.equal(res.result, WRITE_RESULT)
-    t.end()
-  }
-
-})
-
-test('requesting restricted method is rejected', async (t) => {
-  const WRITE_RESULT = 'impeccable result'
-  const domain = {origin: 'login.metamask.io'}
-
-  const ctrl = new CapabilitiesController({
-
-    // safe methods never require approval,
-    // are considered trivial / no risk.
-    // maybe reading should be a permission, though!
-    safeMethods: ['eth_read'],
-
-    // optional prefix for internal methods
-    methodPrefix: 'wallet_',
 
     restrictedMethods: {
-      'eth_write': {
+      'write': {
         method: (req, res, next, end) => {
           res.result = WRITE_RESULT
         }
       }
     },
 
-    requestUserApproval: noop,
-},
-{
-  domains: {}
-})
+    caveats: {
 
-  let req = { method: 'eth_write' }
+       // This caveat always returns "foo".
+       returnFoo: (serializedCaveat) => {
+           return (req, res, next, end) => {
+               res.result = "foo";
+               end();
+           }
+       }
+    },
+
+    // This user always approves with the "returnFoo" caveat.
+    requestUserApproval: (metadata, permissions) => {
+       return {
+           [domain]: {
+               permissions: {
+                   write: { type: 'returnFoo'}
+               }
+           }
+       } 
+    },
+  },
+  {
+    domains: {}
+  })
+
+  let req = {
+    method: 'requestPermissions',
+    params: [
+      {
+        'write': {},
+      }
+    ]
+  }
   let res = {}
   ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
@@ -71,19 +60,39 @@ test('requesting restricted method is rejected', async (t) => {
   }
 
   function end(reason) {
-    t.ok(reason, 'error should be thrown')
-    t.ok(res.error, 'should have error object')
-    t.equal(reason.code, 1, 'error code should be 1.')
-    t.equal(res.error.code, 1, 'error code should be 1.')
-    t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.')
-    t.end()
-  }
+    t.notOk(reason, 'error should not be thrown')
+    t.notOk(res.error, 'should not have error object')
 
+    // Now let's call a restricted method:
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        }
+      ]
+    }
+    let res = {}
+    ctrl.providerMiddlewareFunction(domain, req, res, next2, end2)
+
+    function next2() {
+      t.ok(false, 'next should not be called')
+      t.end()
+    }
+
+    function end2(reason) {
+      t.notOk(reason, 'error should not be thrown')
+      t.notOk(res.error, 'should not have error object')
+      t.equal(res.result, 'foo', 'This caveat should always return foo.')
+      t.end()
+    }
+  }
 })
 
+/*
 test('requesting restricted method with permission is called', async (t) => {
   const WRITE_RESULT = 'impeccable result'
-  const domain = {origin: 'login.metamask.io'}
+  const domain = 'login.metamask.io'
 
   const ctrl = new CapabilitiesController({
 
@@ -134,4 +143,4 @@ test('requesting restricted method with permission is called', async (t) => {
   }
 })
 
-function noop () {}
+*/

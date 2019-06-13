@@ -10,7 +10,7 @@ test('revokePermissions on granted permission deletes that permission', async (t
   const expected = []
 
   const ctrl = new CapabilitiesController({
-    requestUserApproval: () => Promise.resolve(true),
+    requestUserApproval: () => Promise.resolve({}),
   },
   {
     'domains': {
@@ -34,17 +34,15 @@ test('revokePermissions on granted permission deletes that permission', async (t
     },
   })
 
-  const domain = 'login.metamask.io'
-  const otherDomain = 'other.domain.com'
+  const domain = { origin: 'login.metamask.io' }
+  const otherDomain = { origin: 'other.domain.com' }
   let req = {
     method: 'revokePermissions',
     params: [
-      otherDomain,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      otherDomain.origin,
+      {
+        restricted: {},
+      },
     ]
   }
   let res = {}
@@ -58,8 +56,8 @@ test('revokePermissions on granted permission deletes that permission', async (t
 
   function end(reason) {
     t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), expected), 'should have no permissions now')
-    t.ok(ctrl.getPermissionsForDomain(domain), 'should have permissions still')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain.origin), expected), 'should have no permissions now')
+    t.ok(ctrl.getPermissionsForDomain(domain.origin), 'should have permissions still')
     t.end()
   }
 })
@@ -94,17 +92,15 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
     },
   })
 
-  const domain = 'login.metamask.io'
-  const otherDomain = 'other.domain.com'
+  const domain = { origin: 'login.metamask.io' }
+  const otherDomain = { origin: 'other.domain.com' }
   let req = {
     method: 'revokePermissions',
     params: [
-      otherDomain,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      otherDomain.origin,
+      {
+        restricted: {},
+      },
     ]
   }
   let res = {}
@@ -119,8 +115,8 @@ test('revokePermissions on unrelated permission returns auth error', async (t) =
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, 1, 'Auth error returned')
-    t.ok(ctrl.getPermissionsForDomain(otherDomain), 'should have permissions still')
-    t.ok(ctrl.getPermissionsForDomain(otherDomain), 'should have permissions still')
+    t.ok(ctrl.getPermissionsForDomain(otherDomain.origin), 'should have permissions still')
+    t.ok(ctrl.getPermissionsForDomain(otherDomain.origin), 'should have permissions still')
     t.end()
   }
 
@@ -155,16 +151,14 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
     },
   })
 
-  const domain = 'login.metamask.io'
+  const domain = { origin: 'login.metamask.io' }
   let req = {
     method: 'revokePermissions',
     params: [
-      domain,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      domain.origin,
+      {
+        restricted: {},
+      },
     ]
   }
   let res = {}
@@ -178,7 +172,7 @@ test('revokePermissions on own permission deletes that permission.', async (t) =
 
   function end(reason) {
     t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have deleted permissions')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have deleted permissions')
     t.end()
   }
 })
@@ -200,15 +194,15 @@ test('revokePermissions on specific granter and method deletes only the single i
     }
   ]
 
-  const domain = 'login.metamask.io'
-  const otherDomain = 'other.domain.com'
+  const domain = { origin: 'login.metamask.io' }
+  const otherDomain = { origin: 'other.domain.com' }
 
   const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve(true),
   },
   {
     'domains': {
-        [domain]: {
+      [domain.origin]: {
         'permissions': [
           {
             method: 'restricted',
@@ -217,11 +211,11 @@ test('revokePermissions on specific granter and method deletes only the single i
           {
             method: 'restricted',
             date: '0',
-            granter: otherDomain,
+            granter: otherDomain.origin,
           }
         ]
       },
-      [otherDomain]: {
+      [otherDomain.origin]: {
         'permissions': [
           {
             method: 'restricted',
@@ -236,44 +230,36 @@ test('revokePermissions on specific granter and method deletes only the single i
   let req = {
     method: 'revokePermissions',
     params: [
-      domain,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
-    ]
-  }
-  let res = {}
-
-  ctrl.providerMiddlewareFunction(otherDomain, req, res, next, () => {})
-
-  t.ok(equal(ctrl.getPermissionsForDomain(domain), expected1), 'should have deleted target permission only')
-
-  req = {
-    method: 'revokePermissions',
-    params: [
-      domain,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      domain.origin,
+      {
+        restricted: {},
+      },
     ]
   }
 
-  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+  try {
+    let res = await sendRpcMethodWithResponse(ctrl, otherDomain, req);
 
-  function next() {
-    t.ok(false, 'next should not be called')
-    t.end()
-  }
+    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected1), 'should have deleted target permission only')
 
-  function end(reason) {
-    t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected2), 'should have deleted the other permission')
-    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), otherExpected), 'other domain unaffected')
+    req = {
+      method: 'revokePermissions',
+      params: [
+        domain.origin,
+        {
+          restricted: {},
+        },
+      ]
+    }
+
+    res = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected2), 'should have deleted the other permission')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain.origin), otherExpected), 'other domain unaffected')
     t.end()
+
+  } catch (err) {
+    t.end(err);
   }
 })
 
@@ -294,29 +280,29 @@ test('revokePermissions deletes multiple permissions in single request', async (
     }
   ]
 
-  const domain = 'login.metamask.io'
-  const otherDomain = 'other.domain.com'
+  const domain = { origin: 'login.metamask.io' }
+  const otherDomain = { origin: 'other.domain.com' }
 
   const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve(true),
   },
   {
     'domains': {
-        [domain]: {
+      [domain.origin]: {
         'permissions': [
           {
             method: 'restricted1',
             date: '0',
-            granter: otherDomain,
+            granter: otherDomain.origin,
           },
           {
             method: 'restricted2',
             date: '0',
-            granter: otherDomain,
+            granter: otherDomain.origin,
           }
         ]
       },
-      [otherDomain]: {
+      [otherDomain.origin]: {
         permissions: otherExpected,
       }
     },
@@ -325,30 +311,43 @@ test('revokePermissions deletes multiple permissions in single request', async (
   let req = {
     method: 'revokePermissions',
     params: [
-      domain,
-      [
-        {
-          method: 'restricted1',
-        },
-        {
-          method: 'restricted2',
-        },
-      ],
+      domain.origin,
+      {
+        restricted1: {},
+        restricted2: {},
+      },
     ]
   }
-  let res = {}
 
-  ctrl.providerMiddlewareFunction(otherDomain, req, res, next, end)
-
-  function next() {
-    t.ok(false, 'next should not be called')
+  try {
+    let res = await sendRpcMethodWithResponse(ctrl, otherDomain, req)
+    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have deleted both permissions')
+    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain.origin), otherExpected), 'other domain unaffected')
     t.end()
-  }
-
-  function end(reason) {
-    t.error(reason, 'error should not be thrown')
-    t.ok(equal(ctrl.getPermissionsForDomain(domain), expected), 'should have deleted both permissions')
-    t.ok(equal(ctrl.getPermissionsForDomain(otherDomain), otherExpected), 'other domain unaffected')
-    t.end()
+  } catch (err) {
+    t.end(err);
   }
 })
+
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
+  let res = {}
+  return new Promise((resolve, reject) => {
+    ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+    function next() {
+      reject()
+    }
+
+    function end(reason) {
+      if (reason) {
+        reject(reason)
+      }
+      if (res.error) {
+        reject(res.error)
+      }
+
+      resolve(res)
+    }
+  })
+}
+
