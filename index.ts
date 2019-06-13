@@ -21,6 +21,11 @@ const METHOD_NOT_FOUND: JsonRpcError<null> = {
   message: 'Method not found',
 };
 
+const INVALID_REQUEST: JsonRpcError<null> = {
+  code: -32602,
+  message: 'Invalid request.'
+}
+
 // TODO: This error code needs standardization:
 const USER_REJECTED_ERROR: JsonRpcError<null> = {
   code: 5,
@@ -28,22 +33,23 @@ const USER_REJECTED_ERROR: JsonRpcError<null> = {
 };
 
 type JsonRpcEngineEndCallback = (error?: JsonRpcError<any>) => void;
+type JsonRpcEngineNextCallback = (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void;
 
 interface JsonRpcMiddleware {
   (
     req: JsonRpcRequest<any>,
     res: JsonRpcResponse<any> | JsonRpcFailure<any>,
-    next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
+    next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void;
 }
 
 interface AuthenticatedJsonRpcMiddleware {
   (
-    domain: 'string',
+    domain: IOriginMetadata,
     req: JsonRpcRequest<any[]>,
     res: JsonRpcResponse<any> | JsonRpcFailure<any>,
-    next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
+    next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void;
 }
@@ -54,13 +60,13 @@ interface AuthenticatedJsonRpcMiddleware {
  */
 interface IPermissionsRequest {
   origin: string;
-  metadata: IUserApprovalMetadata;
+  metadata: IOriginMetadata ;
   options: IRequestedPermissions;
 }
 
-interface IUserApprovalMetadata {
+interface IOriginMetadata {
   id: string;
-  origin: string;
+  origin: IOriginString;
   siteTitle?: string,
 }
 
@@ -91,6 +97,8 @@ interface RpcCapDomainEntry {
   permissions?: RpcCapPermission[];
 }
 
+type IOriginString = string;
+
 /**
  * The schema used to serialize an assigned permission for a method to a domain.
  */
@@ -98,7 +106,7 @@ interface RpcCapPermission extends IMethodRequest {
   method?: string;
   id?: string;
   date?: number;
-  granter?: string;
+  granter?: IOriginString;
 }
 
 interface CapabilitiesConfig {
@@ -125,11 +133,9 @@ interface RestrictedMethodMap {
 }
 
 interface RpcCapInterface {
-  providerMiddlewareFunction: AuthenticatedJsonRpcMiddleware;
-  executeMethod: AuthenticatedJsonRpcMiddleware;
   getPermissionsForDomain: (domain: string) => RpcCapPermission[];
   getPermission: (domain: string, method: string) => RpcCapPermission | undefined;
-  getPermissionUnTraversed: (domain:string, method:string, granter?: string) => RpcCapPermission[] | undefined;
+  getPermissionUnTraversed: (domain:string, method:string, granter?: string) => RpcCapPermission | undefined;
   getPermissions: () => RpcCapPermission[];
   getPermissionsRequests: () => IPermissionsRequest[];
   grantNewPermissions (domain: string, approved: IRequestedPermissions, res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?: string): void;
@@ -141,10 +147,12 @@ interface RpcCapInterface {
   removePermissionsFor: (domain: string, permissionsToRemove: RpcCapPermission[]) => void;
 
   // Injected permissions-handling methods:
+  providerMiddlewareFunction: AuthenticatedJsonRpcMiddleware;
   getPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
   requestPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
   grantPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
   revokePermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
+  executeMethod: AuthenticatedJsonRpcMiddleware;
 }
 
 export class CapabilitiesController extends BaseController implements RpcCapInterface {
@@ -195,16 +203,9 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
    * The one difference being the first argument should be
    * a unique string identifying the requesting agent/entity,
    * referred to as `domain` in the code. This allows the function to be curried and converted into a normal json-rpc-middleware function.
-   *
-   * @param {string} domain - A unique string representing the requesting entity.
-   * @param {Object} req - The JSON-RPC compatible request object.
-   * @param {string} req.method - The JSON RPC method being called.
-   * @param {Object} res - The JSON RPC compatible response object.
-   * @param {callback} next - A function to pass the responsibility of handling the request down the json-rpc-engine middleware stack.
-   * @param {callback} end - A function to stop traversing the middleware stack, and reply immediately with the current `res`. Can be passed an Error object to return an error.
    */
   providerMiddlewareFunction (
-    domain: 'string',
+    domain: IOriginMetadata,
     req: JsonRpcRequest<any[]>,
     res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
@@ -225,7 +226,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
     // Traverse any permission delegations
     let permission;
     try {
-      permission = this.getPermission(domain, methodName);
+      permission = this.getPermission(domain.origin, methodName);
     } catch (err) {
       res.error = {
         message: err.message,
@@ -243,19 +244,19 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   }
 
   executeMethod (
-    domain: 'string',
-    req: JsonRpcRequest<any[]>,
-    res: JsonRpcFailure<any> | JsonRpcResponse<any[]>,
+    domain: IOriginMetadata,
+    req: JsonRpcRequest<any>,
+    res: JsonRpcFailure<any> | JsonRpcResponse<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
    const methodName = req.method;
-    const permission = this.getPermission(domain, methodName);
+    const permission = this.getPermission(domain.origin, methodName);
     if (Object.keys(this.restrictedMethods).includes(methodName)
         && typeof this.restrictedMethods[methodName].method === 'function') {
 
       // Support static caveat:
-      if (permission.caveats) {
+      if (permission !== undefined && permission.caveats !== undefined) {
         const statics = permission.caveats.filter(c => c.type === 'static');
 
         if (statics.length > 0) {
@@ -301,7 +302,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
 
     while (permissions.length > 0) {
       perm = permissions.shift();
-      if (perm.granter) {
+      if (perm !== undefined && perm.granter) {
         permissions = this.getPermissionsForDomain(perm.granter).filter(
           methodFilter
         );
@@ -399,7 +400,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
     return domains || {};
   }
 
-  setDomains = function (domains: RpcCapDomainRegistry) {
+  setDomains (domains: RpcCapDomainRegistry) : void {
     this.update({ domains });
   }
 
@@ -408,13 +409,15 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
 
     // Setup if not yet existent:
     if (!(Object.keys(domains).includes(domain))) {
-      domains[domain] = { permissions: [] };
+      const newDomain = { permissions: [] };
+      domains[domain] = newDomain;
+      return newDomain;
     }
 
     return domains[domain];
   }
 
-  setDomain (domain: string, domainSettings: RpcCapDomainEntry) {
+  setDomain (domain: IOriginString, domainSettings: RpcCapDomainEntry) {
     const domains = this.getDomains();
     domains[domain] = domainSettings;
     const state = this.state;
@@ -433,10 +436,8 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   addPermissionsFor (domainName: string, newPermissions: RpcCapPermission[]) {
     let domain = this.getDomainSettings(domainName);
 
-    if (!domain) {
-      domain = {
-        permissions: []
-      }
+    if (domain === undefined) {
+      domain = { permissions: [] };
     }
 
     // remove old permissions this will be overwritten
@@ -476,6 +477,10 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   removePermissionsFor (domainName: string, permissionsToRemove: RpcCapPermission[]) {
     const domain = this.getDomainSettings(domainName);
 
+    if (domain === undefined || domain.permissions === undefined) {
+      return;
+    }
+
     domain.permissions = domain.permissions.reduce((acc: RpcCapPermission[], perm: RpcCapPermission) => {
       let keep = true;
       for (let r of permissionsToRemove) {
@@ -494,41 +499,48 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
     this.setDomain(domainName, domain);
   }
 
-  getPermissionsMiddleware (domain, req, res, next, end) {
-    const permissions = this.getPermissionsForDomain(domain);
+  getPermissionsMiddleware (
+    domain: IOriginMetadata,
+    req: JsonRpcRequest<any>,
+    res: JsonRpcResponse<any>,
+    next: JsonRpcEngineNextCallback,
+    end: JsonRpcEngineEndCallback)
+  {
+    const permissions = this.getPermissionsForDomain(domain.origin);
     res.result = permissions;
     end();
   }
 
   /**
    * The capabilities middleware function used for requesting additional permissions from the user.
-   *
-   * @param {Object} req - The JSON RPC formatted request object.
-   * @param {Array} req.params - The JSON RPC formatted params array.
-   * @param {Object} req.params[0] - An object of the requested permissions.
    */
   requestPermissionsMiddleware (
-    domain: 'string',
+    metadata: IOriginMetadata,
     req: JsonRpcRequest<any[]>,
     res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
-    const metadata = req.metadata || {
-      origin: domain,
-      siteTitle: domain,
-    };
+
+    // Validate request
+    if (
+      req === undefined ||
+      req.params[0] === undefined ||
+      typeof req.params[0] !== 'object'
+    ) {
+      res.error = INVALID_REQUEST;
+      return end(INVALID_REQUEST);
+    }
 
     if (!metadata.id) {
       metadata.id = uuid();
     }
 
-    // TODO: Validate permissions request
     const permissions: IRequestedPermissions = req.params[0];
     const requests = this.getPermissionsRequests();
 
     const permissionsRequest: IPermissionsRequest = {
-      origin: domain,
+      origin: metadata.origin,
       metadata,
       options: permissions,
     };
@@ -550,7 +562,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
       this.removePermissionsRequest(permissionsRequest.metadata.id)
 
       // If user approval is different, use it as the permissions:
-      this.grantNewPermissions(domain, approved, res, end);
+      this.grantNewPermissions(metadata.origin, approved, res, end);
     })
     .catch((reason) => {
       res.error = reason;
@@ -559,32 +571,38 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   }
 
   grantPermissionsMiddleware (
-    granter: 'string',
+    metadata: IOriginMetadata,
     req: JsonRpcRequest<any[]>,
     res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
+    const granter: IOriginString = metadata.origin;
 
-    // TODO: Validate params
+    // Validate request
+    if (
+      req === undefined ||
+      req.params[0] === undefined ||
+      req.params[1] === undefined ||
+      typeof req.params[0] !== 'string' ||
+      typeof req.params[1] !== 'object'
+    ) {
+      res.error = INVALID_REQUEST;
+      return end(INVALID_REQUEST);
+    }
+
     // TODO: Allow objects in requestedPerms to specify permission id
-    let grantee: string = req.params[0];
-    let requestedPerms: RpcCapPermission[] = req.params[1];
+    const grantee: IOriginString = req.params[0];
+    const requestedPerms: IRequestedPermissions = req.params[1];
     const newlyGranted: RpcCapPermission[] = [];
 
-    // remove duplicates from requestedPerms
-    const methodNames = {};
-    requestedPerms = requestedPerms.filter(p => {
-      if (!methodNames[p.method]) {
-        methodNames[p.method] = true;
-        return true;
-      }
-      return false;
-    });
-
     let ended = false;
-    requestedPerms.forEach((reqPerm) => {
-      const methodName = reqPerm.method;
+    for (let methodName in requestedPerms) {
+      const reqPerm = requestedPerms[methodName];
+      if (reqPerm === undefined || methodName === undefined) {
+        return;
+      }
+
       const perm = this.getPermission(granter, methodName);
       if (perm) {
         const newPerm: RpcCapPermission = {
@@ -600,7 +618,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
         ended = true;
         return end(res.error);
       }
-    });
+    }
 
     if (ended) {
       return;
@@ -612,28 +630,41 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
   }
 
   revokePermissionsMiddleware (
-    domain: 'string',
+    domain: IOriginMetadata,
     req: JsonRpcRequest<any[]>,
     res: JsonRpcResponse<any[]> | JsonRpcFailure<any>,
     next: (returnFlightCallback?: (res: JsonRpcResponse<any>) => void) => void,
     end: JsonRpcEngineEndCallback,
   ) : void {
-    // TODO: Validate params
-    const [ assignedDomain, requestedPerms ] = req.params;
+
+    // Validate request
+    if (
+      req === undefined ||
+      req.params[0] === undefined ||
+      req.params[1] === undefined ||
+      typeof req.params[0] !== 'string' ||
+      typeof req.params[1] !== 'object'
+    ) {
+      res.error = INVALID_REQUEST;
+      return end(INVALID_REQUEST);
+    }
+
+    const assignedDomain: IOriginString = req.params[0];
+    const requestedPerms: IRequestedPermissions = req.params[1];
     const newlyRevoked: RpcCapPermission[] = [];
 
     let ended = false;
-    requestedPerms.forEach((reqPerm: string | RpcCapPermission) => {
-      const methodName = typeof reqPerm === 'string' ? reqPerm : reqPerm.method;
+
+    for (let methodName in requestedPerms) {
       const perm = this.getPermissionUnTraversed(
-        assignedDomain, methodName, domain
+        assignedDomain, methodName, domain.origin
       );
       if (
             perm && (
               // Grantors can revoke what they have granted:
-              (perm.granter && perm.granter === domain) ||
+              (perm.granter && perm.granter === domain.origin) ||
               // Domains can revoke their own permissions:
-              (assignedDomain === domain)
+              (assignedDomain === domain.origin)
             )
           ) {
         newlyRevoked.push(perm);
@@ -642,7 +673,7 @@ export class CapabilitiesController extends BaseController implements RpcCapInte
         ended = true;
         return end(res.error);
       }
-    });
+    }
 
     if (ended) {
       return;
