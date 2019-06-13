@@ -25,12 +25,13 @@ interface JsonRpcNotification<T> extends JsonRpcResponse<T> {
 }
 
 interface JsonRpcResponse<T> {
+  result: any;
   jsonrpc: JsonRpcVersion;
   id: JsonRpcId;
 }
 
 interface JsonRpcSuccess<T> extends JsonRpcResponse<T> {
-    result: T;
+    result: any;
 }
 
 interface JsonRpcFailure<T> extends JsonRpcResponse<T> {
