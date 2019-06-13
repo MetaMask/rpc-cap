@@ -17,7 +17,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   let req = {
     method: 'requestPermissions',
     params: [
-        ['restricted']
+        [{restricted: {}}]
     ]
   }
   let res = {}
@@ -42,30 +42,25 @@ test('requestPermissions with user approval creates permission', async (t) => {
   const expected = {
      domains: {
       'login.metamask.io': {
-        permissions: [
-          {
-            method: 'restricted',
-            date: '0',
-          }
-        ]
+        permissions: [{
+          restricted: {}
+        }]
       }
     }
   }
 
 
   const ctrl = new CapabilitiesController({
-    requestUserApproval: () => Promise.resolve(expected.domains['login.metamask.io']),
+    requestUserApproval: () => Promise.resolve(expected.domains['login.metamask.io'].permissions[0]),
   })
 
   const domain = { origin: 'login.metamask.io' }
   let req = {
     method: 'requestPermissions',
     params: [
-      [
-        {
-          method: 'restricted'
-        }
-      ]
+      {
+        restricted: {}
+      }
     ]
   }
   let res = {}
@@ -81,66 +76,8 @@ test('requestPermissions with user approval creates permission', async (t) => {
     t.error(reason, 'error should not be thrown')
     t.error(res.error, 'error should not be thrown')
     const endState = ctrl.state
-    t.ok(equal(endState.domains[domain.origin].permissions, req.params[0]), 'should have the requested permissions')
-    t.end()
-  }
-})
-
-test('requestPermissions with returned stub object defines future responses', async (t) => {
-  const expected = ['Account 1']
-
-  const ctrl = new CapabilitiesController({
-
-    restrictedMethods: {
-      'viewAccounts': {
-        description: 'Allows viewing the public address of an Ethereum account.',
-        method: (req, res, next, end) => {
-          res.result = expected.concat(['Account 2 secret account'])
-          end()
-        },
-      },
-    },
-
-    requestUserApproval: async (domain, req) => {
-      return {
-        'viewAccounts': [{
-          type: 'static',
-          value: expected,
-        }],
-      }
-    },
-  })
-
-  const domain = { origin: 'login.metamask.io' }
-  let req = {
-    method: 'requestPermissions',
-    params: [
-      [
-        {
-          method: 'viewAccounts'
-        }
-      ]
-    ]
-  }
-
-  try {
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req)
-
-    let accountsReq = {
-      method: req.params[0][0]['method'], // 'viewAccounts'
-    }
-
-    let result = await sendRpcMethodWithResponse(ctrl, domain, accountsReq)
-    let accounts = result.result
-
-    t.equal(accounts.length, 1, 'returns one account')
-    t.ok(equal(accounts, expected, 'returns expected account'))
-    t.equal(ctrl.getPermissionsRequests().length, 0, 'no permissions requests remain')
-
-    t.end()
-
-  } catch (reason) {
-    t.error(reason)
+    const perms = endState.domains[domain.origin].permissions;
+    t.equal(perms[0].method, 'restricted', 'permission added.')
     t.end()
   }
 })

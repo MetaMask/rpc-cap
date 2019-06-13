@@ -19,7 +19,7 @@ test('grantPermissions with no permission creates no permissions', async (t) => 
   let req = {
     method: 'grantPermissions',
     params: [
-      otherDomain,
+      otherDomain.origin,
       [
         {
           method: 'restricted',
@@ -74,13 +74,11 @@ test('grantPermissions with permission creates permission', async (t) => {
   {
     domains: {
       'login.metamask.io': {
-        permissions: [
-          {
-            method: 'restricted',
-            date: '0',
-          }
-        ],
-      }
+        permissions: [{
+          method: 'restricted',
+          date: '0',
+        }],
+      },
     }
   })
 
@@ -89,17 +87,15 @@ test('grantPermissions with permission creates permission', async (t) => {
   let req = {
     method: 'grantPermissions',
     params: [
-      grantee,
-      [
-        {
-          method: 'restricted',
-        },
-      ],
+      grantee.origin,
+      {
+        restricted: {},
+      },
     ]
   }
   let res = {}
 
-  ctrl.providerMiddlewareFunction(granter, req, res, next, end)
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
 
   function next() {
     t.ok(false, 'next should not be called')
@@ -141,7 +137,7 @@ test('grantPermissions with permission whose granter does not exist results in a
   let req = {
     method: 'grantPermissions',
     params: [
-        otherDomain,
+        otherDomain.origin,
       [
         {
           method: 'restricted',
@@ -212,7 +208,7 @@ test('grantPermissions accumulates the same permission from different granters',
   let req = {
     method: 'grantPermissions',
     params: [
-        grantee,
+        grantee.origin,
       [
         {
           method: 'restricted',
@@ -285,7 +281,7 @@ test('grantPermissions replaces duplicate permissions', async (t) => {
   let req = {
     method: 'grantPermissions',
     params: [
-      grantee,
+      grantee.origin,
       [
         {
           method: 'restricted'

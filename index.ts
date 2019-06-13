@@ -133,7 +133,7 @@ interface RpcCapInterface {
   getDomainSettings: (domain: string) => RpcCapDomainEntry;
   getOrCreateDomainSettings: (domain: string) => RpcCapDomainEntry;
   setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
-  addPermissionsFor: (domainName: string, newPermissions: RpcCapPermission[]) => void;
+  addPermissionsFor: (domainName: string, newPermissions: { [methodName: string]: RpcCapPermission }) => void;
   removePermissionsFor: (domain: string, permissionsToRemove: RpcCapPermission[]) => void;
 
   // Injected permissions-handling methods:
@@ -287,7 +287,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const methodFilter = (p: RpcCapPermission) => p.method === method;
 
     let perm;
-    let permissions = this.getPermissionsForDomain(domain).filter(methodFilter);
+    let permissions = this.getPermissionsForDomain(domain)
+    permissions = permissions.filter(methodFilter);
 
     while (permissions.length > 0) {
       perm = permissions.shift();
@@ -367,16 +368,17 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   grantNewPermissions (domain: string, approved: IRequestedPermissions, 
     res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?:string) {
 
-    const permissions: RpcCapPermission[] = [];
+    const permissions: { [methodName: string]: RpcCapPermission } = {};
 
     for (let method in approved) {
-      permissions.push({
+      const newPerm = {
         method,
         caveats: approved[method].caveats,
         id: uuid(),
         date: Date.now(),
         granter: granter || 'user', 
-      })
+      };
+      permissions[method] = newPerm;
     }
 
     this.addPermissionsFor(domain, permissions);
@@ -418,9 +420,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   setDomain (domain: IOriginString, domainSettings: RpcCapDomainEntry) {
     const domains = this.getDomains();
     domains[domain] = domainSettings;
-    const state = this.state;
-    state.domains = domains;
-    this.update(state, true);
+    this.setDomains(domains)
   }
 
   /**
@@ -431,14 +431,15 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domainName - The grantee domain.
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
-  addPermissionsFor (domainName: string, newPermissions: RpcCapPermission[]) {
+  addPermissionsFor (domainName: string, newPermissions: { [methodName:string]: RpcCapPermission }) {
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
 
     // remove old permissions this will be overwritten
     domain.permissions = domain.permissions.filter((oldPerm: RpcCapPermission) => {
       let isReplaced = false;
 
-      for (let newPerm of newPermissions) {
+      for (let methodName in newPermissions) {
+        let newPerm = newPermissions[methodName];
         if (
           oldPerm.method === newPerm.method &&
           oldPerm.granter === newPerm.granter
@@ -451,8 +452,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     })
 
     // add new permissions
-    // TODO: ensure newPermissions only contains unique permissions
-    for (let perm of newPermissions) {
+    for (let methodName in newPermissions) {
+      const perm = newPermissions[methodName];
       if (!perm.id) {
         perm.id = uuid();
         perm.date = Date.now();
@@ -585,10 +586,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return end(INVALID_REQUEST);
     }
 
-    // TODO: Allow objects in requestedPerms to specify permission id
     const grantee: IOriginString = req.params[0];
     const requestedPerms: IRequestedPermissions = req.params[1];
-    const newlyGranted: RpcCapPermission[] = [];
+    const newlyGranted: { [ method: string]: RpcCapPermission } = {};
 
     let ended = false;
     for (let methodName in requestedPerms) {
@@ -606,7 +606,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
           method: methodName,
         };
         if (perm.caveats) { newPerm.caveats = perm.caveats; }
-        newlyGranted.push(newPerm);
+        newlyGranted[methodName] = newPerm;
       } else {
         res.error = unauthorized(req);
         ended = true;
