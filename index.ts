@@ -152,7 +152,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void {
-    console.log('provider middleware function handling', req)
     const methodName = req.method;
 
     // skip registered safe/passthrough methods.
@@ -178,12 +177,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     if (!permission) {
-      console.log('no permission detected!')
       res.error = unauthorized(req);
       return end(res.error);
     }
 
-    console.log('executing method');
     this.executeMethod(domain, req, res, next, end);
   }
 
@@ -195,9 +192,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     end: JsonRpcEngineEndCallback,
   ) : void {
     const methodName = req.method;
-    console.log('getting permission for ', methodName);
     const permission = this.getPermission(domain.origin, methodName);
-    console.dir(permission);
     if (Object.keys(this.restrictedMethods).includes(methodName)
         && typeof this.restrictedMethods[methodName].method === 'function') {
 
@@ -219,11 +214,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
           _next:JsonRpcEngineNextCallback,
           _end:JsonRpcEngineEndCallback
         ) => {
-          console.log('caveat engine is passing through!', _req);
           next();
         });
 
-        console.log('caveat engine is handling', req)
         engine.handle(req, (err: JsonRpcError<any>, caveatRes: JsonRpcResponse<any>) => {
           if (err) {
             res.error = err;
@@ -235,7 +228,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         });
 
       } else {
-        console.log('no caveats detected');
         return this.restrictedMethods[methodName].method(req, res, next, end);
       }
     }
@@ -246,11 +238,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   getPermissionsForDomain (domain: string): RpcCapPermission[] {
     const { domains = {} } = this.state;
-    console.log('domains: ', domains)
     if (Object.keys(domains).includes(domain)) {
       const { permissions } = domains[domain];
-      console.log('domain object', domains[domain])
-      console.log('permissions', permissions);
       return permissions;
     }
     return [];
@@ -264,11 +253,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} method - The method
    */
   getPermission (domain: string, method: string): RpcCapPermission | undefined {
-    console.log('getPermission for ', domain, method);
     let permissions = this.getPermissionsForDomain(domain).filter(p => {
       return p.parentCapability === method;
     });
-    console.dir(this.getPermissionsForDomain(domain));
     if (permissions.length > 0) { return permissions.shift(); }
 
     return undefined;
@@ -326,7 +313,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       permissions[method] = newPerm;
     }
 
-    console.log('created permissions', JSON.stringify(permissions));
     this.addPermissionsFor(domain, permissions);
     res.result = this.getPermissionsForDomain(domain);
     end();
@@ -378,7 +364,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
   addPermissionsFor (domainName: string, newPermissions: { [methodName:string]: RpcCapPermission }) {
-    console.log('adding permissions for ', domainName, newPermissions.toString());
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
     const newKeys = Object.keys(newPermissions);
 
@@ -476,13 +461,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     requests.push(permissionsRequest);
     this.setPermissionsRequests(requests);
 
-    console.log('requesting user approval for ', permissionsRequest)
     this.requestUserApproval(permissionsRequest)
     // TODO: Allow user to pass back an object describing
     // the approved permissions, allowing user-customization.
     .then((approved: IRequestedPermissions) => {
-      console.log('user approved', JSON.stringify(approved));
-
       if (Object.keys(approved).length === 0) {
         res.error = USER_REJECTED_ERROR;
         return end(USER_REJECTED_ERROR);
@@ -492,7 +474,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       this.removePermissionsRequest(permissionsRequest.metadata.id)
 
       // If user approval is different, use it as the permissions:
-      console.log('grainting new permissions')
       this.grantNewPermissions(metadata.origin, approved, res, end);
     })
     .catch((reason) => {
