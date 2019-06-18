@@ -73,7 +73,7 @@ const capabilities = createCapabilities({
       'login.metamask.io': {
         permissions: [
           {
-            method: 'eth_write',
+            parentCapability: 'eth_write',
             date: '0',
           }
         ]
@@ -97,8 +97,6 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 
 - getPermissions() - Returns the available (otherwise restricted) capabilities for the domain.
 - requestPermissions(options) - Triggers the authroization flow, probably prompting user response, and creating the requested permissions objects if approved.
-- grantPermissions(targetDomain, permissions) - Delegates some of the requesting domain's permissions to the `targetDomain`, if those permissions exist.
-- revokePermissions(targetDomain, permissions) - Revokes a set of permissions if they are self-owned or were delegated by the requesting domain.
 
 ## Object Definitions
 
