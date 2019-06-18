@@ -1,7 +1,7 @@
-/// <reference path="./src/@types/json-rpc-2.d.ts" />
-/// <reference path="./src/@types/gaba.d.ts" />
-/// <reference path="./src/@types/json-rpc-engine.d.ts" />
-/// <reference path="./src/@types/index.d.ts" />
+/// <reference path="./@types/json-rpc-2.d.ts" />
+/// <reference path="./@types/gaba.d.ts" />
+/// <reference path="./@types/json-rpc-engine.d.ts" />
+/// <reference path="./@types/index.d.ts" />
 
 import uuid from 'uuid/v4';
 const JsonRpcEngine = require('json-rpc-engine')
@@ -11,7 +11,7 @@ import {
   filterParams,
   filterResponse,
   ICaveatFunctionGenerator,
- } from './src/caveats';
+ } from './caveats';
 
 import { 
   RpcCapInterface,
@@ -31,7 +31,7 @@ import {
  } from 'json-rpc-capabilities-middleware/src/@types';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
 import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
-import {  } from './src/errors';
+import {  } from './errors';
 
 function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
   const UNAUTHORIZED_ERROR: JsonRpcError<JsonRpcRequest<any>> = {
