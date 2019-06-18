@@ -11,7 +11,7 @@ import {
   filterParams,
   filterResponse,
   ICaveatFunctionGenerator,
-} from './caveats/index';
+} from './caveats';
 
 import { 
   RpcCapInterface,
