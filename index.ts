@@ -4,8 +4,14 @@
 /// <reference path="./src/@types/index.d.ts" />
 
 import uuid from 'uuid/v4';
+const JsonRpcEngine = require('json-rpc-engine')
 import { BaseController } from 'gaba';
-import { ICaveatFunction, onlyReturnMembers, ICaveatFunctionGenerator } from './src/caveats';
+import {
+  ICaveatFunction,
+  filterParams,
+  filterResponse,
+  ICaveatFunctionGenerator,
+ } from './src/caveats';
 
 import { 
   RpcCapInterface,
@@ -24,7 +30,7 @@ import {
   ISerializedCaveat,
  } from 'json-rpc-capabilities-middleware/src/@types';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
-import { JsonRpcEngineNextCallback, JsonRpcEngineEndCallback } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
+import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
 import {  } from './src/errors';
 
 function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
@@ -76,7 +82,7 @@ class Capability implements RpcCapPermission {
     this.invoker = invoker;
   }
 
-  serialize (): RpcCapPermission {
+  toJSON(): RpcCapPermission {
     return {
       '@context': this['@context'],
       invoker: this.invoker,
@@ -88,7 +94,7 @@ class Capability implements RpcCapPermission {
   }
 
   toString():string {
-    return JSON.stringify(this.serialize());
+    return JSON.stringify(this.toJSON());
   }
 }
 
@@ -97,7 +103,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
-  private caveats: { [ name:string]: ICaveatFunctionGenerator } = { onlyReturnMembers };
+  private caveats: { [ name:string]: ICaveatFunctionGenerator } = { filterParams, filterResponse };
   private methodPrefix: string;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
@@ -146,6 +152,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void {
+    console.log('provider middleware function handling', req)
     const methodName = req.method;
 
     // skip registered safe/passthrough methods.
@@ -171,12 +178,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     if (!permission) {
+      console.log('no permission detected!')
       res.error = unauthorized(req);
       return end(res.error);
     }
 
-
-
+    console.log('executing method');
     this.executeMethod(domain, req, res, next, end);
   }
 
@@ -187,22 +194,50 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void {
-   const methodName = req.method;
+    const methodName = req.method;
+    console.log('getting permission for ', methodName);
     const permission = this.getPermission(domain.origin, methodName);
+    console.dir(permission);
     if (Object.keys(this.restrictedMethods).includes(methodName)
         && typeof this.restrictedMethods[methodName].method === 'function') {
 
       // Support static caveat:
-      if (permission !== undefined && permission.caveats !== undefined) {
-        const statics = permission.caveats.filter(c => c.type === 'static');
+      if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
+        const engine = new JsonRpcEngine();
 
-        if (statics.length > 0) {
-          res.result = statics[statics.length - 1].value;
-          return end();
-        }
+        permission.caveats.forEach((serializedCaveat: ISerializedCaveat) => {
+          const caveatFnGens = this.caveats;
+          const caveatFnGen: ICaveatFunctionGenerator = caveatFnGens[serializedCaveat.type];
+          const caveatFn: ICaveatFunction = caveatFnGen(serializedCaveat);
+          engine.push(caveatFn);
+        });
+
+        // After caveat filter, pass through to 
+        engine.push((
+          _req:JsonRpcRequest<any>,
+          _res: JsonRpcResponse<any>,
+          _next:JsonRpcEngineNextCallback,
+          _end:JsonRpcEngineEndCallback
+        ) => {
+          console.log('caveat engine is passing through!', _req);
+          next();
+        });
+
+        console.log('caveat engine is handling', req)
+        engine.handle(req, (err: JsonRpcError<any>, caveatRes: JsonRpcResponse<any>) => {
+          if (err) {
+            res.error = err;
+            return end(err);
+          }
+
+          res = caveatRes;
+          return end(); 
+        });
+
+      } else {
+        console.log('no caveats detected');
+        return this.restrictedMethods[methodName].method(req, res, next, end);
       }
-
-      return this.restrictedMethods[methodName].method(req, res, next, end);
     }
 
     res.error = METHOD_NOT_FOUND;
@@ -211,8 +246,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   getPermissionsForDomain (domain: string): RpcCapPermission[] {
     const { domains = {} } = this.state;
+    console.log('domains: ', domains)
     if (Object.keys(domains).includes(domain)) {
       const { permissions } = domains[domain];
+      console.log('domain object', domains[domain])
+      console.log('permissions', permissions);
       return permissions;
     }
     return [];
@@ -226,9 +264,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} method - The method
    */
   getPermission (domain: string, method: string): RpcCapPermission | undefined {
-   let permissions = this.getPermissionsForDomain(domain).filter(p => {
+    console.log('getPermission for ', domain, method);
+    let permissions = this.getPermissionsForDomain(domain).filter(p => {
       return p.parentCapability === method;
     });
+    console.dir(this.getPermissionsForDomain(domain));
     if (permissions.length > 0) { return permissions.shift(); }
 
     return undefined;
@@ -282,10 +322,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const permissions: { [methodName: string]: RpcCapPermission } = {};
 
     for (let method in approved) {
-      const newPerm = new Capability({ method, invoker: domain });
+      const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
       permissions[method] = newPerm;
     }
 
+    console.log('created permissions', JSON.stringify(permissions));
     this.addPermissionsFor(domain, permissions);
     res.result = this.getPermissionsForDomain(domain);
     end();
@@ -337,31 +378,25 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
   addPermissionsFor (domainName: string, newPermissions: { [methodName:string]: RpcCapPermission }) {
+    console.log('adding permissions for ', domainName, newPermissions.toString());
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
+    const newKeys = Object.keys(newPermissions);
 
     // remove old permissions this will be overwritten
     domain.permissions = domain.permissions.filter((oldPerm: RpcCapPermission) => {
-      let isReplaced = false;
+      return !newKeys.includes(oldPerm.parentCapability);
+    });
 
-      for (let methodName in newPermissions) {
-        let newPerm = newPermissions[methodName];
-        if (oldPerm.parentCapability === newPerm.parentCapability) {
-          isReplaced = true;
-          break;
-        }
-      }
-      return !isReplaced;
-    })
-
-    // add new permissions
     for (let methodName in newPermissions) {
-      const perm = newPermissions[methodName];
-      if (!perm.id) {
-        perm.id = uuid();
-        perm.date = Date.now();
-      }
-      domain.permissions.push(perm);
+      let newPerm = newPermissions[methodName];
+      
+      domain.permissions.push(new Capability({
+        method: newPerm.parentCapability,
+        invoker: domainName,
+        caveats: newPerm.caveats,
+      }));
     }
+
     this.setDomain(domainName, domain);
   }
 
@@ -441,10 +476,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     requests.push(permissionsRequest);
     this.setPermissionsRequests(requests);
 
+    console.log('requesting user approval for ', permissionsRequest)
     this.requestUserApproval(permissionsRequest)
     // TODO: Allow user to pass back an object describing
     // the approved permissions, allowing user-customization.
     .then((approved: IRequestedPermissions) => {
+      console.log('user approved', JSON.stringify(approved));
 
       if (Object.keys(approved).length === 0) {
         res.error = USER_REJECTED_ERROR;
@@ -455,6 +492,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       this.removePermissionsRequest(permissionsRequest.metadata.id)
 
       // If user approval is different, use it as the permissions:
+      console.log('grainting new permissions')
       this.grantNewPermissions(metadata.origin, approved, res, end);
     })
     .catch((reason) => {

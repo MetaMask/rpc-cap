@@ -90,3 +90,9 @@ Man, that library is so verbose. It's so unappealing to have to interface with. 
 With capnode, I really think we could do that. Rather than passing back these capability-describing objects, we could pass back capnode functions with a special `capabilityMetadata` property that includes all this stuff for advanced use.
 
 Most dapps will just care that they have a function they can call. Advanced dapps can get analyze the nuance of what they've been granted.
+
+# After a weekend of consideration
+
+The simplest path to MVP seems to forego delegation and its trials entirely: If we first focus on permitting restricted methods, those applications can then be responsible for delegating their own permissions. In the case of plugins, this already makes many things possible, since scripts can request permission to interact with each other.
+
+
