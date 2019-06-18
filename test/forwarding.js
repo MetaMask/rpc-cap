@@ -11,7 +11,7 @@ test('safe method should pass through', async (t) => {
 
   const ctrl = new CapabilitiesController({
     safeMethods: ['public_read'],
-    requestUserApproval: noop,
+    requestUserApproval: async (permsReq) => permsReq.options,
   }, {})
 
   const domain = {origin: 'login.metamask.io'}
@@ -55,7 +55,7 @@ test('requesting restricted method is rejected', async (t) => {
       }
     },
 
-    requestUserApproval: noop,
+    requestUserApproval: async (permsReq) => permsReq.options,
 },
 {
   domains: {}
@@ -102,14 +102,14 @@ test('requesting restricted method with permission is called', async (t) => {
         }
       }
     },
-    requestUserApproval: noop,
+    requestUserApproval: async (permsReq) => permsReq.options,
   },
   {
     domains: {
       'login.metamask.io': {
         permissions: [
           {
-            method: 'eth_write',
+            parentCapability: 'eth_write',
             date: '0',
           }
         ]
@@ -117,21 +117,37 @@ test('requesting restricted method with permission is called', async (t) => {
     }
   })
 
-  let req = { method: 'eth_write' }
-  let res = {}
-  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
-
-  function next() {
-    t.ok(false, 'next should not be called')
-    t.end()
-  }
-
-  function end(reason) {
-    t.error(reason, 'should not throw error')
+  let req = { method: 'eth_write', params: ['hello!'] };
+  try {
+    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.error(res.error, 'should not have error object')
     t.equal(res.result, WRITE_RESULT, 'Write result should be assigned.')
     t.end()
+  } catch (error) {
+    t.error(error, 'should not throw error');
+    t.end();
   }
 })
 
-function noop () {}
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
+  let res = {}
+  return new Promise((resolve, reject) => {
+    ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+    function next() {
+      reject()
+    }
+
+    function end(reason) {
+      if (reason) {
+        reject(reason)
+      }
+      if (res.error) {
+        reject(res.error)
+      }
+
+      resolve(res)
+    }
+  })
+}
+

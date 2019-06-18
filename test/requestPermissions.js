@@ -63,24 +63,19 @@ test('requestPermissions with user approval creates permission', async (t) => {
       }
     ]
   }
-  let res = {}
 
-  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
-
-  function next() {
-    t.ok(false, 'next should not be called')
-    t.end()
-  }
-
-  function end(reason) {
-    t.error(reason, 'error should not be thrown')
-    t.error(res.error, 'error should not be thrown')
+  try {
+    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
     const endState = ctrl.state
     const perms = endState.domains[domain.origin].permissions;
-    t.equal(perms[0].method, 'restricted', 'permission added.')
+    t.equal(perms[0].parentCapability, 'restricted', 'permission added.')
     t.end()
+ 
+  } catch (error) {
+    t.error(reason, 'error should not be thrown')
+    t.end();
   }
-})
+});
 
 async function sendRpcMethodWithResponse(ctrl, domain, req) {
   let res = {}
