@@ -1,8 +1,8 @@
-/// <reference path="../@types/json-rpc-engine.d.ts" />
-/// <reference path="../@types/is-subset.d.ts" />
+/// <reference path="./@types/json-rpc-engine.d.ts" />
+/// <reference path="./@types/is-subset.d.ts" />
 import { JsonRpcMiddleware } from "json-rpc-capabilities-middleware/src/@types/json-rpc-engine";
 import { isSubset, intersectObjects } from "json-rpc-capabilities-middleware/src/@types/is-subset";
-import { unauthorized } from '../errors';
+import { unauthorized } from './errors';
 const isSubset = require('is-subset');
 const intersectObjects = require('intersect-objects');
 
