@@ -155,6 +155,46 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.executeMethod(domain, req, res, next, end);
   }
 
+  /**
+   * Used for retrieving the key that manages the restricted method
+   * associated with the current RPC `method` key.
+   * 
+   * Used to support our namespaced method feature, which allows blocks
+   * of methods to be hidden behind a restricted method with a trailing `_` character.
+   * 
+   * @param method string - The requested rpc method.
+   * @returns methodKey string
+   */
+  getMethodKeyFor(method: string): string {
+    const managedMethods: string[] = Object.keys(this.restrictedMethods);
+
+    // Return exact matches:
+    if (managedMethods.includes(method)) {
+      return method;
+    }
+
+    // Check for potentially nested namespaces:
+    // Ex: wildzone_
+    // Ex: eth_plugin_
+    if (method.indexOf('_') > 0) {
+
+      const segments = method.split('_');
+      let managed: string = '';
+
+      while (segments.length > 0 && !managedMethods.includes(managed)) {
+        managed += segments.shift() + '_';
+      }
+
+      if (managedMethods.includes(managed)) {
+        return managed;
+      } else {
+        return '';
+      }
+    } else {
+      return managedMethods.includes(method) ? method : '';
+    }
+  }
+
   executeMethod (
     domain: IOriginMetadata,
     req: JsonRpcRequest<any>,
@@ -162,10 +202,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
   ) : void {
-    const methodName = req.method;
-    const permission = this.getPermission(domain.origin, methodName);
-    if (Object.keys(this.restrictedMethods).includes(methodName)
-        && typeof this.restrictedMethods[methodName].method === 'function') {
+    const methodKey = this.getMethodKeyFor(req.method);
+    const permission = this.getPermission(domain.origin, req.method);
+    if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
 
       // Support static caveat:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
@@ -199,7 +238,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         });
 
       } else {
-        return this.restrictedMethods[methodName].method(req, res, next, end);
+        return this.restrictedMethods[methodKey].method(req, res, next, end);
       }
     }
 

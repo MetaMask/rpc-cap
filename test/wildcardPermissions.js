@@ -43,7 +43,7 @@ test('requestPermissions on namespaced method with user approval creates permiss
     let res = await sendRpcMethodWithResponse(ctrl, domain, req);
     req = { method: 'plugin_A' };
     res = await sendRpcMethodWithResponse(ctrl, domain, req);
-    assert.equal(res, 'A', 'returned the segment correctly.');
+    t.equal(res.result, 'A', 'returned the segment correctly.');
     t.end()
 
   } catch (error) {
@@ -93,7 +93,6 @@ test('requestPermissions on namespaced method with user approval does not permit
     t.end()
 
   } catch (error) {
-    console.log(error)
     t.ok(error, 'error should not be thrown');
     t.equal(error.code, 1, 'Should throw auth error');
     t.end();
