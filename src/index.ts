@@ -31,36 +31,7 @@ import {
  } from 'json-rpc-capabilities-middleware/src/@types';
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
 import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
-import {  } from './errors';
-
-function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
-  const UNAUTHORIZED_ERROR: JsonRpcError<JsonRpcRequest<any>> = {
-    message: 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
-    code: 1,
-    data: request,
-  };
-  return UNAUTHORIZED_ERROR;
-}
-
-const METHOD_NOT_FOUND: JsonRpcError<null> = {
-  code: -32601,
-  message: 'Method not found',
-};
-
-function invalidReq (req?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
-  const INVALID_REQUEST: JsonRpcError<JsonRpcRequest<any>> = {
-    code: -32602,
-    message: 'Invalid request.',
-    data: req,
-  }
-  return INVALID_REQUEST;
-}
-
-// TODO: This error code needs standardization:
-const USER_REJECTED_ERROR: JsonRpcError<null> = {
-  code: 5,
-  message: 'User rejected the request.',
-};
+import { unauthorized, invalidReq, USER_REJECTED_ERROR, METHOD_NOT_FOUND } from './errors';
 
 class Capability implements RpcCapPermission {
   public '@context':string[] = ['https://github.com/MetaMask/json-rpc-capabilities-middleware'];
