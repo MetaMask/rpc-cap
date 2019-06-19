@@ -1,9 +1,9 @@
 {
   "name": "json-rpc-capabilities-middleware",
-  "version": "0.11.6",
+  "version": "0.11.7",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "ts-node test",
     "build": "rm -rf dist && tsc",
