@@ -458,7 +458,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     if (
       req === undefined ||
       req.params[0] === undefined ||
-      typeof req.params[0] !== 'object'
+      typeof req.params[0] !== 'object' ||
+      Array.isArray(req.params[0])
     ) {
       res.error = invalidReq(req);
       return end(res.error);
