@@ -204,9 +204,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   ) : void {
     const methodKey = this.getMethodKeyFor(req.method);
     const permission = this.getPermission(domain.origin, req.method);
+    console.log('executeMethod checking', { methodKey, restrictedMethods: this.restrictedMethods });
     if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
 
-      // Support static caveat:
+      console.log('supporting caveats')
+      // Check for Caveats:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
         const engine = new JsonRpcEngine();
 
@@ -242,6 +244,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       }
     }
 
+    console.log('execute method calling not found')
     res.error = METHOD_NOT_FOUND;
     return end(METHOD_NOT_FOUND);
   }
@@ -320,6 +323,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     for (let methodName in approved) {
       const exists = this.getMethodKeyFor(methodName);
       if (!exists) {
+        console.log('grantNewPermissions calling not found')
         res.error = METHOD_NOT_FOUND;
         return end(res.error);
       }
