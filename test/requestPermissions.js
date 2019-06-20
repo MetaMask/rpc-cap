@@ -23,7 +23,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   let req = {
     method: 'requestPermissions',
     params: [
-        [{restricted: {}}]
+        {restricted: {}}
     ]
   }
   let res = {}
