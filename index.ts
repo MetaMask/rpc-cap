@@ -4,7 +4,8 @@
 /// <reference path="./src/@types/index.d.ts" />
 
 import uuid from 'uuid/v4';
-const JsonRpcEngine = require('json-rpc-engine')
+const JsonRpcEngine = require('json-rpc-engine');
+const asMiddleware = require('json-rpc-engine/src/asMiddleware');
 import { BaseController } from 'gaba';
 import {
   ICaveatFunction,
@@ -29,8 +30,8 @@ import {
   IOriginString,
   ISerializedCaveat,
  } from 'json-rpc-capabilities-middleware/src/@types';
-import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
-import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
+import { JsonRpcRequest, JsonRpcResponse } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
+import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback, JsonRpcMiddleware } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
 import { unauthorized, invalidReq, USER_REJECTED_ERROR, METHOD_NOT_FOUND } from './src/errors';
 
 class Capability implements RpcCapPermission {
@@ -210,6 +211,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       console.log('supporting caveats')
       // Check for Caveats:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
+        console.log('caveats found')
         const engine = new JsonRpcEngine();
 
         permission.caveats.forEach((serializedCaveat: ISerializedCaveat) => {
@@ -219,25 +221,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
           engine.push(caveatFn);
         });
 
-        // After caveat filter, pass through to 
-        engine.push((
-          _req:JsonRpcRequest<any>,
-          _res: JsonRpcResponse<any>,
-          _next:JsonRpcEngineNextCallback,
-          _end:JsonRpcEngineEndCallback
-        ) => {
-          next();
-        });
-
-        engine.handle(req, (err: JsonRpcError<any>, caveatRes: JsonRpcResponse<any>) => {
-          if (err) {
-            res.error = err;
-            return end(err);
-          }
-
-          res = caveatRes;
-          return end(); 
-        });
+        const middleware: JsonRpcMiddleware = asMiddleware(engine);
+        return middleware(req, res, next, end);
 
       } else {
         return this.restrictedMethods[methodKey].method(req, res, next, end);
