@@ -1,10 +1,9 @@
 /// <reference path="./@types/json-rpc-engine.d.ts" />
 /// <reference path="./@types/is-subset.d.ts" />
 import { JsonRpcMiddleware } from "json-rpc-capabilities-middleware/src/@types/json-rpc-engine";
-import { isSubset, intersectObjects } from "json-rpc-capabilities-middleware/src/@types/is-subset";
+import { isSubset } from "json-rpc-capabilities-middleware/src/@types/is-subset";
 import { unauthorized } from './errors';
 const isSubset = require('is-subset');
-const intersectObjects = require('intersect-objects').intersectObjects;
 
 interface ISerializedCaveat {
   type: string;
@@ -29,12 +28,21 @@ export const filterParams: ICaveatFunctionGenerator = function filterParams(seri
   }
 }
 
+/*
+ * Filters array results shallowly.
+ * Is an MVP caveat for signing in with accounts.
+ * Lots of room for enhancement later.
+ */
 export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: ISerializedCaveat) {
   const { value } = serialized;
   return (_req, res, next, _end) => {
 
     next((done) => {
-      res.result = intersectObjects(res.result, value);
+      if (Array.isArray(res.result)) {
+        res.result = res.result.filter((item) => {
+          return value.includes(item);
+        })
+      }
       done();
     });
   }

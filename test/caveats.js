@@ -2,6 +2,7 @@
 
 const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController
+const sendRpcMethodWithResponse = require('./lib/utils').sendRpcMethodWithResponse;
 
 test('filterParams caveat throws if params are not a subset.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
@@ -63,13 +64,16 @@ test('filterParams caveat throws if params are not a subset.', async (t) => {
 
 test('filterParams caveat passes through if params are a subset.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
+  const params = [
+    'foo',
+    { bar: 'baz', also: 'bonusParams!' },
+  ]
 
   const ctrl = new CapabilitiesController({
     restrictedMethods: {
       'write': {
         method: (req, res, next, end) => {
-          const params = req.params;
-          res.result = params;
+          res.result = 'Success';
           end();
         }
       }
@@ -104,16 +108,13 @@ test('filterParams caveat passes through if params are a subset.', async (t) => 
     // Now let's call that restricted method:
     req = {
       method: 'write',
-      params: [
-        'foo',
-        { bar: 'baz', also: 'bonusParams!' },
-      ]
+      params,
     }
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
 
     t.ok(result, 'should succeed');
-    t.equal(req, result, 'Just returned the request');
+    t.equal(result, 'Success', 'Just returned the request');
     t.end();
 
   } catch (err) {
@@ -124,12 +125,17 @@ test('filterParams caveat passes through if params are a subset.', async (t) => 
 
 test('filterResponse caveat returns empty if params are not a subset.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
+  const items = [
+    '0x44ed36e289cd9e8de4d822ad373ae42aac890a68',
+    '0x404d0886ad4933630160c169fffa1084d15b7beb',
+    '0x30476e1d96ae0ebaae94558afa146b0023df2d07',
+  ]
 
   const ctrl = new CapabilitiesController({
     restrictedMethods: {
-      'write': {
+      'readAccounts': {
         method: (req, res, next, end) => {
-          res.result = [1,2,3,4,5];
+          res.result = items;
           end();
         }
       }
@@ -137,8 +143,8 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
 
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'filterResponse', value: [5, 6, 7, 8] },
+      perms.readAccounts.caveats = [
+        { type: 'filterResponse', value: [items[1], '123'] },
       ]
       return perms;
     },
@@ -152,7 +158,7 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          'readAccounts': {},
         }
       ]
     };
@@ -161,7 +167,7 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
 
     // Now let's call that restricted method:
     req = {
-      method: 'write',
+      method: 'readAccounts',
       params: [
         'notAllowed',
         { definitely: 'restricted' },
@@ -169,7 +175,8 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
     }
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
-    t.equal(result[0], 5, 'returns the single intersecting item');
+    t.equal(result.length, 1, 'A single item');
+    t.equal(result[0], items[1], 'returns the single intersecting item');
     t.end();
 
   } catch (err) {
@@ -226,7 +233,7 @@ test('filterResponse caveat passes through subset portion of response', async (t
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
 
     t.ok(result, 'should succeed');
-    t.equal(result, [1,2,3], 'Returned the correct subset');
+    t.deepEqual(result, [1,2,3], 'Returned the correct subset');
     t.end();
 
   } catch (err) {
@@ -235,24 +242,3 @@ test('filterResponse caveat passes through subset portion of response', async (t
   }
 })
 
-async function sendRpcMethodWithResponse(ctrl, domain, req) {
-  let res = {}
-  return new Promise((resolve, reject) => {
-    ctrl.providerMiddlewareFunction(domain, req, res, next, end)
-
-    function next() {
-      reject()
-    }
-
-    function end(reason) {
-      if (reason) {
-        reject(reason)
-      }
-      if (res.error) {
-        reject(res.error)
-      }
-
-      resolve(res)
-    }
-  })
-}

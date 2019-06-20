@@ -1,22 +1,17 @@
+const RpcEngine = require('json-rpc-engine');
+
 async function sendRpcMethodWithResponse(ctrl, domain, req) {
-  let res = {}
   return new Promise((resolve, reject) => {
-    ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+    const engine = new RpcEngine();
+    engine.push(ctrl.providerMiddlewareFunction.bind(ctrl, domain));
 
-    function next() {
-      reject()
-    }
-
-    function end(reason) {
-      if (reason) {
-        reject(reason)
-      }
-      if (res.error) {
-        reject(res.error)
+    engine.handle(req, (err, res) => {
+      if (err || res.error) {
+        return reject(err);
       }
 
-      resolve(res)
-    }
+      resolve(res.result);
+    });
   })
 }
 
