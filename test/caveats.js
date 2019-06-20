@@ -20,7 +20,7 @@ test('filterParams caveat throws if params are not a subset.', async (t) => {
     // User approves on condition of first arg being 'foo',
     // and second arg having the 'bar': 'baz' value.
     requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.options;
+      const perms = permissionsRequest.permissions;
       perms.write.caveats = [
         { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
       ]
@@ -78,7 +78,7 @@ test('filterParams caveat passes through if params are a subset.', async (t) => 
     // User approves on condition of first arg being 'foo',
     // and second arg having the 'bar': 'baz' value.
     requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.options;
+      const perms = permissionsRequest.permissions;
       perms.write.caveats = [
         { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
       ]
@@ -136,7 +136,7 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
     },
 
     requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.options;
+      const perms = permissionsRequest.permissions;
       perms.write.caveats = [
         { type: 'filterResponse', value: [6, 7, 8] },
       ]
@@ -194,7 +194,7 @@ test('filterResponse caveat passes through subset portion of response', async (t
     // User approves on condition of first arg being 'foo',
     // and second arg having the 'bar': 'baz' value.
     requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.options;
+      const perms = permissionsRequest.permissions;
       perms.write.caveats = [
         { type: 'filterResponse', value: [0,1,2,3]},
       ]

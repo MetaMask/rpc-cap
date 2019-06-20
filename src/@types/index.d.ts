@@ -20,7 +20,7 @@ export interface AuthenticatedJsonRpcMiddleware {
 export interface IPermissionsRequest {
   origin: string;
   metadata: IOriginMetadata ;
-  options: IRequestedPermissions;
+  permissions: IRequestedPermissions;
 }
 
 export interface IOriginMetadata {

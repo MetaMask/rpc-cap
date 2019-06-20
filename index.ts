@@ -465,7 +465,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const permissionsRequest: IPermissionsRequest = {
       origin: metadata.origin,
       metadata,
-      options: permissions,
+      permissions: permissions,
     };
 
     requests.push(permissionsRequest);

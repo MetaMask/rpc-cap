@@ -11,7 +11,7 @@ test('requestPermissions on namespaced method with user approval creates permiss
   const ctrl = new CapabilitiesController({
 
     // Auto fully approve:
-    requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.options),
+    requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
 
@@ -57,7 +57,7 @@ test('requestPermissions on namespaced method with user approval does not permit
   const ctrl = new CapabilitiesController({
 
     // Auto fully approve:
-    requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.options),
+    requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
 

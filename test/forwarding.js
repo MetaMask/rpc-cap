@@ -11,7 +11,7 @@ test('safe method should pass through', async (t) => {
 
   const ctrl = new CapabilitiesController({
     safeMethods: ['public_read'],
-    requestUserApproval: async (permsReq) => permsReq.options,
+    requestUserApproval: async (permsReq) => permsReq.permissions,
   }, {})
 
   const domain = {origin: 'login.metamask.io'}
@@ -55,7 +55,7 @@ test('requesting restricted method is rejected', async (t) => {
       }
     },
 
-    requestUserApproval: async (permsReq) => permsReq.options,
+    requestUserApproval: async (permsReq) => permsReq.permissions,
 },
 {
   domains: {}
@@ -102,7 +102,7 @@ test('requesting restricted method with permission is called', async (t) => {
         }
       }
     },
-    requestUserApproval: async (permsReq) => permsReq.options,
+    requestUserApproval: async (permsReq) => permsReq.permissions,
   },
   {
     domains: {
