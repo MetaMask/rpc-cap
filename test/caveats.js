@@ -138,7 +138,7 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'filterResponse', value: [6, 7, 8] },
+        { type: 'filterResponse', value: [5, 6, 7, 8] },
       ]
       return perms;
     },
@@ -169,7 +169,7 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
     }
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
-    t.equal(result, [], 'returns empty array');
+    t.equal(result[0], 5, 'returns the single intersecting item');
     t.end();
 
   } catch (err) {
