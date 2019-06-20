@@ -316,6 +316,15 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   grantNewPermissions (domain: string, approved: IRequestedPermissions, 
     res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback) {
 
+    // Enforce actual approving known methods:
+    for (let methodName in approved) {
+      const exists = this.getMethodKeyFor(methodName);
+      if (!exists) {
+        res.error = METHOD_NOT_FOUND;
+        return end(res.error);
+      }
+    }
+
     const permissions: { [methodName: string]: RpcCapPermission } = {};
 
     for (let method in approved) {

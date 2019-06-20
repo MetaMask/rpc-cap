@@ -18,7 +18,6 @@ export type ICaveatFunctionGenerator = (caveat:ISerializedCaveat) => ICaveatFunc
 export const filterParams: ICaveatFunctionGenerator = function filterParams(serialized: ISerializedCaveat) {
   const { value } = serialized;
   return (req, res, next, end) => {
-    console.log('is calling isSubset of ', req.params, value);
     const permitted = isSubset(req.params, value);
 
     if (!permitted) {
