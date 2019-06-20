@@ -1,6 +1,6 @@
 {
   "name": "json-rpc-capabilities-middleware",
-  "version": "0.14.3",
+  "version": "0.14.4",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
