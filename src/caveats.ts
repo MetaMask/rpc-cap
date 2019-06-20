@@ -4,7 +4,7 @@ import { JsonRpcMiddleware } from "json-rpc-capabilities-middleware/src/@types/j
 import { isSubset, intersectObjects } from "json-rpc-capabilities-middleware/src/@types/is-subset";
 import { unauthorized } from './errors';
 const isSubset = require('is-subset');
-const intersectObjects = require('intersect-objects');
+const intersectObjects = require('intersect-objects').intersectObjects;
 
 interface ISerializedCaveat {
   type: string;
