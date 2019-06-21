@@ -1,6 +1,8 @@
 /// <reference path="./json-rpc-engine.d.ts" />
 /// <reference path="./json-rpc-2.d.ts" />
+/// <reference path="./ocap-ld.d.ts" />
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
+import { IOcapLdCapability, IOcapLdCaveat } from 'json-rpc-capabilities-middleware/src/@types/ocap-ld';
 import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from "json-rpc-capabilities-middleware/src/@types/json-rpc-engine";
 
 export interface AuthenticatedJsonRpcMiddleware {
@@ -39,39 +41,21 @@ export interface IOriginMetadata {
  */
 export interface IRequestedPermissions { [methodName: string]: IMethodRequest }
 
-type IMethodRequest = {
-  caveats?: ISerializedCaveat[];
-};
+/**
+ * Object used to request a given permission within reasonable terms.
+ * This can be an empty object, but can also include a caveat array.
+ */
+type IMethodRequest = Partial<IOcapLdCapability>;
 
 export interface UserApprovalPrompt {
   (permissionsRequest: IPermissionsRequest): Promise<IRequestedPermissions>;
 }
 
-export interface ISerializedCaveat {
-  type: string;
-  value?: any;
-}
-
 export interface RpcCapDomainEntry {
-  permissions: RpcCapPermission[];
+  permissions: IOcapLdCapability[];
 }
 
 type IOriginString = string;
-
-/**
- * The schema used to serialize an assigned permission for a method to a domain.
- * 
- * Optionally implements the ocap-ld schema:
- * https://w3c-ccg.github.io/ocap-ld/
- */
-export interface RpcCapPermission extends IMethodRequest {
-  "@context": string[];
-  id: string;
-  parentCapability: string;
-  invoker: IOriginString;
-  date?: number;
-  caveats?: ISerializedCaveat[];
-}
 
 export interface CapabilitiesConfig {
   safeMethods?: string[];
@@ -97,9 +81,9 @@ export interface RestrictedMethodMap {
 }
 
 export interface RpcCapInterface {
-  getPermissionsForDomain: (domain: string) => RpcCapPermission[];
-  getPermission: (domain: string, method: string) => RpcCapPermission | undefined;
-  getPermissions: () => RpcCapPermission[];
+  getPermissionsForDomain: (domain: string) => IOcapLdCapability[];
+  getPermission: (domain: string, method: string) => IOcapLdCapability | undefined;
+  getPermissions: () => IOcapLdCapability[];
   getPermissionsRequests: () => IPermissionsRequest[];
   grantNewPermissions (domain: string, approved: IRequestedPermissions, res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?: string): void;
   getDomains: () => RpcCapDomainRegistry;
@@ -107,8 +91,8 @@ export interface RpcCapInterface {
   getDomainSettings: (domain: string) => RpcCapDomainEntry;
   getOrCreateDomainSettings: (domain: string) => RpcCapDomainEntry;
   setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
-  addPermissionsFor: (domainName: string, newPermissions: { [methodName: string]: RpcCapPermission }) => void;
-  removePermissionsFor: (domain: string, permissionsToRemove: RpcCapPermission[]) => void;
+  addPermissionsFor: (domainName: string, newPermissions: { [methodName: string]: IOcapLdCapability }) => void;
+  removePermissionsFor: (domain: string, permissionsToRemove: IOcapLdCapability[]) => void;
 
   // Injected permissions-handling methods:
   providerMiddlewareFunction: AuthenticatedJsonRpcMiddleware;

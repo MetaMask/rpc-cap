@@ -22,29 +22,28 @@ import {
   CapabilitiesConfig,
   CapabilitiesState,
   IOriginMetadata,
-  RpcCapPermission,
   IPermissionsRequest,
   IRequestedPermissions,
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
-  ISerializedCaveat,
  } from 'json-rpc-capabilities-middleware/src/@types';
 import { JsonRpcRequest, JsonRpcResponse } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
 import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback, JsonRpcMiddleware } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
 import { unauthorized, invalidReq, USER_REJECTED_ERROR, METHOD_NOT_FOUND } from './src/errors';
+import { IOcapLdCapability, IOcapLdCaveat } from 'json-rpc-capabilities-middleware/src/@types/ocap-ld';
 
-class Capability implements RpcCapPermission {
+class Capability implements IOcapLdCapability {
   public '@context':string[] = ['https://github.com/MetaMask/json-rpc-capabilities-middleware'];
   public parentCapability: string;
-  public caveats: ISerializedCaveat[] | undefined;
+  public caveats: IOcapLdCaveat[] | undefined;
   public id: string;
   public date: number;
   public invoker: IOriginString;
 
   constructor ({ method, caveats, invoker }: {
     method: string;
-    caveats?: ISerializedCaveat[];
+    caveats?: IOcapLdCaveat[];
     invoker: IOriginString;
   }) {
     this.parentCapability = method;
@@ -54,7 +53,7 @@ class Capability implements RpcCapPermission {
     this.invoker = invoker;
   }
 
-  toJSON(): RpcCapPermission {
+  toJSON(): IOcapLdCapability {
     return {
       '@context': this['@context'],
       invoker: this.invoker,
@@ -211,7 +210,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
         const engine = new JsonRpcEngine();
 
-        permission.caveats.forEach((serializedCaveat: ISerializedCaveat) => {
+        permission.caveats.forEach((serializedCaveat: IOcapLdCaveat) => {
           const caveatFnGens = this.caveats;
           const caveatFnGen: ICaveatFunctionGenerator = caveatFnGens[serializedCaveat.type];
           const caveatFn: ICaveatFunction = caveatFnGen(serializedCaveat);
@@ -232,7 +231,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return end(METHOD_NOT_FOUND);
   }
 
-  getPermissionsForDomain (domain: string): RpcCapPermission[] {
+  getPermissionsForDomain (domain: string): IOcapLdCapability[] {
     const { domains = {} } = this.state;
     if (Object.keys(domains).includes(domain)) {
       const { permissions } = domains[domain];
@@ -248,7 +247,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domain - The domain whose permission to retrieve.
    * @param {string} method - The method
    */
-  getPermission (domain: string, method: string): RpcCapPermission | undefined {
+  getPermission (domain: string, method: string): IOcapLdCapability | undefined {
     let permissions = this.getPermissionsForDomain(domain).filter(p => {
       return p.parentCapability === method;
     });
@@ -311,7 +310,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       }
     }
 
-    const permissions: { [methodName: string]: RpcCapPermission } = {};
+    const permissions: { [methodName: string]: IOcapLdCapability } = {};
 
     for (let method in approved) {
       const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
@@ -368,12 +367,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domainName - The grantee domain.
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
-  addPermissionsFor (domainName: string, newPermissions: { [methodName:string]: RpcCapPermission }) {
+  addPermissionsFor (domainName: string, newPermissions: { [methodName:string]: IOcapLdCapability }) {
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
     const newKeys = Object.keys(newPermissions);
 
     // remove old permissions this will be overwritten
-    domain.permissions = domain.permissions.filter((oldPerm: RpcCapPermission) => {
+    domain.permissions = domain.permissions.filter((oldPerm: IOcapLdCapability) => {
       return !newKeys.includes(oldPerm.parentCapability);
     });
 
@@ -396,14 +395,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domainName - The domain name whose permissions to remove.
    * @param {Array} permissionsToRemove - Objects identifying the permissions to remove.
    */
-  removePermissionsFor (domainName: string, permissionsToRemove: RpcCapPermission[]) {
+  removePermissionsFor (domainName: string, permissionsToRemove: IOcapLdCapability[]) {
     const domain = this.getDomainSettings(domainName);
 
     if (domain === undefined || domain.permissions === undefined) {
       return;
     }
 
-    domain.permissions = domain.permissions.filter((perm: RpcCapPermission) => {
+    domain.permissions = domain.permissions.filter((perm: IOcapLdCapability) => {
       for (let r of permissionsToRemove) {
         if (
           r.parentCapability === perm.parentCapability
