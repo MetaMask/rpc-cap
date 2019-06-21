@@ -20,7 +20,7 @@ This means the capabilities are not valuable without a connection to the grantin
 
 The capability system is initialized with a variety of options, and is itself a [gaba](https://github.com/MetaMask/gaba/) compatible controller.
 
-Once initialized, it exposes a special method `providerMiddlewareFunction(domain, req, res, next, end)`, which requires an authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
+Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/json-rpc-capabilities-middleware/blob/master/src/%40types/index.d.ts#L6-L14) type method `providerMiddlewareFunction(domain, req, res, next, end)`, which requires an authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
 
 It will simply pass-through methods that are listed in the `safeMethods` array, but otherwise will require the requesting domain to have a permissions object, either granted by user, by approval on request, or by delegation from another domain that has the desired permission.
 
