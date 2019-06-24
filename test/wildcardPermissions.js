@@ -18,6 +18,8 @@ test('requestPermissions on namespaced method with user approval creates permiss
       // Underscore suffix implies namespace:
       // This namespaced method simply returns the namespace suffix:
       'plugin_': {
+        // We need to enhance this parameter to support more open-ended display:
+        description: "Permission to install plugin",
         method: (req, res, next, end) => {
           const parts = req.method.split('_');
           const second = parts[1];
