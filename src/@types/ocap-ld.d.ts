@@ -13,7 +13,8 @@ interface IOcapLdCapability {
   "@context": string[];
   // A GUID representing this method.
   id: string;
-  // A pointer to the resource to invoke, like an API url.
+  // A pointer to the resource to invoke, like an API url,
+  // or the method name (in the case of a local API).
   parentCapability: string;
   // A globally unique identifier representing the valid holder/invoker of this capability.
   invoker: string;
