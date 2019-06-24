@@ -21,6 +21,7 @@ interface IOcapLdCapability {
   date?: number;
   // An optional array of caveat objects.
   caveats?: IOcapLdCaveat[];
+  proof?: IOcapLdProof;
 }
 
 export type IOcapLdCaveat = {
@@ -29,3 +30,14 @@ export type IOcapLdCaveat = {
   // Any additional data required to enforce the caveat type.
   value?: any;
 }
+
+export type IOcapLdProof = {
+  type: string;
+  proofPurpose: "capabilityDelegation" | "capabilityInvocation";
+  // A date string
+  created: string;
+  // A link to the creator.
+  creator: string;
+  // Dependent on the type, an arbitrary signature value.
+  signatureValue?: string;
+};
