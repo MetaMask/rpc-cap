@@ -30,7 +30,7 @@
     "gaba": "MetaMask/gaba#develop",
     "intersect-objects": "^1.0.0",
     "is-subset": "^0.1.1",
-    "json-rpc-engine": "^5.0.0",
+    "json-rpc-engine": "^5.1.1",
     "json-rpc-error": "^2.0.0",
     "obs-store": "^3.0.2",
     "uuid": "^3.3.2"

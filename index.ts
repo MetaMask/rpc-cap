@@ -1,6 +1,5 @@
 /// <reference path="./src/@types/json-rpc-2.d.ts" />
 /// <reference path="./src/@types/gaba.d.ts" />
-/// <reference path="./src/@types/json-rpc-engine.d.ts" />
 /// <reference path="./src/@types/index.d.ts" />
 
 import uuid from 'uuid/v4';
@@ -29,7 +28,6 @@ import {
   IOriginString,
  } from 'json-rpc-capabilities-middleware/src/@types';
 import { JsonRpcRequest, JsonRpcResponse } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
-import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback, JsonRpcMiddleware } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
 import { unauthorized, invalidReq, USER_REJECTED_ERROR, METHOD_NOT_FOUND } from './src/errors';
 import { IOcapLdCapability, IOcapLdCaveat } from 'json-rpc-capabilities-middleware/src/@types/ocap-ld';
 
@@ -473,6 +471,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       if (Object.keys(approved).length === 0) {
         res.error = USER_REJECTED_ERROR;
         return end(USER_REJECTED_ERROR);
+      }
+
+      if (!permissionsRequest.metadata.id) {
+        res.error = invalidReq();
+        return end(res.error);
       }
 
       // Delete the request object
