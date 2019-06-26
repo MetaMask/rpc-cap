@@ -1,4 +1,4 @@
-import { JsonRpcRequest, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
+import { JsonRpcRequest, JsonRpcError } from 'json-rpc-engine';
 
 function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
   const UNAUTHORIZED_ERROR: JsonRpcError<JsonRpcRequest<any>> = {
