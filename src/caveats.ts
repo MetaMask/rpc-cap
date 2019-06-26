@@ -1,7 +1,7 @@
-/// <reference path="./@types/json-rpc-engine.d.ts" />
 /// <reference path="./@types/is-subset.d.ts" />
-import { JsonRpcMiddleware } from "json-rpc-capabilities-middleware/src/@types/json-rpc-engine";
-import { isSubset } from "json-rpc-capabilities-middleware/src/@types/is-subset";
+
+import { JsonRpcMiddleware } from 'json-rpc-engine';
+import { isSubset } from "./@types/is-subset";
 import { unauthorized } from './errors';
 const isSubset = require('is-subset');
 
@@ -14,6 +14,10 @@ export type ICaveatFunction = JsonRpcMiddleware;
 
 export type ICaveatFunctionGenerator = (caveat:ISerializedCaveat) => ICaveatFunction;
 
+/*
+ * Filters params shallowly.
+ * MVP caveats with lots of room for enhancement later.
+ */
 export const filterParams: ICaveatFunctionGenerator = function filterParams(serialized: ISerializedCaveat) {
   const { value } = serialized;
   return (req, res, next, end) => {
@@ -30,7 +34,7 @@ export const filterParams: ICaveatFunctionGenerator = function filterParams(seri
 
 /*
  * Filters array results shallowly.
- * Is an MVP caveat for signing in with accounts.
+ * MVP caveat for signing in with accounts.
  * Lots of room for enhancement later.
  */
 export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: ISerializedCaveat) {

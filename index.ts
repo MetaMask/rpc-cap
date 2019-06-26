@@ -1,12 +1,21 @@
-/// <reference path="./src/@types/json-rpc-2.d.ts" />
 /// <reference path="./src/@types/gaba.d.ts" />
-/// <reference path="./src/@types/json-rpc-engine.d.ts" />
 /// <reference path="./src/@types/index.d.ts" />
 
 import uuid from 'uuid/v4';
+
 const JsonRpcEngine = require('json-rpc-engine');
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
+import {
+  JsonRpcEngine as IJsonRpcEngine,
+  JsonRpcEngineNextCallback,
+  JsonRpcEngineEndCallback,
+  JsonRpcMiddleware,
+  JsonRpcRequest,
+  JsonRpcResponse
+} from 'json-rpc-engine';
+
 import { BaseController } from 'gaba';
+
 import {
   ICaveatFunction,
   filterParams,
@@ -27,11 +36,16 @@ import {
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
- } from 'json-rpc-capabilities-middleware/src/@types';
-import { JsonRpcRequest, JsonRpcResponse } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
-import { JsonRpcEngine, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback, JsonRpcMiddleware } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-engine';
-import { unauthorized, invalidReq, USER_REJECTED_ERROR, METHOD_NOT_FOUND } from './src/errors';
-import { IOcapLdCapability, IOcapLdCaveat } from 'json-rpc-capabilities-middleware/src/@types/ocap-ld';
+ } from './src/@types';
+
+import {
+  unauthorized,
+  invalidReq,
+  USER_REJECTED_ERROR,
+  METHOD_NOT_FOUND
+} from './src/errors';
+
+import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
 
 class Capability implements IOcapLdCapability {
   public '@context':string[] = ['https://github.com/MetaMask/json-rpc-capabilities-middleware'];
@@ -208,7 +222,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
       // Check for Caveats:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
-        const engine = new JsonRpcEngine();
+        const engine: IJsonRpcEngine = new JsonRpcEngine();
 
         permission.caveats.forEach((serializedCaveat: IOcapLdCaveat) => {
           const caveatFnGens = this.caveats;
@@ -473,6 +487,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       if (Object.keys(approved).length === 0) {
         res.error = USER_REJECTED_ERROR;
         return end(USER_REJECTED_ERROR);
+      }
+
+      if (!permissionsRequest.metadata.id) {
+        res.error = invalidReq();
+        return end(res.error);
       }
 
       // Delete the request object
