@@ -1,9 +1,8 @@
-/// <reference path="./json-rpc-engine.d.ts" />
-/// <reference path="./json-rpc-2.d.ts" />
 /// <reference path="./ocap-ld.d.ts" />
-import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-capabilities-middleware/src/@types/json-rpc-2';
-import { IOcapLdCapability, IOcapLdCaveat } from 'json-rpc-capabilities-middleware/src/@types/ocap-ld';
-import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from "json-rpc-capabilities-middleware/src/@types/json-rpc-engine";
+
+import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-engine';
+import { IOcapLdCapability, IOcapLdCaveat } from './ocap-ld';
+import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from "json-rpc-engine";
 
 export interface AuthenticatedJsonRpcMiddleware {
   (
