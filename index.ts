@@ -3,7 +3,8 @@
 /// <reference path="./src/@types/index.d.ts" />
 
 import uuid from 'uuid/v4';
-const JsonRpcEngine = require('json-rpc-engine');
+import JsonRpcEngine from 'json-rpc-engine';
+import { JsonRpcMiddleware, JsonRpcEngineNextCallback, JsonRpcEngineEndCallback } from 'json-rpc-engine';
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
 import { BaseController } from 'gaba';
 import {

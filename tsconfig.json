@@ -5,7 +5,6 @@
     "paths": {
       "*": ["definitions/*"]
     },
-    "typeRoots": ["definitions", "node_modules/@types"],
     "declaration": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
