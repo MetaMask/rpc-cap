@@ -16,7 +16,11 @@
       <button id="submitName">Rename</button>
     </p>
 
-    <button id="login">Login</button>
+    <button id="allPerms">Request All Perms</button>
+    <button id="viewAccounts">Read/Write Profile Only</button>
+    <button id="readWrite">Read/Write Profile Only</button>
+    <br/>
+    <button id="enable">Enable</button>
 
     <details>
       <summary>Nothing here!</summary>
@@ -32,24 +36,42 @@
   </body>
 
   <script>
-    login.addEventListener('click', requestPerms)
+    allPerms.addEventListener('click', function() {
+      requestPerms({
+          readYourProfile: {},
+          writeToYourProfile: {},
+          eth_accounts: {},
+        },
+      )
+    })
+    viewAccounts.addEventListener('click', function() {
+      requestPerms({
+          eth_accounts: {},
+        },
+      )
+    })
+    readWrite.addEventListener('click', function() {
+      requestPerms({
+          readYourProfile: {},
+          writeToYourProfile: {},
+        },
+      )
+    })
+    enable.addEventListener('click', function() {
+      if (!window.ethereum) throw new Error('no window.ethereum')
+      window.ethereum.enable().then(res => console.log('ethereum.enable(): ', res))
+    })
     read.addEventListener('click', readProfile)
     submitName.addEventListener('click', changeName)
+    window.readProfile = readProfile
 
     readProfile()
 
-    async function requestPerms () {
+    async function requestPerms (perms) {
       ethereum.sendAsync({
         method: 'wallet_requestPermissions',
         jsonrpc: '2.0',
-        id: Math.floor(Math.random() * 100),
-        params: [
-          {
-            readYourProfile: {},
-            writeToYourProfile: {},
-            eth_accounts: {},
-          },
-        ],
+        params: [perms],
       }, (err, res) => {
         console.dir({ err, res })
         if (err) return alert('error!: ' + err)
