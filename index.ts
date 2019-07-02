@@ -506,4 +506,3 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     });
   }
 }
-

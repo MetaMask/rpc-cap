@@ -51,3 +51,12 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse(
     });
   }
 }
+
+export const requireDependency: ICaveatFunctionGenerator = function requireDependency(serialized: ISerializedCaveat) {
+
+  const { value } = serialized;
+  return (req, res, next, end) => {
+
+    next();
+  }
+}
