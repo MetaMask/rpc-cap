@@ -242,3 +242,128 @@ test('filterResponse caveat passes through subset portion of response', async (t
   }
 })
 
+test('requirePermissions caveat passes request through if required permissions present', async (t) => {
+
+  const domain = { origin: 'www.metamask.io' };
+  const ctrl = new CapabilitiesController({ restrictedMethods: {
+      'read': {
+        method: (req, res, next, end) => {
+          res.result = 'read success';
+          end();
+        }
+      },
+      'write': {
+        method: (req, res, next, end) => {
+          res.result = 'write success';
+          end();
+        }
+      }
+    },
+
+    // Request for 'write' only succeed if the request domain also has the
+    // 'read' permission
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'requirePermissions', value: ['read']},
+      ]
+      return perms;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'read': {},
+          'write': {},
+        }
+      ]
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call the restricted method:
+    req = {
+      method: 'write',
+      params: [],
+    }
+
+    const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(result, 'should succeed');
+    t.equal(result, 'write success', 'Returned the result');
+    t.end();
+
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+    t.end();
+  }
+})
+
+test('requirePermissions caveat terminates request if required permissions not present', async (t) => {
+
+  const domain = { origin: 'www.metamask.io' };
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'read': {
+        method: (req, res, next, end) => {
+          res.result = 'read success';
+          end();
+        }
+      },
+      'write': {
+        method: (req, res, next, end) => {
+          res.result = 'write success';
+          end();
+        }
+      }
+    },
+
+    // Request for 'write' only succeed if the request domain also has the
+    // 'read' permission
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'requirePermissions', value: ['read']},
+      ]
+      return perms;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        }
+      ]
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call the restricted method:
+    req = {
+      method: 'write',
+      params: [],
+    }
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(false, 'did not throw');
+
+  } catch (err) {
+    t.ok(err, 'should throw');
+    t.equal(err.code, 1, 'Auth error code.');
+    t.end();
+  }
+})

@@ -1,8 +1,10 @@
 /// <reference path="./@types/is-subset.d.ts" />
+/// <reference path="./@types/index.d.ts" />
 
 import { JsonRpcMiddleware } from 'json-rpc-engine';
 import { isSubset } from "./@types/is-subset";
 import { unauthorized } from './errors';
+import { RpcCapExternalMethods } from './@types';
 const isSubset = require('is-subset');
 
 interface ISerializedCaveat {
@@ -12,13 +14,17 @@ interface ISerializedCaveat {
 
 export type ICaveatFunction = JsonRpcMiddleware;
 
-export type ICaveatFunctionGenerator = (caveat:ISerializedCaveat) => ICaveatFunction;
+export type ICaveatFunctionGenerator = (
+  caveat: ISerializedCaveat, rpcCap: RpcCapExternalMethods, domain: string
+) => ICaveatFunction;
 
 /*
  * Filters params shallowly.
  * MVP caveats with lots of room for enhancement later.
  */
-export const filterParams: ICaveatFunctionGenerator = function filterParams(serialized: ISerializedCaveat) {
+export const filterParams: ICaveatFunctionGenerator = function filterParams(
+  serialized: ISerializedCaveat
+) {
   const { value } = serialized;
   return (req, res, next, end) => {
     const permitted = isSubset(req.params, value);
@@ -37,7 +43,9 @@ export const filterParams: ICaveatFunctionGenerator = function filterParams(seri
  * MVP caveat for signing in with accounts.
  * Lots of room for enhancement later.
  */
-export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: ISerializedCaveat) {
+export const filterResponse: ICaveatFunctionGenerator = function filterResponse(
+  serialized: ISerializedCaveat
+) {
   const { value } = serialized;
   return (_req, res, next, _end) => {
 
@@ -52,11 +60,21 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse(
   }
 }
 
-export const requireDependency: ICaveatFunctionGenerator = function requireDependency(serialized: ISerializedCaveat) {
-
+// TODO:07-02
+// see the caveat value, and understand what it needs (a reference to the perm domain)
+// there may exist a cleaner way of doing this, but shipit
+export const requirePermissions: ICaveatFunctionGenerator = function requirePermissions(
+  serialized: ISerializedCaveat,
+  rpcCap: RpcCapExternalMethods,
+  domain: string
+) {
   const { value } = serialized;
   return (req, res, next, end) => {
-
-    next();
+    if (rpcCap.hasPermissions(domain, value)) next()
+    else {
+      // res.error = unauthorized(req)
+      res.error = { message: 'requiredPermissions error', code: 1, data: req }
+      return end(res.error)
+    }
   }
 }

@@ -1,10 +1,13 @@
 /// <reference path="./src/@types/gaba.d.ts" />
 /// <reference path="./src/@types/index.d.ts" />
+/// <reference path="./src/@types/is-subset.d.ts" />
 
 import uuid from 'uuid/v4';
 
+const isSubset = require('is-subset')
 const JsonRpcEngine = require('json-rpc-engine');
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
+
 import {
   JsonRpcEngine as IJsonRpcEngine,
   JsonRpcEngineNextCallback,
@@ -20,6 +23,7 @@ import {
   ICaveatFunction,
   filterParams,
   filterResponse,
+  requirePermissions,
   ICaveatFunctionGenerator,
 } from './src/caveats';
 
@@ -36,6 +40,7 @@ import {
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
+  RpcCapExternalMethods,
  } from './src/@types';
 
 import {
@@ -83,13 +88,25 @@ class Capability implements IOcapLdCapability {
   }
 }
 
+class ExternalMethods implements RpcCapExternalMethods {
+
+  public hasPermissions: (domain: string, permissions: string[]) => boolean;
+
+  constructor(hasPermissions: (domain: string, permissions: string[]) => boolean) {
+    this.hasPermissions = hasPermissions;
+  }
+}
+
 export class CapabilitiesController extends BaseController<any, any> implements RpcCapInterface {
   private safeMethods: string[];
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
-  private caveats: { [ name:string]: ICaveatFunctionGenerator } = { filterParams, filterResponse };
+  private caveats: { [ name:string]: ICaveatFunctionGenerator } = {
+    filterParams, filterResponse, requirePermissions
+  };
   private methodPrefix: string;
+  public externalMethods: RpcCapExternalMethods;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
     super(config, state || {});
@@ -116,6 +133,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.internalMethods = {};
     this.internalMethods[`${this.methodPrefix}getPermissions`] = this.getPermissionsMiddleware.bind(this);
     this.internalMethods[`${this.methodPrefix}requestPermissions`] = this.requestPermissionsMiddleware.bind(this);
+
+    this.externalMethods = new ExternalMethods(this.hasPermissions.bind(this));
 
     this.initialize();
   }
@@ -226,8 +245,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
         permission.caveats.forEach((serializedCaveat: IOcapLdCaveat) => {
           const caveatFnGens = this.caveats;
-          const caveatFnGen: ICaveatFunctionGenerator = caveatFnGens[serializedCaveat.type];
-          const caveatFn: ICaveatFunction = caveatFnGen(serializedCaveat);
+          const caveatFnGen: ICaveatFunctionGenerator = caveatFnGens[
+            serializedCaveat.type
+          ];
+          const caveatFn: ICaveatFunction = caveatFnGen(
+            serializedCaveat, this.externalMethods, domain.origin
+          );
           engine.push(caveatFn);
         });
 
@@ -504,5 +527,17 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       res.error = reason;
       return end(reason);
     });
+  }
+
+  /**
+   * SAFE PUBLIC METHODS
+   */
+
+  hasPermissions(domain: string, permissions: string[]) : boolean {
+    return isSubset(
+      this.getPermissionsForDomain(domain)
+      .map(cap => cap.parentCapability),
+      permissions
+    )
   }
 }

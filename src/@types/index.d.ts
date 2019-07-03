@@ -79,6 +79,10 @@ export interface RestrictedMethodMap {
   [key: string]: RestrictedMethodEntry;
 }
 
+export interface RpcCapExternalMethods {
+  hasPermissions: (domain: string, permissions: string[]) => boolean,
+}
+
 export interface RpcCapInterface {
   getPermissionsForDomain: (domain: string) => IOcapLdCapability[];
   getPermission: (domain: string, method: string) => IOcapLdCapability | undefined;
@@ -92,6 +96,7 @@ export interface RpcCapInterface {
   setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
   addPermissionsFor: (domainName: string, newPermissions: { [methodName: string]: IOcapLdCapability }) => void;
   removePermissionsFor: (domain: string, permissionsToRemove: IOcapLdCapability[]) => void;
+  externalMethods: RpcCapExternalMethods,
 
   // Injected permissions-handling methods:
   providerMiddlewareFunction: AuthenticatedJsonRpcMiddleware;
