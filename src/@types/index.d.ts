@@ -27,7 +27,10 @@ export interface IPermissionsRequest {
 export interface IOriginMetadata {
   id?: string;
   origin: IOriginString;
-  siteTitle?: string,
+  site?: {
+    name?: string,
+    icon?: any,
+  }
 }
 
 /**

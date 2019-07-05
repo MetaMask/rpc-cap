@@ -128,7 +128,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * Returns a nearly json-rpc-engine compatible method.
    * The one difference being the first argument should be
    * a unique string identifying the requesting agent/entity,
-   * referred to as `domain` in the code. This allows the function to be curried and converted into a normal json-rpc-middleware function.
+   * referred to as `domain` in the code. This allows the function
+   * to be curried and converted into a normal json-rpc-middleware function.
    */
   providerMiddlewareFunction (
     domain: IOriginMetadata,
@@ -149,7 +150,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return this.internalMethods[methodName](domain, req, res, next, end);
     }
 
-    // Apply any permission caveats
     let permission;
     try {
       permission = this.getPermission(domain.origin, methodName);
@@ -453,15 +453,23 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     end: JsonRpcEngineEndCallback,
   ) : void {
 
-    // Validate request
+    // validate request
     if (
       req === undefined ||
-      req.params[0] === undefined ||
+      !req.params ||
       typeof req.params[0] !== 'object' ||
       Array.isArray(req.params[0])
     ) {
       res.error = invalidReq(req);
       return end(res.error);
+    }
+
+    // get additional metadata from params if it exists
+    if (
+      req.params.length === 2 &&
+      req.params[1].metadata
+    ) {
+      metadata = { ...req.params.pop().metadata, ...metadata }
     }
 
     if (!metadata.id) {
