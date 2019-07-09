@@ -502,15 +502,18 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         return end(res.error);
       }
 
-      // Delete the request object
-      this.removePermissionsRequest(permissionsRequest.metadata.id)
-
       // If user approval is different, use it as the permissions:
       this.grantNewPermissions(metadata.origin, approved, res, end);
     })
     .catch((reason) => {
       res.error = reason;
       return end(reason);
+    })
+    .finally(() => {
+      // Delete the request object
+      if (permissionsRequest.metadata.id) {
+        this.removePermissionsRequest(permissionsRequest.metadata.id)
+      }
     });
   }
 }
