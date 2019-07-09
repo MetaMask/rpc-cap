@@ -430,6 +430,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.setDomain(domainName, domain);
   }
 
+  /**
+   * Clear all domains (and thereby remove all permissions).
+   */
+  clearDomains () {
+    this.setDomains({})
+  }
+
   getPermissionsMiddleware (
     domain: IOriginMetadata,
     _req: JsonRpcRequest<any>,
