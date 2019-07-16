@@ -41,13 +41,13 @@
       requestPerms({
           readYourProfile: {},
           writeToYourProfile: {},
-          eth_requestAccounts: {},
+          eth_accounts: {},
         },
       )
     })
     viewAccounts.addEventListener('click', function() {
       requestPerms({
-          eth_requestAccounts: {},
+          eth_accounts: {},
         },
       )
     })
@@ -60,7 +60,9 @@
     })
     enable.addEventListener('click', function() {
       if (!window.ethereum) throw new Error('no window.ethereum')
-      window.ethereum.enable().then(res => console.log('ethereum.enable(): ', res))
+      window.ethereum.send('eth_requestAccounts').then(
+        res => console.log('ethereum.enable(): ', res)
+      )
     })
     read.addEventListener('click', readProfile)
     submitName.addEventListener('click', changeName)
