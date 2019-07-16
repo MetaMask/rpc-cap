@@ -2,7 +2,7 @@
 
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-engine';
 import { IOcapLdCapability, IOcapLdCaveat } from './ocap-ld';
-import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from "json-rpc-engine";
+import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from 'json-rpc-engine';
 
 export interface AuthenticatedJsonRpcMiddleware {
   (
@@ -20,14 +20,17 @@ export interface AuthenticatedJsonRpcMiddleware {
  */
 export interface IPermissionsRequest {
   origin: string;
-  metadata: IOriginMetadata ;
+  metadata: IOriginMetadata;
   permissions: IRequestedPermissions;
 }
 
 export interface IOriginMetadata {
   id?: string;
   origin: IOriginString;
-  siteTitle?: string,
+  site?: {
+    name?: string,
+    icon?: any,
+  }
 }
 
 /**

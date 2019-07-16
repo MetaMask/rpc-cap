@@ -3,6 +3,7 @@
 
   <head>
     <title>Capabilities Test</title>
+    <link rel="shortcut icon" href="/favicon.ico">
   </head>
 
   <body>
@@ -17,7 +18,7 @@
     </p>
 
     <button id="allPerms">Request All Perms</button>
-    <button id="viewAccounts">Read/Write Profile Only</button>
+    <button id="viewAccounts">View Accounts Only</button>
     <button id="readWrite">Read/Write Profile Only</button>
     <br/>
     <button id="enable">Enable</button>
@@ -59,7 +60,9 @@
     })
     enable.addEventListener('click', function() {
       if (!window.ethereum) throw new Error('no window.ethereum')
-      window.ethereum.enable().then(res => console.log('ethereum.enable(): ', res))
+      window.ethereum.send('eth_requestAccounts').then(
+        res => console.log('ethereum.enable(): ', res)
+      )
     })
     read.addEventListener('click', readProfile)
     submitName.addEventListener('click', changeName)
