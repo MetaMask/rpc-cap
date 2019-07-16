@@ -7,7 +7,7 @@ Hypothetical API
 // one promise-returning object.
 
 const neededPermissions = {
-  accounts: { method: 'eth_accounts', caveats: [ { limit: 1 } ] },
+  accounts: { method: 'eth_requestAccounts', caveats: [ { limit: 1 } ] },
   sendTransaction: { method: 'eth_sendTransaction' },
   read: { method: 'eth_call' },
   getBalance: { method: 'eth_getBalance' }
