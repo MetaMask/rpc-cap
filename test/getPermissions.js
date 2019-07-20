@@ -2,24 +2,22 @@ const test = require('tape')
 const CapabilitiesController = require('../dist').CapabilitiesController
 const equal = require('fast-deep-equal')
 
-// TODO: Standardize!
-// Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
-const USER_REJECTION_CODE = 5
+function noop () {};
 
 const arbitraryCaps = [
-    {
-      domain: 'bar',
-      method: 'restricted',
-      granter: 'baz',
-      id: 'abc',
-    },
-    {
-      domain: 'baz',
-      method: 'restricted2',
-      granter: 'bar',
-      id: 'xyz',
-    },
-  ]
+  {
+    domain: 'bar',
+    method: 'restricted',
+    granter: 'baz',
+    id: 'abc',
+  },
+  {
+    domain: 'baz',
+    method: 'restricted2',
+    granter: 'bar',
+    id: 'xyz',
+  },
+]
 
 test('getPermissions with none returns empty object', async (t) => {
   const expected = []
@@ -77,6 +75,3 @@ test('getPermissions with some returns them', async (t) => {
     t.end()
   }
 })
-
-function noop () {};
-

@@ -270,14 +270,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return undefined;
   }
 
-  /*
-  * Returns all stored permissions objects.
-  */
-  getPermissions () {
-    const perms = this.state.permissions;
-    return perms || [];
-  }
-
   /**
    * Gets current permissions request objects.
    * Useful for displaying information for user consent.

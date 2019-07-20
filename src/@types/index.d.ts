@@ -85,7 +85,6 @@ export interface RestrictedMethodMap {
 export interface RpcCapInterface {
   getPermissionsForDomain: (domain: string) => IOcapLdCapability[];
   getPermission: (domain: string, method: string) => IOcapLdCapability | undefined;
-  getPermissions: () => IOcapLdCapability[];
   getPermissionsRequests: () => IPermissionsRequest[];
   grantNewPermissions (domain: string, approved: IRequestedPermissions, res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?: string): void;
   getDomains: () => RpcCapDomainRegistry;
