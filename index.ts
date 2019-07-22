@@ -105,12 +105,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     this.defaultState = {
       permissionsRequests: [],
-      permissionsDescriptions: Object.keys(this.restrictedMethods).map((methodName) => {
-        return {
-          method: methodName,
-          description: this.restrictedMethods[methodName].description,
-        };
-      }),
+      permissionsDescriptions: Object.keys(this.restrictedMethods)
+      .reduce<{[key:string]:string}>(
+        (acc, methodName) => {
+          acc[methodName] = this.restrictedMethods[methodName].description
+          return acc;
+        },
+      {}),
     }
 
     this.internalMethods = {};
@@ -401,23 +402,26 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domainName - The domain name whose permissions to remove.
    * @param {Array} permissionsToRemove - Objects identifying the permissions to remove.
    */
-  removePermissionsFor (domainName: string, permissionsToRemove: IOcapLdCapability[]) {
+  removePermissionsFor (
+    domainName: string,
+    permissionsToRemove: IOcapLdCapability[]
+  ) {
     const domain = this.getDomainSettings(domainName);
 
     if (domain === undefined || domain.permissions === undefined) {
       return;
     }
 
-    domain.permissions = domain.permissions.filter((perm: IOcapLdCapability) => {
-      for (let r of permissionsToRemove) {
-        if (
-          r.parentCapability === perm.parentCapability
-        ) {
-          return false;
+    domain.permissions = domain.permissions.filter(
+      (perm: IOcapLdCapability) => {
+        for (let r of permissionsToRemove) {
+          if (r.parentCapability === perm.parentCapability) {
+            return false;
+          }
         }
+        return true;
       }
-      return true;
-    });
+    );
 
     this.setDomain(domainName, domain);
   }

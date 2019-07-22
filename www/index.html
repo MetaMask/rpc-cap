@@ -67,6 +67,7 @@
     eth_accounts.addEventListener('click', () => window.ethereum.send('eth_accounts'))
     submitName.addEventListener('click', changeName)
     window.readProfile = readProfile
+    readProfile()
 
     async function requestPerms (perms, readWhenDone) {
       ethereum.sendAsync({
