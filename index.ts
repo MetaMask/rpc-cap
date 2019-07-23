@@ -105,8 +105,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     this.defaultState = {
       permissionsRequests: [],
-      permissionsDescriptions: Object.keys(this.restrictedMethods)
-      .reduce<{[key:string]:string}>(
+      permissionsDescriptions: Object.keys(
+        this.restrictedMethods
+      ).reduce<{[key:string]:string}>(
         (acc, methodName) => {
           acc[methodName] = this.restrictedMethods[methodName].description
           return acc;

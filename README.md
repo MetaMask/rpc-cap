@@ -2,9 +2,9 @@
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
 
-For an intro to capability based security and why it makes sense, [I recommend this video](https://www.youtube.com/watch?v=2H-Azm8tM24).
+For an intro to capability based security and why it makes sense, [we recommend this video](https://www.youtube.com/watch?v=2H-Azm8tM24).
 
-Currently is an MVP capabilities system, with a certain usage assumption:
+This is an MVP capabilities system, with certain usage assumptions:
 
 The consuming context is able to provide a `domain` to the middleware that is pre-authenticated. The library does not handle authentication, and trusts the `domain` parameter to the `providerMiddlewareFunction` is accurate and has been verified. (This was made initially as an MVP for proposing a simple capabilities system around [the MetaMask provider API](https://metamask.github.io/metamask-docs/API_Reference/Ethereum_Provider)).
 
@@ -14,23 +14,23 @@ This means the capabilities are not valuable without a connection to the grantin
 
 ## Installation
 
-`npm install json-rpc-capabilities-middleware -S`
+`npm install json-rpc-capabilities-middleware`
 
 ## Usage
 
 The capability system is initialized with a variety of options, and is itself a [gaba](https://github.com/MetaMask/gaba/) compatible controller.
 
-Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/json-rpc-capabilities-middleware/blob/master/src/%40types/index.d.ts#L6-L14) type method `providerMiddlewareFunction(domain, req, res, next, end)`, which requires an authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
+Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/json-rpc-capabilities-middleware/blob/master/src/%40types/index.d.ts#L7-L15) type method `providerMiddlewareFunction(domain, req, res, next, end)`, which requires an assumed-authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
 
-It will simply pass-through methods that are listed in the `safeMethods` array, but otherwise will require the requesting domain to have a permissions object, either granted by user, by approval on request, or by delegation from another domain that has the desired permission.
+It simply passes through methods that are listed in the `safeMethods` array, but otherwise requires the requesting domain to have a permissions object, either granted by user, by approval on request, or (Soon<sup>TM</sup>) by delegation from another domain that has the desired permission.
 
-This module uses typescript, and so referring to the `.d.ts` files for interface definitions could be helpful. The tests are also very demonstrative.
+This module uses TypeScript, and so referring to the `.d.ts` files for interface definitions could be helpful. The tests are also demonstrative.
 
 ```javascript
 const Engine = require('json-rpc-engine')
-const createCapabilities = require('json-rpc-capabilities-middleware')
+const CapabilitiesController = require('json-rpc-capabilities-middleware')
 
-const capabilities = createCapabilities({
+const capabilitiesConfig = {
 
   // Supports passthrough methods:
   safeMethods: ['get_index']
@@ -65,40 +65,35 @@ const capabilities = createCapabilities({
   requestUserApproval: async (domainInfo, req) => {
     const ok = await checkIfUserTrusts(domainInfo, req)
     return ok
-  },
-
-  // Same state that is emitted from `this.store.subscribe((state) => {})`,
-  // Following the `obs-store` module framework.
-  // can be used to re-instantiate:
-  initState: {
-    domains: {
-      'login.metamask.io': {
-        permissions: [
-          {
-            parentCapability: 'eth_write',
-            date: '0',
-          }
-        ]
-      }
-    }
   }
-})
+}
+
+// Same state that is emitted from `this.store.subscribe((state) => {})`,
+// Following the `obs-store` module framework.
+// can be used to re-instantiate:
+const restoredState = getPersistedState()
+
+const capabilities = new CapabilitiesController(capabilitiesConfig, restoredState)
 
 // Unlike normal json-rpc-engine middleware, these methods all require
 // a unique requesting-domain-string as the first argument.
 const domain = 'requestor.thatsite.com'
 engine.push(capabilities.providerMiddlewareFunction.bind(capabilities, domain))
-
-engine.push(finalMiddleware)
 engine.start()
 ```
 
+### Testing
+
+To run unit tests: `npm run build && npm run test`
+
+To test against an example dapp, serve the example using `npm run serve` and explore using [this branch of MetaMask](https://github.com/MetaMask/metamask-extension/tree/LoginPerSite).
+
 ## Internal RPC Methods
 
-The capabilities system adds new methods to the RPC, and you can modify what they are with a prefix of your chocie with the constructor param `methodPrefix`:
+The capabilities system adds new methods to the RPC, and you can modify their names with the `methodPrefix` contructor param:
 
-- getPermissions() - Returns the available (otherwise restricted) capabilities for the domain.
-- requestPermissions(options) - Triggers the authroization flow, probably prompting user response, and creating the requested permissions objects if approved.
+- getPermissions () - Returns the available (otherwise restricted) capabilities for the domain.
+- requestPermissions (options) - Triggers the authorization flow, probably prompting user response, and creating the requested permissions objects if approved.
 
 ## Object Definitions
 
@@ -106,14 +101,17 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 
 ```
 {
-  method: 'restrictedMethodName',
+  @context: [ // always present per the standard, but can be ignored for the moment
+    "https://github.com/MetaMask/json-rpc-capabilities-middleware"
+  ],
+  date: 1563743815289, // unix time of creation
   id: '63b225d0-414e-4a2d-8067-c34499c984c7', // UUID string
-  date: 0, // unix time of creation
-  granter: 'another.domain.com', // Another domain string if this permission was created by delegation.
-  caveats: [ // An optional array of objects describing limitations on the method reference.
+  invoker: 'exampledapp' // the domain of the dapp receiving the capability
+  parentCapability: 'eth_accounts', // the name of the corresponding RPC method
+  caveats: [ // an optional array of objects describing limitations on the method reference
     {
-      type: 'static', // The static caveat only returns the specified static response value.
-      value: 'Always this!'
+      type: 'filterResponse', // the filterResponse applies an exclusive filter to the RPC response
+      value: ['0xabcde...'] // here, 'eth_accounts' can only return the single given account
     }
   ]
 }
@@ -121,7 +119,4 @@ The capabilities system adds new methods to the RPC, and you can modify what the
 
 ## Current Status
 
-This module is in an exploratory MVP state. It probably deserves more testing, scrutiny, consideration, maybe a TypeScript conversion, and a healthy beta period before I'd want to really trust it to a lot of value.
-
-I've got it working with [a branch of metamask](https://github.com/MetaMask/metamask-extension/tree/capabilities-middleware-example) which you can use with [the sample site](https://metamask.github.io/json-rpc-capabilities-middleware/).
-
+This module is in an exploratory MVP state and should not be used in production. It deserves more testing, scrutiny, consideration, and a healthy beta period before anyone should trust it with significant value.
