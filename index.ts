@@ -363,7 +363,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   setDomain (domain: IOriginString, domainSettings: RpcCapDomainEntry) {
     const domains = this.getDomains();
-    domains[domain] = domainSettings;
+    if (domainSettings.permissions.length > 0) {
+      domains[domain] = domainSettings;
+    } else {
+      delete domains[domain]
+    }
     this.setDomains(domains)
   }
 
