@@ -3,7 +3,7 @@
 
   <head>
     <title>Capabilities Test</title>
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="./favicon.ico">
   </head>
 
   <body>
@@ -70,7 +70,7 @@
     readProfile()
 
     async function requestPerms (perms, readWhenDone) {
-      ethereum.sendAsync({
+      getSend()({
         method: 'wallet_requestPermissions',
         jsonrpc: '2.0',
         params: [perms],
@@ -89,7 +89,7 @@
 
     function changeName () {
       const name = nameInput.value
-      ethereum.sendAsync({
+      getSend()({
         method: 'writeToYourProfile',
         params: ['name', name],
       }, (err, result) => {
@@ -102,7 +102,7 @@
     }
 
     function readProfile () {
-      ethereum.sendAsync({
+      getSend()({
         method: 'readYourProfile',
         params: [],
       }, (err, result) => {
@@ -120,7 +120,7 @@
     }
 
     async function writeProfile (key, value) {
-      ethereum.sendAsync({
+      getSend()({
         method: 'writeToYourProfile',
         params: [],
       }, (err, res) => {
@@ -132,6 +132,10 @@
         }
         readProfile()
       })
+    }
+
+    function getSend() {
+      return ethereum._sendAsync || ethereum.sendAsync
     }
 
     function showError (res) {
