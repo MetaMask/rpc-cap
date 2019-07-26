@@ -2,3 +2,5 @@ www
 diagrams
 *.png
 *.graffle
+.DS_Store
+.circleci
