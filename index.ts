@@ -148,7 +148,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     // handle internal methods before any restricted methods.
-    if (Object.keys(this.internalMethods).includes(methodName)) {
+    if (this.internalMethods[methodName]) {
       return this.internalMethods[methodName](domain, req, res, next, end);
     }
 
@@ -249,7 +249,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   getPermissionsForDomain (domain: string): IOcapLdCapability[] {
     const { domains = {} } = this.state;
-    if (Object.keys(domains).includes(domain)) {
+    if (domains[domain]) {
       const { permissions } = domains[domain];
       return permissions;
     }
@@ -352,7 +352,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const domains = this.getDomains();
 
     // Setup if not yet existent:
-    if (!(Object.keys(domains).includes(domain))) {
+    if (!domains[domain]) {
       const newDomain = { permissions: [] };
       domains[domain] = newDomain;
       return newDomain;
