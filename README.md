@@ -35,6 +35,10 @@ const capabilitiesConfig = {
   // Supports passthrough methods:
   safeMethods: ['get_index']
 
+  // If you want restricted methods to have access to other methods within this scope,
+  // You can provide a json-rpc-engine instance here:
+  engine,
+
   // optional prefix for internal methods
   methodPrefix: 'wallet_',
 
@@ -55,9 +59,14 @@ const capabilitiesConfig = {
     // to easly call other methods within the same restricted domain:
     'send_much_money': {
       description: 'Sends money to a variety of recipients',
-       method: (req, res, next, end, provider) => {
+       method: (req, res, next, end, engine) => {
          Promise.all(req.params.map((recipient) => {
-           return provider.send({ method: 'send_money', params: [recipient] })
+           return new Promise((res, rej) => {
+             engine.send({ method: 'send_money', params: [recipient] }, (err, result) => {
+               if (err) return rej(result);
+               res(result);
+             });
+           })
          }))
          .then(() => {
            res.result = 'Success!'
