@@ -1,4 +1,4 @@
-# JSON RPC Capabilities Middleware
+# JSON RPC Capabilities Middleware [![CircleCI](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware.svg?style=svg)](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware)
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
 
