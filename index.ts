@@ -224,7 +224,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const methodKey = this.getMethodKeyFor(req.method);
     const permission = this.getPermission(domain.origin, req.method);
     if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
-      const engine = this.createVirtualEngineFor(domain);
+      const virtualEngine = this.createVirtualEngineFor(domain);
 
       // Check for Caveats:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
@@ -238,14 +238,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         });
 
         engine.push((req, res, next, end) => {
-          return this.restrictedMethods[methodKey].method(req, res, next, end, engine)
+          return this.restrictedMethods[methodKey].method(req, res, next, end, virtualEngine)
         });
 
         const middleware: JsonRpcMiddleware = asMiddleware(engine);
         return middleware(req, res, next, end);
 
       } else {
-        return this.restrictedMethods[methodKey].method(req, res, next, end, engine);
+        return this.restrictedMethods[methodKey].method(req, res, next, end, virtualEngine);
       }
     }
 
