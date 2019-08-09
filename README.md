@@ -42,14 +42,28 @@ const capabilitiesConfig = {
 
     // Restricted methods themselves are defined as
     // json-rpc-engine middleware functions.
-  'send_money': {
-    description: 'Allows sending your money away freely.',
+    'send_money': {
+      description: 'Allows sending your money away freely.',
       method: (req, res, next, end) => {
         sendMoney()
         res.result = 'Success!'
         end()
       }
     },
+
+    // Restricted methods receive a simple provider method that can be used
+    // to easly call other methods within the same restricted domain:
+    'send_much_money': {
+      description: 'Sends money to a variety of recipients',
+       method: (req, res, next, end, provider) => {
+         Promise.all(req.params.map((recipient) => {
+           return provider.send({ method: 'send_money', params: [recipient] })
+         }))
+         .then(() => {
+           res.result = 'Success!'
+         })
+       }
+    }
   },
 
   /**
