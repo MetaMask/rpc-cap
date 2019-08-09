@@ -25,16 +25,15 @@ test('restricted permission gets restricted provider', async (t) => {
 
       'greet': {
         description: 'Greets the current name, if allowed.',
-        method: (req, res, next, end, provider) => {
-          provider.send({ method: 'getName' })
-          .then((nameRes) => {
+        method: (req, res, next, end, engine) => {
+          engine.handle({ method: 'getName' }, (err, nameRes) => {
+            if (err) {
+              res.error = reason;
+              return end(reason);
+            }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
             end();
-          })
-          .catch((reason) => {
-            res.error = reason;
-            end(reason);
           })
         }
       },
@@ -78,16 +77,15 @@ test('restricted permission gets domain permissions', async (t) => {
 
       'greet': {
         description: 'Greets the current name, if allowed.',
-        method: (req, res, next, end, provider) => {
-          provider.send({ method: 'getName' })
-          .then((nameRes) => {
+        method: (req, res, next, end, engine) => {
+          engine.handle({ method: 'getName' }, (err, nameRes) => {
+            if (err) {
+              res.error = reason;
+              return end(reason);
+            }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
             end();
-          })
-          .catch((reason) => {
-            res.error = reason;
-            end(reason);
           })
         }
       },
@@ -149,16 +147,15 @@ test('permitted provider can pass through to other methods', async (t) => {
       
       'greet': {
         description: 'Greets the current name, if allowed.',
-        method: (req, res, next, end, provider) => {
-          provider.send({ method: 'getName' })
-          .then((nameRes) => {
+        method: (req, res, next, end, engine) => {
+          engine.handle({ method: 'getName' }, (err, nameRes) => {
+            if (err) {
+              res.error = reason;
+              return end(reason);
+            }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
             end();
-          })
-          .catch((reason) => {
-            res.error = reason;
-            end(reason);
           })
         }
       },

@@ -37,7 +37,6 @@ import {
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
-  IProvider,
  } from './src/@types';
 
 import {
@@ -225,7 +224,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const methodKey = this.getMethodKeyFor(req.method);
     const permission = this.getPermission(domain.origin, req.method);
     if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
-      const provider = this.createVirtualProviderFor(domain);
+      const engine = this.createVirtualEngineFor(domain);
 
       // Check for Caveats:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
@@ -239,14 +238,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         });
 
         engine.push((req, res, next, end) => {
-          return this.restrictedMethods[methodKey].method(req, res, next, end, provider)
+          return this.restrictedMethods[methodKey].method(req, res, next, end, engine)
         });
 
         const middleware: JsonRpcMiddleware = asMiddleware(engine);
         return middleware(req, res, next, end);
 
       } else {
-        return this.restrictedMethods[methodKey].method(req, res, next, end, provider);
+        return this.restrictedMethods[methodKey].method(req, res, next, end, engine);
       }
     }
 
@@ -254,7 +253,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return end(METHOD_NOT_FOUND);
   }
 
-  createVirtualProviderFor(domain: IOriginMetadata): IProvider {
+  createVirtualEngineFor(domain: IOriginMetadata): JsonRpcEngine {
     const engine: IJsonRpcEngine = new JsonRpcEngine();
     engine.push(this.providerMiddlewareFunction.bind(this, domain));
 
@@ -266,22 +265,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       engine.push(asMiddleware(this.engine));
     }
 
-    const provider: IProvider = {
-      send: (req: JsonRpcRequest<any>) => {
-        return new Promise((resolve, reject) => {
-          engine.handle(req, (err, res) => {
-            if (err) {
-              if (err.code === 4100) {
-                err.message = `Unauthorized to call ${req.method}: ${err.message}`;
-              }
-              return reject(err);
-            }
-            return resolve(res);
-          })
-        })
-      }
-    }
-    return provider;
+    return engine;
   }
 
   getPermissionsForDomain (domain: string): IOcapLdCapability[] {
