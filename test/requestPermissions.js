@@ -2,9 +2,7 @@ const test = require('tape')
 const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
-// TODO: Standardize!
-// Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
-const USER_REJECTION_CODE = 5
+const USER_REJECTION_CODE = require('../dist/src/errors').USER_REJECTED_ERROR.code
 
 test('requestPermissions with user rejection creates no permissions', async (t) => {
   const expected = []
@@ -37,7 +35,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
 
   function end(reason) {
     t.ok(reason, 'error thrown')
-    t.equal(reason.code, 5, 'Rejection error returned')
+    t.equal(reason.code, USER_REJECTION_CODE, 'Rejection error returned')
     t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still')
     t.end()
   }

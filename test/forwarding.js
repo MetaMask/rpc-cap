@@ -1,10 +1,7 @@
 const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController
-// import CapabilitiesController from '../';
 
-// TODO: Standardize!
-// Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
-const USER_REJECTION_CODE = 5
+const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.eth.unauthorized
 
 test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result'
@@ -73,8 +70,8 @@ test('requesting restricted method is rejected', async (t) => {
   function end(reason) {
     t.ok(reason, 'error should be thrown')
     t.ok(res.error, 'should have error object')
-    t.equal(reason.code, 1, 'error code should be 1.')
-    t.equal(res.error.code, 1, 'error code should be 1.')
+    t.equal(reason.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`)
+    t.equal(res.error.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`)
     t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.')
     t.end()
   }

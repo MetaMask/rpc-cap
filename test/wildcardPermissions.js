@@ -2,9 +2,7 @@ const test = require('tape')
 const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
 
-// TODO: Standardize!
-// Maybe submit to https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
-const USER_REJECTION_CODE = 5
+const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.eth.unauthorized
 
 test('requestPermissions on namespaced method with user approval creates permission', async (t) => {
 
@@ -96,7 +94,7 @@ test('requestPermissions on namespaced method with user approval does not permit
 
   } catch (error) {
     t.ok(error, 'error should not be thrown');
-    t.equal(error.code, 1, 'Should throw auth error');
+    t.equal(error.code, UNAUTHORIZED_CODE, 'Should throw auth error');
     t.end();
   }
 });

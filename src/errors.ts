@@ -1,32 +1,27 @@
-import { JsonRpcRequest, JsonRpcError } from 'json-rpc-engine';
+import { JsonRpcRequest } from 'json-rpc-engine';
 
-function unauthorized (request?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
-  const UNAUTHORIZED_ERROR: JsonRpcError<JsonRpcRequest<any>> = {
-    message: 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
-    code: 1,
-    data: request,
-  };
-  return UNAUTHORIZED_ERROR;
+import { IRpcErrors, IJsonRpcError } from 'eth-json-rpc-errors';
+
+const rpcErrors: IRpcErrors = require('eth-json-rpc-errors').rpcErrors;
+
+// TODO: standardize
+const USER_REJECTED_ERROR_CODE = 4002;
+const USER_REJECTED_ERROR_MESSAGE = 'User rejected the request.';
+
+function unauthorized (request?: JsonRpcRequest<any>): IJsonRpcError<JsonRpcRequest<any>> {
+  return rpcErrors.eth.unauthorized(
+    'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
+    request
+  );
 }
 
-const METHOD_NOT_FOUND: JsonRpcError<null> = {
-  code: -32601,
-  message: 'Method not found',
-};
-
-function invalidReq (req?: JsonRpcRequest<any>): JsonRpcError<JsonRpcRequest<any>> {
-  const INVALID_REQUEST: JsonRpcError<JsonRpcRequest<any>> = {
-    code: -32602,
-    message: 'Invalid request.',
-    data: req,
-  }
-  return INVALID_REQUEST;
+function invalidReq (request?: JsonRpcRequest<any>): IJsonRpcError<JsonRpcRequest<any>> {
+  return rpcErrors.invalidRequest(null, request);
 }
 
-// TODO: This error code needs standardization:
-const USER_REJECTED_ERROR: JsonRpcError<null> = {
-  code: 5,
-  message: 'User rejected the request.',
-};
+const METHOD_NOT_FOUND: IJsonRpcError<undefined> = rpcErrors.methodNotFound();
+const USER_REJECTED_ERROR: IJsonRpcError<undefined> = rpcErrors.eth.nonStandard(
+  USER_REJECTED_ERROR_CODE, USER_REJECTED_ERROR_MESSAGE
+);
 
 export { unauthorized, METHOD_NOT_FOUND, invalidReq, USER_REJECTED_ERROR };

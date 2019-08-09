@@ -4,6 +4,8 @@ const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController
 const sendRpcMethodWithResponse = require('./lib/utils').sendRpcMethodWithResponse;
 
+const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.eth.unauthorized
+
 test('filterParams caveat throws if params are not a subset.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
@@ -57,7 +59,7 @@ test('filterParams caveat throws if params are not a subset.', async (t) => {
 
   } catch (err) {
     t.ok(err, 'should throw');
-    t.equal(err.code, 1, 'Auth error code.');
+    t.equal(err.code, UNAUTHORIZED_CODE, 'Auth error code.');
     t.end();
   }
 })
