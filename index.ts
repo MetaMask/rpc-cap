@@ -260,7 +260,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         return new Promise((resolve, reject) => {
           engine.handle(req, (err, res) => {
             if (err) {
-              if (err.code === 1) {
+              if (err.code === 4100) {
                 err.message = `Unauthorized to call ${req.method}: ${err.message}`;
               }
               return reject(err);
