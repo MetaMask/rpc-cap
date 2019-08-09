@@ -36,6 +36,7 @@ import {
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
+  IProvider,
  } from './src/@types';
 
 import {
@@ -221,6 +222,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const methodKey = this.getMethodKeyFor(req.method);
     const permission = this.getPermission(domain.origin, req.method);
     if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
+      const provider = this.createVirtualProviderFor(domain);
 
       // Check for Caveats:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
@@ -233,18 +235,42 @@ export class CapabilitiesController extends BaseController<any, any> implements 
           engine.push(caveatFn);
         });
 
-        engine.push(this.restrictedMethods[methodKey].method);
+        engine.push((req, res, next, end) => {
+          return this.restrictedMethods[methodKey].method(req, res, next, end, provider)
+        });
 
         const middleware: JsonRpcMiddleware = asMiddleware(engine);
         return middleware(req, res, next, end);
 
       } else {
-        return this.restrictedMethods[methodKey].method(req, res, next, end);
+        return this.restrictedMethods[methodKey].method(req, res, next, end, provider);
       }
     }
 
     res.error = METHOD_NOT_FOUND;
     return end(METHOD_NOT_FOUND);
+  }
+
+  createVirtualProviderFor(domain: IOriginMetadata): IProvider {
+    const engine: IJsonRpcEngine = new JsonRpcEngine();
+    engine.push(this.providerMiddlewareFunction.bind(this, domain));
+
+    const provider: IProvider = {
+      send: (req: JsonRpcRequest<any>) => {
+        return new Promise((resolve, reject) => {
+          engine.handle(req, (err, res) => {
+            if (err) {
+              if (err.code === 1) {
+                err.message = `Unauthorized to call ${req.method}: ${err.message}`;
+              }
+              return reject(err);
+            }
+            return resolve(res);
+          })
+        })
+      }
+    }
+    return provider;
   }
 
   getPermissionsForDomain (domain: string): IOcapLdCapability[] {

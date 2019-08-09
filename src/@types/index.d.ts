@@ -75,8 +75,12 @@ export interface CapabilitiesState {
 
 export interface RestrictedMethodEntry {
   description: string;
-  method: JsonRpcMiddleware;
+  method: PermittedJsonRpcMiddleware;
 } 
+
+export interface PermittedJsonRpcMiddleware extends JsonRpcMiddleware {
+  (req: JsonRpcRequest<any>, res: JsonRpcResponse<any>, next: JsonRpcEngineNextCallback, end: JsonRpcEngineEndCallback, provider: IProvider): void;
+}
 
 export interface RestrictedMethodMap {
   [key: string]: RestrictedMethodEntry;
@@ -100,4 +104,8 @@ export interface RpcCapInterface {
   getPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
   requestPermissionsMiddleware: AuthenticatedJsonRpcMiddleware;
   executeMethod: AuthenticatedJsonRpcMiddleware;
+}
+
+export interface IProvider {
+  send: (req: JsonRpcRequest<any>) => Promise<JsonRpcResponse<any>>;
 }
