@@ -127,7 +127,16 @@ test('permitted provider can pass through to other methods', async (t) => {
   const name = 'Glen Runciter';
   const domain = { origin: 'login.metamask.io' };
 
+  const getNameMiddleware = (req, res, next, end) => {
+    res.result = name;
+    end();
+  };
+
+  const masterEngine = new JsonRpcEngine();
+  masterEngine.push(getNameMiddleware);
+
   const ctrl = new CapabilitiesController({
+    engine: masterEngine,
 
     // Auto fully approve:
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
@@ -155,11 +164,6 @@ test('permitted provider can pass through to other methods', async (t) => {
       },
     },
   })
-
-  const getNameMiddleware = (req, res, next, end) => {
-    res.result = name;
-    end();
-  };
 
   const engine = new JsonRpcEngine();
   engine.push(ctrl.providerMiddlewareFunction.bind(ctrl, domain))

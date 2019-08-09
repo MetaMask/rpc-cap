@@ -1,6 +1,6 @@
 /// <reference path="./ocap-ld.d.ts" />
 
-import { JsonRpcRequest, JsonRpcResponse, JsonRpcError } from 'json-rpc-engine';
+import { JsonRpcRequest, JsonRpcResponse, JsonRpcError, JsonRpcEngine } from 'json-rpc-engine';
 import { IOcapLdCapability, IOcapLdCaveat } from './ocap-ld';
 import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from 'json-rpc-engine';
 
@@ -65,6 +65,7 @@ export interface CapabilitiesConfig {
   initState?: CapabilitiesConfig;
   methodPrefix?: string;
   requestUserApproval: UserApprovalPrompt;
+  engine?: JsonRpcEngine;
 }
 
 type RpcCapDomainRegistry = { [domain:string]: RpcCapDomainEntry };
