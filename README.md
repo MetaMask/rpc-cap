@@ -55,14 +55,14 @@ const capabilitiesConfig = {
       }
     },
 
-    // Restricted methods receive a simple provider method that can be used
+    // Restricted methods receive a simple engine that can be used
     // to easly call other methods within the same restricted domain:
     'send_much_money': {
       description: 'Sends money to a variety of recipients',
        method: (req, res, next, end, engine) => {
          Promise.all(req.params.map((recipient) => {
            return new Promise((res, rej) => {
-             engine.send({ method: 'send_money', params: [recipient] }, (err, result) => {
+             engine.handle({ method: 'send_money', params: [recipient] }, (err, result) => {
                if (err) return rej(result);
                res(result);
              });
