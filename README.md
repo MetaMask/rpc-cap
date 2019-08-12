@@ -10,8 +10,6 @@ A fairly minimal server example, hosted over a [socket.io-like](https://www.npmj
 ```typescript
 const JsonRpcEngine = require('json-rpc-engine');
 const RpcCap = require('json-rpc-capabilities-middleware');
-const createScaffoldMiddleware = require('json-rpc-engine/src/createScaffoldMiddleware');
-const createAsyncMiddleware = require('json-rpc-engine/src/createAsyncMiddleware');
 
 // Here we will restrict access to subsequent functions:
 const capabilities = new RpcCap({
