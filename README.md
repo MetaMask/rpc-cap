@@ -1,4 +1,4 @@
-# JSON RPC Capabilities Middleware
+# JSON RPC Capabilities Middleware [![CircleCI](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware.svg?style=svg)](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware)
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
 
@@ -35,6 +35,10 @@ const capabilitiesConfig = {
   // Supports passthrough methods:
   safeMethods: ['get_index']
 
+  // If you want restricted methods to have access to other methods within this scope,
+  // You can provide a json-rpc-engine instance here:
+  engine,
+
   // optional prefix for internal methods
   methodPrefix: 'wallet_',
 
@@ -42,14 +46,33 @@ const capabilitiesConfig = {
 
     // Restricted methods themselves are defined as
     // json-rpc-engine middleware functions.
-  'send_money': {
-    description: 'Allows sending your money away freely.',
+    'send_money': {
+      description: 'Allows sending your money away freely.',
       method: (req, res, next, end) => {
         sendMoney()
         res.result = 'Success!'
         end()
       }
     },
+
+    // Restricted methods receive a simple engine that can be used
+    // to easly call other methods within the same restricted domain:
+    'send_much_money': {
+      description: 'Sends money to a variety of recipients',
+       method: (req, res, next, end, engine) => {
+         Promise.all(req.params.map((recipient) => {
+           return new Promise((res, rej) => {
+             engine.handle({ method: 'send_money', params: [recipient] }, (err, result) => {
+               if (err) return rej(result);
+               res(result);
+             });
+           })
+         }))
+         .then(() => {
+           res.result = 'Success!'
+         })
+       }
+    }
   },
 
   /**

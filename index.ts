@@ -11,7 +11,8 @@ import {
   JsonRpcEngineEndCallback,
   JsonRpcMiddleware,
   JsonRpcRequest,
-  JsonRpcResponse
+  JsonRpcResponse,
+  JsonRpcEngine
 } from 'json-rpc-engine';
 
 import { BaseController } from 'gaba';
@@ -90,6 +91,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
   private caveats: { [ name:string]: ICaveatFunctionGenerator } = { filterParams, filterResponse };
   private methodPrefix: string;
+  private engine: JsonRpcEngine | undefined;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
     super(config, state || {});
@@ -97,6 +99,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.safeMethods = config.safeMethods || [];
     this.restrictedMethods = config.restrictedMethods || {};
     this.methodPrefix = config.methodPrefix || '';
+    this.engine = config.engine || undefined;
 
     if (!config.requestUserApproval) {
       throw "User approval prompt required.";
@@ -221,6 +224,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const methodKey = this.getMethodKeyFor(req.method);
     const permission = this.getPermission(domain.origin, req.method);
     if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
+      const virtualEngine = this.createVirtualEngineFor(domain);
 
       // Check for Caveats:
       if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
@@ -233,18 +237,35 @@ export class CapabilitiesController extends BaseController<any, any> implements 
           engine.push(caveatFn);
         });
 
-        engine.push(this.restrictedMethods[methodKey].method);
+        engine.push((req, res, next, end) => {
+          return this.restrictedMethods[methodKey].method(req, res, next, end, virtualEngine)
+        });
 
         const middleware: JsonRpcMiddleware = asMiddleware(engine);
         return middleware(req, res, next, end);
 
       } else {
-        return this.restrictedMethods[methodKey].method(req, res, next, end);
+        return this.restrictedMethods[methodKey].method(req, res, next, end, virtualEngine);
       }
     }
 
     res.error = METHOD_NOT_FOUND;
     return end(METHOD_NOT_FOUND);
+  }
+
+  createVirtualEngineFor(domain: IOriginMetadata): JsonRpcEngine {
+    const engine: IJsonRpcEngine = new JsonRpcEngine();
+    engine.push(this.providerMiddlewareFunction.bind(this, domain));
+
+    /**
+     * If an engine was provided, it is used as the final step
+     * for the middleware provider.
+     */
+    if (this.engine) {
+      engine.push(asMiddleware(this.engine));
+    }
+
+    return engine;
   }
 
   getPermissionsForDomain (domain: string): IOcapLdCapability[] {

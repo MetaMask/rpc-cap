@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "clone": "^2.1.2",
-    "eth-json-rpc-errors": "^0.3.0",
+    "eth-json-rpc-errors": "^0.3.1",
     "fast-deep-equal": "^2.0.1",
     "gaba": "^1.4.1",
     "intersect-objects": "^1.0.0",
