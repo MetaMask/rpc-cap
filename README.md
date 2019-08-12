@@ -1,16 +1,69 @@
 # JSON RPC Capabilities Middleware [![CircleCI](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware.svg?style=svg)](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware)
 
-A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine).
+A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine), to instantly add a user-consent based permissions system on top of any JSON-RPC API.
 
-For an intro to capability based security and why it makes sense, [we recommend this video](https://www.youtube.com/watch?v=2H-Azm8tM24).
+Requires that you are able to authenticate a requesting `domain`, which can be any unique string you use to identify a remote entity, be it a user ID whose cookie you've verified, or a public key that you've challenged:
 
-This is an MVP capabilities system, with certain usage assumptions:
+## Minimal Example
+A fairly minimal server example, hosted over a [socket.io-like](https://www.npmjs.com/package/socket.io) server API.
 
-The consuming context is able to provide a `domain` to the middleware that is pre-authenticated. The library does not handle authentication, and trusts the `domain` parameter to the `providerMiddlewareFunction` is accurate and has been verified. (This was made initially as an MVP for proposing a simple capabilities system around [the MetaMask provider API](https://metamask.github.io/metamask-docs/API_Reference/Ethereum_Provider)).
+```typescript
+const JsonRpcEngine = require('json-rpc-engine');
+const RpcCap = require('json-rpc-capabilities-middleware');
+const createScaffoldMiddleware = require('json-rpc-engine/src/createScaffoldMiddleware');
+const createAsyncMiddleware = require('json-rpc-engine/src/createAsyncMiddleware');
 
-This means the capabilities are not valuable without a connection to the granting server, which is definitely fairly acceptable for many contexts (just not like, issuing capabilities intended for redemption in a cryptographically verified smart contract).
+// Here we will restrict access to subsequent functions:
+const capabilities = new RpcCap({
+  restrictedMethods: {
 
-![architecture diagram](./flow-chart.png)
+    // Restricted methods themselves are defined as
+    // json-rpc-engine middleware functions.
+    'unlockDoor': {
+      description: 'Allows unlocking a Very Special door.',
+      method: (req, res, next, end) => {
+        unlockDoor();
+        res.result = 'Unlocked!';
+        end();
+      }
+    }
+  },
+
+  // This library also depends on your ability to present the request
+  // To an entity in charge of administrating permissions:
+  requestUserApproval: async (domainInfo, req) => {
+    return checkIfUserTrusts(domainInfo, req);
+  }
+});
+
+function createPermissionedEngine (domain) {
+  const engine = new JsonRpcEngine();
+  engine.push(capabilities.providerMiddlewareFunction.bind(capabilities, domain)))
+  return engine
+}
+
+// Imagine a very standard server-response framework, here I'll use
+// something like socket.io:
+server.on('connection', (socket) => {
+
+  // It is a critical security assumption that these connections can be authenticated outside of this framework:
+  const domain = authenticateConnection(socket);
+  const engine = createPermissionedEngine(domain);
+
+  socket.on('message', (message, response) => {
+    engine.handle(message, (err, response) => {
+      socket.emit('request', response);
+    })
+  })
+})
+```
+
+## Resulting API
+
+Once this middleware is added to a server that is directing requests to a [JsonRpcEngine](https://github.com/MetaMask/json-rpc-engine), it adds some new methods to the RPC server:
+
+- `getPermissions`: For listing the currently available restricted methods.
+- `requestPermissions`: For requesting additional permissions from the user.
 
 ## Installation
 
@@ -18,13 +71,147 @@ This means the capabilities are not valuable without a connection to the grantin
 
 ## Usage
 
-The capability system is initialized with a variety of options, and is itself a [gaba](https://github.com/MetaMask/gaba/) compatible controller.
+The capability system is initialized with a variety of options, and is itself a [gaba](https://github.com/MetaMask/gaba/) compatible controller, which defines how new permissions are persisted to state, and how they are restored in the constructor.
 
-Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/json-rpc-capabilities-middleware/blob/master/src/%40types/index.d.ts#L7-L15) type method `providerMiddlewareFunction(domain, req, res, next, end)`, which requires an assumed-authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
+Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/json-rpc-capabilities-middleware/blob/master/src/%40types/index.d.ts#L7-L15) type method `providerMiddlewareFunction(domainInfo, req, res, next, end)`, which requires an assumed-authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
 
-It simply passes through methods that are listed in the `safeMethods` array, but otherwise requires the requesting domain to have a permissions object, either granted by user, by approval on request, or (Soon<sup>TM</sup>) by delegation from another domain that has the desired permission.
+It simply passes through methods that are listed in the optional `safeMethods` array, but otherwise requires the requesting domain to have a permissions entry.
 
-This module uses TypeScript, and so referring to the `.d.ts` files for interface definitions could be helpful. The tests are also demonstrative.
+This module is written in TypeScript, and so type definitions can be found in [our types file](./src/@types/index.d.ts).
+
+## API
+
+### Constructor Options
+
+#### initState?: CapabilitiesConfig
+
+Our persistence model depends on the gaba architecture, which means state updates are emitted via `controller.subscribe((update) => {/* handle update */});`
+
+This `update` value should then be fed back in as the `initState` value.
+
+Note this does mean each restricted engine's state is stored in a single blob, and so should not be used to manage overly large sets of permissions
+
+#### methodPrefix?: string
+
+An optional string that will be prepended to the automatically-inserted permissions methods, to allow namespacing and avoid name collisions.
+
+- `getPermissions`: For listing the currently available restricted methods.
+- `requestPermissions`: For requesting additional permissions from the user.
+
+#### safeMethods?: string[]
+
+An array of RPC `method` names that should be passed through this middleware for a latter middleware to handle, with no permissions required.
+
+#### engine?: JsonRpcProviderEngine
+
+An optional reference to the parent `json-rpc-engine` instance, which will be passed to the `restrictedMethods` so that they can call other methods on the host within the same restricted domain.
+
+For example, a restricted method `sendEmail` may depend on another restricted method, `composeEmail`. In this case, the `engine` parameter allows easy composition of restricted methods.
+
+```typescript
+  restrictedMethods: {
+    composeEmail: {
+      description: 'Assigns a copy writer the task of authoring a beautiful text.',
+      method: async (req, res, next, end) => {
+        const text = await commissionCopyWriting(req);
+        res.result = text;
+        end();
+      }
+    }
+
+    // Note the optional `engine` parameter here:
+    // This engine is the same restricted engine that was passed in
+    // as a parameter.
+    'sendEmail': {
+      description: 'Sends a beautiful text to the requested recipient.',
+      method: (req, res, next, end, engine) => {
+        engine.handle({ method: 'composeEmail' }, (err, result) => {
+          sendEmail(result);
+          res.result = 'Sent!';
+          end();
+        })
+      }
+    }
+  },
+
+```
+
+#### restrictedMethods: RestrictedMethodMap
+
+This `RestrictedMethodMap` is a type described like this.
+
+The `description` of a `RestrictedMethodEntry` should be something that could be presented to the user/administrator to decide whether they should authorize this permission to the requesting `domain`.
+
+The `PermittedJsonRpcMiddleware` is just like a normal `json-rpc-engine` middleware, except it can optionally receive a reference to the parent restricted `engine`, for the sake of making permitted requests within the restricted domain.
+
+```typescript
+interface RestrictedMethodMap {
+  [key: string]: RestrictedMethodEntry;
+}
+
+interface RestrictedMethodEntry {
+  description: string;
+  method: PermittedJsonRpcMiddleware;
+} 
+
+interface PermittedJsonRpcMiddleware extends JsonRpcMiddleware {
+  (req: JsonRpcRequest<any>, res: JsonRpcResponse<any>, next: JsonRpcEngineNextCallback, end: JsonRpcEngineEndCallback, engine?: JsonRpcEngine): void;
+}
+```
+
+#### requestUserApproval: UserApprovalPrompt
+
+```typescript
+interface UserApprovalPrompt {
+  (permissionsRequest: IPermissionsRequest): Promise<IRequestedPermissions>;
+}
+
+interface IPermissionsRequest {
+  origin: string;
+  metadata: IOriginMetadata;
+  permissions: IRequestedPermissions;
+}
+
+interface IOriginMetadata {
+  id?: string;
+  origin: IOriginString;
+  site?: {
+    name?: string,
+    icon?: any,
+  }
+}
+
+interface IRequestedPermissions { [methodName: string]: IMethodRequest }
+
+type IMethodRequest = Partial<IOcapLdCapability>
+
+interface IOcapLdCapability {
+  "@context": string[];
+  // A GUID representing this method.
+  id: string;
+  // A pointer to the resource to invoke, like an API url,
+  // or the method name (in the case of a local API).
+  parentCapability: string;
+  // A globally unique identifier representing the valid holder/invoker of this capability.
+  invoker: string;
+  // The issuing date, in UNIX epoch time
+  date?: number;
+  // An optional array of caveat objects.
+  caveats?: IOcapLdCaveat[];
+  proof?: IOcapLdProof;
+}
+```
+
+A promise-returning function representing 
+
+You can see our `IMethodRequest` objects, along with our internal permissions storage, are in a schema based on the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) proposal, which may allow us to add signatures to these permissions in the future. That would allow:
+
+- Clients to back up their own permissions instead of the server storing permissions tables.
+- Unauthenticated, stateless connections, which are authenticated by signed "invocations" by the keys that these permissions would be signed "to".
+
+None of these features are used yet, but we've used this schema internally to provide an interesting possible future path for the project.
+
+## A more detailed Example
 
 ```javascript
 const Engine = require('json-rpc-engine')
@@ -111,34 +298,13 @@ To run unit tests: `npm run build && npm run test`
 
 To test against an example dapp, serve the example using `npm run serve` and explore using [this branch of MetaMask](https://github.com/MetaMask/metamask-extension/tree/LoginPerSite).
 
-## Internal RPC Methods
-
-The capabilities system adds new methods to the RPC, and you can modify their names with the `methodPrefix` contructor param:
-
-- getPermissions () - Returns the available (otherwise restricted) capabilities for the domain.
-- requestPermissions (options) - Triggers the authorization flow, probably prompting user response, and creating the requested permissions objects if approved.
-
 ## Object Definitions
 
-### Permissions Object
+Most object type definitions can be found in [our types file](./src/@types/index.d.ts).
 
-```
-{
-  @context: [ // always present per the standard, but can be ignored for the moment
-    "https://github.com/MetaMask/json-rpc-capabilities-middleware"
-  ],
-  date: 1563743815289, // unix time of creation
-  id: '63b225d0-414e-4a2d-8067-c34499c984c7', // UUID string
-  invoker: 'exampledapp' // the domain of the dapp receiving the capability
-  parentCapability: 'eth_accounts', // the name of the corresponding RPC method
-  caveats: [ // an optional array of objects describing limitations on the method reference
-    {
-      type: 'filterResponse', // the filterResponse applies an exclusive filter to the RPC response
-      value: ['0xabcde...'] // here, 'eth_accounts' can only return the single given account
-    }
-  ]
-}
-```
+## Architecture
+
+![architecture diagram](./flow-chart.png)
 
 ## Current Status
 
