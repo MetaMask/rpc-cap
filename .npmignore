@@ -3,3 +3,4 @@ diagrams
 *.graffle
 .DS_Store
 .circleci
+.python-version
