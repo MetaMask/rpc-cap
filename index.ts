@@ -128,6 +128,27 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   serialize () {
     return this.state;
   }
+  /**
+   * Returns a capabilities middleware function bound to its parent
+   * CapabilitiesController object with the given domain as its
+   * first argument.
+   * @param  {string} domain the domain to bind the middleware to
+   */
+  createBoundMiddleware(domain: string) {
+    return this.providerMiddlewareFunction.bind(this, { origin: domain })
+  }
+
+  /**
+   * Returns a JsonRpcEngine with a single, bound capabilities middleware with
+   * the given domain as its first argument.
+   * See createBoundMiddleware for more information.
+   * @param  {string} domain the domain to bind the middleware to
+   */
+  createPermissionedEngine(domain: string) {
+    const engine = new JsonRpcEngine()
+    engine.push(this.createBoundMiddleware(domain))
+    return engine
+  }
 
   /**
    * Returns a nearly json-rpc-engine compatible method.
@@ -484,8 +505,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     // validate request
     if (
-      req === undefined ||
-      !req.params ||
+      !req ||
+      !Array.isArray(req.params) ||
       typeof req.params[0] !== 'object' ||
       Array.isArray(req.params[0])
     ) {

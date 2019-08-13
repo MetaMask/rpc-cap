@@ -99,6 +99,8 @@ export interface RpcCapInterface {
   setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
   addPermissionsFor: (domainName: string, newPermissions: { [methodName: string]: IOcapLdCapability }) => void;
   removePermissionsFor: (domain: string, permissionsToRemove: IOcapLdCapability[]) => void;
+  createBoundMiddleware: (domain: string) => PermittedJsonRpcMiddleware;
+  createPermissionedEngine: (domain: string) => JsonRpcEngine;
 
   // Injected permissions-handling methods:
   providerMiddlewareFunction: AuthenticatedJsonRpcMiddleware;
