@@ -79,7 +79,123 @@ This module is written in TypeScript, and so type definitions can be found in [o
 
 ## API
 
+### RPC Methods
+
+Here is a more detailed look at the methods that are added to a JSON-RPC service using this module.
+
+#### getPermissions() => IOcapLdCapability[]
+
+```typescript
+engine.handle({
+  method: 'getPermissions'
+}, (err, result) => {
+  console.log(result);
+  /**
+   * [{ parentCapability: 'sendEmail' ... }]
+   **/
+})
+```
+If the `method` requested is `getPermissions` (optionally preceded by `methodPrefix`), the response will be an array of capability objects, which each represent the permission to call a function, with the key `parentCapability` to indicate the restricted method's name.
+
+```typescript
+interface IOcapLdCapability {
+  // An array of strings describing this resource, and pointing at this documentation.
+  "@context": string[];
+
+  // A GUID representing this method.
+  id: string;
+
+  // The restrictedMethod name:
+  parentCapability: string;
+
+  // The recipient's internal domain identifier:
+  invoker: string;
+
+  // The issuing date, in UNIX epoch time
+  date?: number;
+
+  // An optional array of caveat objects.
+  caveats?: IOcapLdCaveat[];
+}
+
+export type IOcapLdCaveat = {
+  // A type identifying the type of caveat.
+  type: string,
+  // Any additional data required to enforce the caveat type.
+  value?: any;
+}
+```
+Of particular interest will be the `caveats` array, which will eventually be customizable by the platform, and describe possible limitations being imposed on the way that particular method is called:
+
+##### Currently Supported Caveats
+
+Currently all supported caveats can be found in the [./src/caveats.ts](Caveats.ts file), which should be expected to be significantly expanded over time.
+
+Right now the supported caveat types are simple, to demonstrate the concept:
+
+- filterParams: Ensures that the method can only be called with a superset of some hard-defined parametersa.
+- filterResponse: Ensures that the response will only include explicitly permitted values in it (if an array).
+
+Some caveat types we are looking forward to supporting eventually:
+
+- Expiration caveat
+- Invocation limit
+- Total sum caveat
+- ???
+
+#### requestPermissions (IRequestedPermissions)
+
+```typescript
+// @types
+
+interface IRequestedPermissions { [methodName: string]: IMethodRequest }
+type IMethodRequest = Partial<IOcapLdCapability>;
+
+// Here is the relevant subset of this object:
+interface IOcapLdCapability {
+  // An optional array of caveat objects.
+  caveats?: IOcapLdCaveat[];
+}
+
+type IOcapLdCaveat = {
+  // A type identifying the type of caveat.
+  type: string,
+  // Any additional data required to enforce the caveat type.
+  value?: any;
+}
+```
+
+A sample permissions request:
+
+```typescript
+engine.handle({
+  method: 'requestPermissions',
+  params: [
+    {
+      unlockDoor: {},
+      composeMessage: {},
+      sendEmail: {
+        caveats: [
+          {
+            type: 'filterParams',
+            value: {
+              to: 'only@my-address.com',
+            }
+          }
+        ]
+      },
+    }
+  ]
+})
+```
+
+As you can see, each requested permission includes an options object, which can specify `caveats` that the requestor is willing to work within.
+
+The simplest permissions request has no `caveats`, but by including caveats, the requestor puts in a little extra effort to give the authorizer a bit more comfort and confidence in approving the requested permissions.
+
 ### Constructor Options
+
+If consuming this module for your own JSON-RPC API, here are the options required to configure and use this module:
 
 #### initState?: CapabilitiesConfig
 
@@ -199,7 +315,6 @@ interface IOcapLdCapability {
   proof?: IOcapLdProof;
 }
 ```
-
 A promise-returning function representing 
 
 You can see our `IMethodRequest` objects, along with our internal permissions storage, are in a schema based on the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) proposal, which may allow us to add signatures to these permissions in the future. That would allow:
@@ -208,6 +323,7 @@ You can see our `IMethodRequest` objects, along with our internal permissions st
 - Unauthenticated, stateless connections, which are authenticated by signed "invocations" by the keys that these permissions would be signed "to".
 
 None of these features are used yet, but we've used this schema internally to provide an interesting possible future path for the project.
+
 
 ## A more detailed Example
 
