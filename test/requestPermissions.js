@@ -1,8 +1,10 @@
 const test = require('tape')
 const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
+const rpcErrors = require('eth-json-rpc-errors')
 
 const USER_REJECTION_CODE = require('../dist/src/errors').USER_REJECTED_ERROR.code
+const INVALID_REQUEST_CODE = rpcErrors.ERROR_CODES.jsonRpc.invalidRequest
 
 test('requestPermissions with user rejection creates no permissions', async (t) => {
   const expected = []
@@ -36,6 +38,43 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   function end(reason) {
     t.ok(reason, 'error thrown')
     t.equal(reason.code, USER_REJECTION_CODE, 'Rejection error returned')
+    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still')
+    t.end()
+  }
+})
+
+test('requestPermissions with invalid requested permissions object fails', async (t) => {
+  const expected = []
+
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: () => Promise.resolve({}),
+    restrictedMethods: {
+      restricted: (req, res, next, end) => {
+        res.result = 'Wahoo!';
+        end();
+      }
+    }
+  })
+
+  const domain = { origin: 'login.metamask.io' }
+  let req = {
+    method: 'requestPermissions',
+    params: [
+        { restricted: { parentCapability: 'foo' } }
+    ]
+  }
+  let res = {}
+
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
+    t.end()
+  }
+
+  function end(reason) {
+    t.ok(reason, 'error thrown')
+    t.equal(reason.code, INVALID_REQUEST_CODE, 'Invalid request error returned')
     t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still')
     t.end()
   }
@@ -120,8 +159,6 @@ test('approving unknown permission should fail', async (t) => {
     t.equal(error.code, -32601, 'should throw method not found error')
     t.end();
   }
-
-
 })
 
 async function sendRpcMethodWithResponse(ctrl, domain, req) {
@@ -145,4 +182,3 @@ async function sendRpcMethodWithResponse(ctrl, domain, req) {
     }
   })
 }
-

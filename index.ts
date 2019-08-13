@@ -134,7 +134,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * first argument.
    * @param  {string} domain the domain to bind the middleware to
    */
-  createBoundMiddleware(domain: string) {
+  createBoundMiddleware (domain: string) {
     return this.providerMiddlewareFunction.bind(this, { origin: domain })
   }
 
@@ -144,7 +144,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * See createBoundMiddleware for more information.
    * @param  {string} domain the domain to bind the middleware to
    */
-  createPermissionedEngine(domain: string) {
+  createPermissionedEngine (domain: string) {
     const engine = new JsonRpcEngine()
     engine.push(this.createBoundMiddleware(domain))
     return engine
@@ -274,7 +274,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return end(METHOD_NOT_FOUND);
   }
 
-  createVirtualEngineFor(domain: IOriginMetadata): JsonRpcEngine {
+  createVirtualEngineFor (domain: IOriginMetadata): JsonRpcEngine {
     const engine: IJsonRpcEngine = new JsonRpcEngine();
     engine.push(this.providerMiddlewareFunction.bind(this, domain));
 
@@ -480,6 +480,36 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.setDomains({})
   }
 
+  /**
+   * Check if a request to requestPermissionsMiddleware is valid.
+   */
+  isValidPermissionsRequest (req: JsonRpcRequest<any>): boolean {
+    if (
+      !req ||
+      !Array.isArray(req.params) ||
+      typeof req.params[0] !== 'object' ||
+      Array.isArray(req.params[0])
+    ) {
+      return false;
+    }
+
+    const perms: IRequestedPermissions = req.params[0]
+    for (let key of Object.keys(perms)) {
+      if (
+        perms[key].parentCapability !== undefined &&
+        key !== perms[key].parentCapability
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * The capabilities middleware function used for getting permissions for a
+   * specific domain.
+   */
   getPermissionsMiddleware (
     domain: IOriginMetadata,
     _req: JsonRpcRequest<any>,
@@ -504,11 +534,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   ) : void {
 
     // validate request
-    if (
-      !req ||
-      !Array.isArray(req.params) ||
-      typeof req.params[0] !== 'object' ||
-      Array.isArray(req.params[0])
+    if (!this.isValidPermissionsRequest(req)
     ) {
       res.error = invalidReq(req);
       return end(res.error);
@@ -567,4 +593,3 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     });
   }
 }
-
