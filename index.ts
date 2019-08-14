@@ -540,14 +540,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return end(res.error);
     }
 
-    // get additional metadata from params if it exists
-    if (
-      req.params.length === 2 &&
-      req.params[1].metadata
-    ) {
-      metadata = { ...req.params.pop().metadata, ...metadata }
-    }
-
     if (!metadata.id) {
       metadata.id = uuid();
     }
