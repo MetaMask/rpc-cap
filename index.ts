@@ -1,10 +1,6 @@
-/// <reference path="./src/@types/gaba.d.ts" />
-/// <reference path="./src/@types/index.d.ts" />
 
 import uuid from 'uuid/v4';
 
-const JsonRpcEngine = require('json-rpc-engine');
-const asMiddleware = require('json-rpc-engine/src/asMiddleware');
 import {
   JsonRpcEngine as IJsonRpcEngine,
   JsonRpcEngineNextCallback,
@@ -48,8 +44,11 @@ import {
 
 import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
 
+const JsonRpcEngine = require('json-rpc-engine');
+const asMiddleware = require('json-rpc-engine/src/asMiddleware');
+
 class Capability implements IOcapLdCapability {
-  public '@context':string[] = ['https://github.com/MetaMask/json-rpc-capabilities-middleware'];
+  public '@context': string[] = ['https://github.com/MetaMask/json-rpc-capabilities-middleware'];
   public parentCapability: string;
   public caveats: IOcapLdCaveat[] | undefined;
   public id: string;
@@ -79,7 +78,7 @@ class Capability implements IOcapLdCapability {
     }
   }
 
-  toString():string {
+  toString(): string {
     return JSON.stringify(this.toJSON());
   }
 }
@@ -89,7 +88,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
-  private caveats: { [ name:string]: ICaveatFunctionGenerator } = { filterParams, filterResponse };
+  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { filterParams, filterResponse };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
 
@@ -110,7 +109,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       permissionsRequests: [],
       permissionsDescriptions: Object.keys(
         this.restrictedMethods
-      ).reduce<{[key:string]:string}>(
+      ).reduce<{[key: string]: string}>(
         (acc, methodName) => {
           acc[methodName] = this.restrictedMethods[methodName].description
           return acc;
@@ -163,7 +162,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     res: JsonRpcResponse<any>,
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
-  ) : void {
+  ): void {
     const methodName = req.method;
 
     // skip registered safe/passthrough methods.
@@ -219,7 +218,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     if (method.indexOf('_') > 0) {
 
       const segments = method.split('_');
-      let managed: string = '';
+      let managed = '';
 
       while (segments.length > 0 && !managedMethods.includes(managed)) {
         managed += segments.shift() + '_';
@@ -241,7 +240,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     res: JsonRpcResponse<any>,
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
-  ) : void {
+  ): void {
     const methodKey = this.getMethodKeyFor(req.method);
     const permission = this.getPermission(domain.origin, req.method);
     if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
@@ -306,7 +305,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} method - The method
    */
   getPermission (domain: string, method: string): IOcapLdCapability | undefined {
-    let permissions = this.getPermissionsForDomain(domain).filter(p => {
+    const permissions = this.getPermissionsForDomain(domain).filter(p => {
       return p.parentCapability === method;
     });
     if (permissions.length > 0) { return permissions.shift(); }
@@ -328,7 +327,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * 
    * @param request The request that no longer requires user attention.
    */
-  removePermissionsRequest (requestId: string) : void {
+  removePermissionsRequest (requestId: string): void {
     const reqs = this.getPermissionsRequests().filter((oldReq) => {
       return oldReq.metadata.id !== requestId;
     })
@@ -352,7 +351,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback) {
 
     // Enforce actual approving known methods:
-    for (let methodName in approved) {
+    for (const methodName in approved) {
       const exists = this.getMethodKeyFor(methodName);
       if (!exists) {
         res.error = METHOD_NOT_FOUND;
@@ -362,7 +361,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     const permissions: { [methodName: string]: IOcapLdCapability } = {};
 
-    for (let method in approved) {
+    for (const method in approved) {
       const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
       permissions[method] = newPerm;
     }
@@ -372,12 +371,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     end();
   }
 
-  getDomains () : RpcCapDomainRegistry {
+  getDomains (): RpcCapDomainRegistry {
     const { domains } = this.state;
     return domains || {};
   }
 
-  setDomains (domains: RpcCapDomainRegistry) : void {
+  setDomains (domains: RpcCapDomainRegistry): void {
     this.update({ domains });
   }
 
@@ -421,7 +420,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domainName - The grantee domain.
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
-  addPermissionsFor (domainName: string, newPermissions: { [methodName:string]: IOcapLdCapability }) {
+  addPermissionsFor (domainName: string, newPermissions: { [methodName: string]: IOcapLdCapability }) {
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
     const newKeys = Object.keys(newPermissions);
 
@@ -430,8 +429,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return !newKeys.includes(oldPerm.parentCapability);
     });
 
-    for (let methodName in newPermissions) {
-      let newPerm = newPermissions[methodName];
+    for (const methodName in newPermissions) {
+      const newPerm = newPermissions[methodName];
       
       domain.permissions.push(new Capability({
         method: newPerm.parentCapability,
@@ -461,7 +460,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     domain.permissions = domain.permissions.filter(
       (perm: IOcapLdCapability) => {
-        for (let r of permissionsToRemove) {
+        for (const r of permissionsToRemove) {
           if (r.parentCapability === perm.parentCapability) {
             return false;
           }
@@ -494,7 +493,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     const perms: IRequestedPermissions = req.params[0]
-    for (let key of Object.keys(perms)) {
+    for (const key of Object.keys(perms)) {
       if (
         perms[key].parentCapability !== undefined &&
         key !== perms[key].parentCapability
@@ -531,7 +530,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     res: JsonRpcResponse<any>,
     _next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
-  ) : void {
+  ): void {
 
     // validate request
     if (!this.isValidPermissionsRequest(req)

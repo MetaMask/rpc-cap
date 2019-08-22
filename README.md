@@ -65,7 +65,7 @@ Once this middleware is added to a server that is directing requests to a [JsonR
 
 ## Installation
 
-`npm install json-rpc-capabilities-middleware`
+`yarn add json-rpc-capabilities-middleware`
 
 ## Usage
 
@@ -408,9 +408,11 @@ engine.start()
 
 ### Testing
 
-To run unit tests: `npm run build && npm run test`
+To run unit tests on a fresh build: `yarn test:clean`
 
-To test against an example dapp, serve the example using `npm run serve` and explore using [this branch of MetaMask](https://github.com/MetaMask/metamask-extension/tree/LoginPerSite).
+To run unit tests without building: `yarn test`
+
+To test against an example dapp, serve the example using `yarn serve` and explore using [this branch of MetaMask](https://github.com/MetaMask/metamask-extension/tree/LoginPerSite).
 
 ## Object Definitions
 

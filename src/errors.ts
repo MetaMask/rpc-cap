@@ -1,8 +1,8 @@
 import { JsonRpcRequest } from 'json-rpc-engine';
 
-import { IRpcErrors, IJsonRpcError } from 'eth-json-rpc-errors';
+import { IRpcErrors, IJsonRpcError } from 'eth-json-rpc-errors/@types';
 
-const rpcErrors: IRpcErrors = require('eth-json-rpc-errors').rpcErrors;
+const rpcErrors: IRpcErrors = require('eth-json-rpc-errors').errors;
 
 // TODO: standardize
 const USER_REJECTED_ERROR_CODE = 4002;
@@ -20,7 +20,7 @@ function invalidReq (request?: JsonRpcRequest<any>): IJsonRpcError<JsonRpcReques
 }
 
 const METHOD_NOT_FOUND: IJsonRpcError<undefined> = rpcErrors.methodNotFound();
-const USER_REJECTED_ERROR: IJsonRpcError<undefined> = rpcErrors.eth.nonStandard(
+const USER_REJECTED_ERROR: IJsonRpcError<undefined> = rpcErrors.eth.custom(
   USER_REJECTED_ERROR_CODE, USER_REJECTED_ERROR_MESSAGE
 );
 
