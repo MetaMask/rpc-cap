@@ -129,7 +129,7 @@ Of particular interest will be the `caveats` array, which will eventually be cus
 
 ##### Currently Supported Caveats
 
-Currently all supported caveats can be found in the [./src/caveats.ts](Caveats.ts file), which should be expected to be significantly expanded over time.
+Currently all supported caveats can be found in the [Caveats.ts file](./src/caveats.ts), which should be expected to be significantly expanded over time.
 
 Right now the supported caveat types are simple, to demonstrate the concept:
 
@@ -266,7 +266,7 @@ interface RestrictedMethodMap {
 interface RestrictedMethodEntry {
   description: string;
   method: PermittedJsonRpcMiddleware;
-} 
+}
 
 interface PermittedJsonRpcMiddleware extends JsonRpcMiddleware {
   (req: JsonRpcRequest<any>, res: JsonRpcResponse<any>, next: JsonRpcEngineNextCallback, end: JsonRpcEngineEndCallback, engine?: JsonRpcEngine): void;
@@ -315,7 +315,7 @@ interface IOcapLdCapability {
   proof?: IOcapLdProof;
 }
 ```
-A promise-returning function representing 
+A promise-returning function representing
 
 You can see our `IMethodRequest` objects, along with our internal permissions storage, are in a schema based on the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) proposal, which may allow us to add signatures to these permissions in the future. That would allow:
 
