@@ -51,3 +51,14 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse(
     });
   }
 }
+
+/*
+ * Forces the method to be called with given params
+ */
+export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: ISerializedCaveat) {
+  const { value } = serialized;
+  return (req, res, next, end) => {
+      req.params = [...value.params]
+      next();
+  };
+}
