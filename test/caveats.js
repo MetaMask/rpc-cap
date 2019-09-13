@@ -244,3 +244,60 @@ test('filterResponse caveat passes through subset portion of response', async (t
   }
 })
 
+test('forceParams caveat overwrites', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'testMethod': {
+        method: (req, res, next, end) => {
+          res.result = req.params;
+          end();
+        }
+      }
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      return permissionsRequest.permissions;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'testMethod': {
+            caveats: [
+              { type: 'forceParams', value: [0,1,2,3] },
+            ]
+          },
+        }
+      ]
+    };
+
+    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'testMethod',
+      params: [],
+    }
+
+    const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(result, 'should succeed');
+    t.deepEqual(result, [0,1,2,3], 'Returned the correct subset');
+    t.end();
+
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+    t.end();
+  }
+})
+
