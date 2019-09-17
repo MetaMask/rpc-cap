@@ -222,24 +222,20 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     // Check for potentially nested namespaces:
     // Ex: wildzone_
     // Ex: eth_plugin_
-    if (method.indexOf('_') > 0) {
 
-      const segments = method.split('_');
-      let managed = '';
+    const segments = method.split('_');
+    let managed = '';
 
-      while (segments.length > 0 && !managedMethods.includes(managed) && !wildCardMethodsWithoutWildCard[managed]) {
-        managed += segments.shift() + '_';
-      }
+    while (segments.length > 0 && !managedMethods.includes(managed) && !wildCardMethodsWithoutWildCard[managed]) {
+      managed += segments.shift() + '_';
+    }
 
-      if (managedMethods.includes(managed)) {
-        return managed;
-      } else if (wildCardMethodsWithoutWildCard[managed]) {
-        return managed + '*';
-      } else {
-        return '';
-      }
+    if (managedMethods.includes(managed)) {
+      return managed;
+    } else if (wildCardMethodsWithoutWildCard[managed]) {
+      return managed + '*';
     } else {
-      return managedMethods.includes(method) ? method : '';
+      return '';
     }
   }
 
