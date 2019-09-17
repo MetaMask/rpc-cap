@@ -52,6 +52,96 @@ test('requestPermissions on namespaced method with user approval creates permiss
   }
 });
 
+test('requestPermissions on twice namespaced method with user approval creates permission', async (t) => {
+
+  const ctrl = new CapabilitiesController({
+
+    // Auto fully approve:
+    requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
+
+    restrictedMethods: {
+
+      'eth_plugin_': {
+        description: "Permission to install plugin",
+        method: (req, res, next, end) => {
+          const parts = req.method.split('_');
+          const second = parts[2];
+          res.result = second;
+          end();
+        }
+      }
+    },
+
+  })
+
+  const domain = { origin: 'login.metamask.io' }
+  let req = {
+    method: 'requestPermissions',
+    params: [
+      {
+        eth_plugin_A: {}
+      }
+    ]
+  }
+
+  try {
+    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    req = { method: 'eth_plugin_A' };
+    res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    t.equal(res.result, 'A', 'returned the segment correctly.');
+    t.end()
+
+  } catch (error) {
+    t.error(error, 'error should not be thrown')
+    t.end();
+  }
+});
+
+test('requestPermissions on namespaced method ending in a wildcard with user approval creates permission', async (t) => {
+
+  const ctrl = new CapabilitiesController({
+
+    // Auto fully approve:
+    requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
+
+    restrictedMethods: {
+
+      'eth_plugin_*': {
+        description: "Permission to install plugin",
+        method: (req, res, next, end) => {
+          const parts = req.method.split('_');
+          const second = parts[2];
+          res.result = second;
+          end();
+        }
+      }
+    },
+
+  })
+
+  const domain = { origin: 'login.metamask.io' }
+  let req = {
+    method: 'requestPermissions',
+    params: [
+      {
+        eth_plugin_A: {}
+      }
+    ]
+  }
+
+  try {
+    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    req = { method: 'eth_plugin_A' };
+    res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    t.equal(res.result, 'A', 'returned the segment correctly.');
+    t.end()
+
+  } catch (error) {
+    t.error(error, 'error should not be thrown')
+    t.end();
+  }
+});
+
 test('requestPermissions on namespaced method with user approval does not permit other namespaces', async (t) => {
 
   const ctrl = new CapabilitiesController({
