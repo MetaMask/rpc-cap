@@ -135,6 +135,7 @@ Right now the supported caveat types are simple, to demonstrate the concept:
 
 - filterParams: Ensures that the method can only be called with a superset of some hard-defined parametersa.
 - filterResponse: Ensures that the response will only include explicitly permitted values in it (if an array).
+- forceParams: Overwrites the params of all calls to the method with a specified list of params.
 
 Some caveat types we are looking forward to supporting eventually:
 
