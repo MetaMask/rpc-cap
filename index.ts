@@ -43,6 +43,10 @@ import {
   METHOD_NOT_FOUND
 } from './src/errors';
 
+export interface AnnotatedJsonRpcEngine extends JsonRpcEngine {
+  domain?: IOriginString
+}
+
 import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
 
 const JsonRpcEngine = require('json-rpc-engine');
@@ -279,8 +283,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return end(METHOD_NOT_FOUND);
   }
 
-  createVirtualEngineFor (domain: IOriginMetadata): JsonRpcEngine {
-    const engine: IJsonRpcEngine = new JsonRpcEngine();
+  createVirtualEngineFor (domain: IOriginMetadata): AnnotatedJsonRpcEngine {
+    const engine: AnnotatedJsonRpcEngine = new JsonRpcEngine();
     engine.push(this.providerMiddlewareFunction.bind(this, domain));
 
     /**
@@ -291,6 +295,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       engine.push(asMiddleware(this.engine));
     }
 
+    engine.domain = domain.origin;
     return engine;
   }
 
