@@ -39,12 +39,12 @@ import {
 import {
   unauthorized,
   invalidReq,
-  USER_REJECTED_ERROR,
-  METHOD_NOT_FOUND
+  userRejectedRequest,
+  methodNotFound
 } from './src/errors';
 
 export interface AnnotatedJsonRpcEngine extends JsonRpcEngine {
-  domain?: IOriginString
+  domain?: IOriginString;
 }
 
 import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
@@ -132,6 +132,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   serialize () {
     return this.state;
   }
+
   /**
    * Returns a capabilities middleware function bound to its parent
    * CapabilitiesController object with the given domain as its
@@ -279,8 +280,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       }
     }
 
-    res.error = METHOD_NOT_FOUND;
-    return end(METHOD_NOT_FOUND);
+    res.error = methodNotFound(req);
+    return end(res.error);
   }
 
   createVirtualEngineFor (domain: IOriginMetadata): AnnotatedJsonRpcEngine {
@@ -365,7 +366,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     for (const methodName in approved) {
       const exists = this.getMethodKeyFor(methodName);
       if (!exists) {
-        res.error = METHOD_NOT_FOUND;
+        res.error = methodNotFound(methodName);
         return end(res.error);
       }
     }
@@ -571,8 +572,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     // the approved permissions, allowing user-customization.
     .then((approved: IRequestedPermissions) => {
       if (Object.keys(approved).length === 0) {
-        res.error = USER_REJECTED_ERROR;
-        return end(USER_REJECTED_ERROR);
+        res.error = userRejectedRequest(req);
+        return end(res.error);
       }
 
       if (!permissionsRequest.metadata.id) {

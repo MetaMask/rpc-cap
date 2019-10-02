@@ -1,27 +1,25 @@
 import { JsonRpcRequest } from 'json-rpc-engine';
 
-import { IRpcErrors, IJsonRpcError } from 'eth-json-rpc-errors/@types';
+import { IEthErrors, IEthereumRpcError } from 'eth-json-rpc-errors/@types';
 
-const rpcErrors: IRpcErrors = require('eth-json-rpc-errors').errors;
+const ethErrors: IEthErrors = require('eth-json-rpc-errors').ethErrors;
 
-// TODO: standardize
-const USER_REJECTED_ERROR_CODE = 4002;
-const USER_REJECTED_ERROR_MESSAGE = 'User rejected the request.';
-
-function unauthorized (request?: JsonRpcRequest<any>): IJsonRpcError<JsonRpcRequest<any>> {
-  return rpcErrors.eth.unauthorized(
-    'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
-    request
-  );
+function unauthorized (request?: JsonRpcRequest<any>): IEthereumRpcError<JsonRpcRequest<any>> {
+  return ethErrors.provider.unauthorized({
+    message: 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
+    data: request
+  });
 }
 
-function invalidReq (request?: JsonRpcRequest<any>): IJsonRpcError<JsonRpcRequest<any>> {
-  return rpcErrors.invalidRequest(null, request);
+function invalidReq (request?: JsonRpcRequest<any>): IEthereumRpcError<JsonRpcRequest<any>> {
+  return ethErrors.rpc.invalidRequest({ data: request });
 }
 
-const METHOD_NOT_FOUND: IJsonRpcError<undefined> = rpcErrors.methodNotFound();
-const USER_REJECTED_ERROR: IJsonRpcError<undefined> = rpcErrors.eth.custom(
-  USER_REJECTED_ERROR_CODE, USER_REJECTED_ERROR_MESSAGE
-);
+function methodNotFound (data?: any): IEthereumRpcError<JsonRpcRequest<any>> {
+  return ethErrors.rpc.methodNotFound({ data });
+}
 
-export { unauthorized, METHOD_NOT_FOUND, invalidReq, USER_REJECTED_ERROR };
+function userRejectedRequest (request?: JsonRpcRequest<any>): IEthereumRpcError<JsonRpcRequest<any>> {
+  return ethErrors.provider.userRejectedRequest({ data: request });
+}
+export { unauthorized, methodNotFound, invalidReq, userRejectedRequest };

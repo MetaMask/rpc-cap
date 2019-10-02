@@ -1,7 +1,7 @@
 const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController
 
-const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.eth.unauthorized
+const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.provider.unauthorized
 
 test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result'
