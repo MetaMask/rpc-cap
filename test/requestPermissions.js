@@ -3,8 +3,8 @@ const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal')
 const rpcErrors = require('eth-json-rpc-errors')
 
-const USER_REJECTION_CODE = require('../dist/src/errors').USER_REJECTED_ERROR.code
-const INVALID_REQUEST_CODE = rpcErrors.ERROR_CODES.jsonRpc.invalidRequest
+const USER_REJECTION_CODE = rpcErrors.ERROR_CODES.provider.userRejectedRequest
+const INVALID_REQUEST_CODE = rpcErrors.ERROR_CODES.rpc.invalidRequest
 
 test('requestPermissions with user rejection creates no permissions', async (t) => {
   const expected = []

@@ -1,8 +1,7 @@
 const test = require('tape')
 const CapabilitiesController = require('../dist').CapabilitiesController;
-const equal = require('fast-deep-equal')
 
-const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.eth.unauthorized
+const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.provider.unauthorized
 
 test('requestPermissions on namespaced method with user approval creates permission', async (t) => {
 

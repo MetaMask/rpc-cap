@@ -1,9 +1,6 @@
 const test = require('tape')
 const CapabilitiesController = require('../dist').CapabilitiesController;
-const equal = require('fast-deep-equal')
 const JsonRpcEngine = require('json-rpc-engine');
-
-const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.eth.unauthorized;
 
 test('restricted permission gets restricted provider', async (t) => {
   const name = 'Glen Runciter';
