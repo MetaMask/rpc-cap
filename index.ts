@@ -364,8 +364,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     // Enforce actual approving known methods:
     for (const methodName in approved) {
-      const exists = this.getMethodKeyFor(methodName);
-      if (!exists) {
+      if (!this.getMethodKeyFor(methodName)) {
         res.error = methodNotFound(methodName);
         return end(res.error);
       }
@@ -442,16 +441,46 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     });
 
     for (const methodName in newPermissions) {
-      const newPerm = newPermissions[methodName];
-      
-      domain.permissions.push(new Capability({
-        method: newPerm.parentCapability,
-        invoker: domainName,
-        caveats: newPerm.caveats,
-      }));
+      domain.permissions.push(newPermissions[methodName]);
     }
 
     this.setDomain(domainName, domain);
+  }
+
+  /**
+   * Updates the caveats for the permission corresponding to the given domain
+   * and method by overwriting them. The domain must be known and the
+   * permission must exist, else this method will throw.
+   * 
+   * @param {string} domainName - The grantee domain.
+   * @param {string} methodName - The name of the method identifying the permission.
+   * @param {Array} caveats - The new caveats for the permission.
+   */
+  updateCaveatsFor (
+    domainName: string,
+    methodName: string,
+    caveats: IOcapLdCaveat[],
+  ): void {
+
+    // assert method exists
+    if (!this.getMethodKeyFor(methodName)) {
+      throw methodNotFound(methodName);
+    }
+
+    // assert domain already has permission
+    const existing = this.getPermissionsForDomain(domainName)
+      .find(p => p.parentCapability === methodName);
+    if (!existing) {
+      throw new Error('not there'); // not unauthorized, but the request is undefined
+    }
+
+    // construct new permission, which will overwrite the existing one
+    const newPermissions: { [methodName: string]: IOcapLdCapability } = {};
+
+    existing.caveats = caveats
+    newPermissions[methodName] = existing
+
+    this.addPermissionsFor(domainName, newPermissions);
   }
 
   /**

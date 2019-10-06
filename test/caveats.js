@@ -301,3 +301,132 @@ test('forceParams caveat overwrites', async (t) => {
   }
 })
 
+test('PermissionsController.updateCaveatsFor', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'testMethod': {
+        method: (req, res, next, end) => {
+          res.result = req.params;
+          end();
+        }
+      }
+    },
+
+    // All permissions automatically approved
+    requestUserApproval: async (permissionsRequest) => {
+      return permissionsRequest.permissions;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'testMethod': {
+            caveats: [
+              { type: 'forceParams', value: [0,1,2,3] },
+            ]
+          },
+        }
+      ]
+    };
+
+    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    test('updateCaveatsFor successfully updates caveats', async (t) => {
+
+      try {
+
+        ctrl.updateCaveatsFor(
+          domain.origin, 'testMethod', [{
+            type: 'forceParams',
+            value: [0,1,2]
+          }]
+        )
+
+        req = {
+          method: 'testMethod',
+          params: [],
+        }
+        const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+        t.ok(result, 'should succeed');
+        t.deepEqual(result, [0,1,2], 'Returned the correct subset');
+        t.end();
+      } catch (err) {
+        t.notOk(err, 'should not throw')
+        t.end()
+      }
+    })
+
+    test('updateCaveatsFor throws on non-existing domain', async (t) => {
+
+      try {
+
+        ctrl.updateCaveatsFor(
+          'foo.bar.xyz', 'testMethod', [{
+            type: 'forceParams',
+            value: [0,1]
+          }]
+        )
+
+        t.notOk(true, 'should have thrown')
+        t.end()
+
+      } catch (err) {
+        t.ok(err, 'did throw')
+        t.end()
+      }
+    })
+
+    test('updateCaveatsFor throws on non-existing method', async (t) => {
+
+      try {
+
+        ctrl.updateCaveatsFor(
+          domain.origin, 'doesNotExist', [{
+            type: 'forceParams',
+            value: [0,1]
+          }]
+        )
+
+        t.notOk(true, 'should have thrown')
+        t.end()
+
+      } catch (err) {
+        t.ok(err, 'did throw')
+        t.end()
+      }
+    })
+
+    test('updateCaveatsFor does not alter state after throwing', async (t) => {
+
+      try {
+
+        req = {
+          method: 'testMethod',
+          params: [],
+        }
+        const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+        t.ok(result, 'should succeed');
+        t.deepEqual(result, [0,1,2], 'Returned the correct subset');
+        t.end();
+      } catch (err) {
+        t.notOk(err, 'should not throw')
+        t.end()
+      }
+    })
+
+    t.end()
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+    t.end();
+  }
+})

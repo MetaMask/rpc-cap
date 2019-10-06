@@ -5,7 +5,7 @@ import { isSubset } from "./@types/is-subset";
 import { unauthorized } from './errors';
 const isSubset = require('is-subset');
 
-interface ISerializedCaveat {
+export interface ISerializedCaveat {
   type: string;
   value?: any;
 }
