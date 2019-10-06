@@ -11,7 +11,7 @@ export interface AuthenticatedJsonRpcMiddleware {
     res: JsonRpcResponse<any>,
     next: JsonRpcEngineNextCallback,
     end: JsonRpcEngineEndCallback,
-  ) : void;
+  ): void;
 }
 
 /**

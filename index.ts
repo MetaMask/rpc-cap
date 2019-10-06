@@ -149,7 +149,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * See createBoundMiddleware for more information.
    * @param  {string} domain the domain to bind the middleware to
    */
-  createPermissionedEngine (domain: string) {
+  createPermissionedEngine (domain: string): IJsonRpcEngine {
     const engine = new JsonRpcEngine()
     engine.push(this.createBoundMiddleware(domain))
     return engine
@@ -193,7 +193,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     if (!permission) {
-      res.error = unauthorized(req);
+      res.error = unauthorized({ data: req });
       return end(res.error);
     }
 
@@ -346,7 +346,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.setPermissionsRequests(reqs);
   }
 
-  setPermissionsRequests (permissionsRequests: IPermissionsRequest[]) {
+  setPermissionsRequests (
+    permissionsRequests: IPermissionsRequest[]
+  ): void {
     this.update({ permissionsRequests });
   }
 
@@ -359,9 +361,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {JsonRpcResponse} res - The response.
    * @param {JsonRpcEngineEndCallback} end - The end function.
    */
-  grantNewPermissions (domain: string, approved: IRequestedPermissions, 
-    res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback) {
-
+  grantNewPermissions (
+    domain: string,
+    approved: IRequestedPermissions, 
+    res: JsonRpcResponse<any>,
+    end: JsonRpcEngineEndCallback
+  ): void {
     // Enforce actual approving known methods:
     for (const methodName in approved) {
       if (!this.getMethodKeyFor(methodName)) {
@@ -413,7 +418,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return domains[domain];
   }
 
-  setDomain (domain: IOriginString, domainSettings: RpcCapDomainEntry) {
+  setDomain (
+    domain: IOriginString, domainSettings: RpcCapDomainEntry
+  ): void {
     const domains = this.getDomains();
     if (domainSettings.permissions.length > 0) {
       domains[domain] = domainSettings;
@@ -431,7 +438,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domainName - The grantee domain.
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
-  addPermissionsFor (domainName: string, newPermissions: { [methodName: string]: IOcapLdCapability }) {
+  addPermissionsFor (
+    domainName: string,
+    newPermissions: { [methodName: string]: IOcapLdCapability }
+  ): void {
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
     const newKeys = Object.keys(newPermissions);
 
@@ -448,9 +458,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   }
 
   /**
-   * Updates the caveats for the permission corresponding to the given domain
-   * and method by overwriting them. The domain must be known and the
-   * permission must exist, else this method will throw.
+   * Overwrites caveats for the permission corresponding to the given domain
+   * and method. The domain must be known and the permission must exist, or
+   * this method will throw.
    * 
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
@@ -462,6 +472,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     caveats: IOcapLdCaveat[],
   ): void {
 
+    // assert domain exists
+    if (!this.getDomains()[domainName]) {
+      throw unauthorized({
+        message: 'Unknown domain.',
+        data: domainName,
+      })
+    }
+
     // assert method exists
     if (!this.getMethodKeyFor(methodName)) {
       throw methodNotFound(methodName);
@@ -471,7 +489,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const existing = this.getPermissionsForDomain(domainName)
       .find(p => p.parentCapability === methodName);
     if (!existing) {
-      throw new Error('not there'); // not unauthorized, but the request is undefined
+      throw unauthorized({
+        message: 'No such permissions exists for the given domain.',
+        data: { domain: domainName, method: methodName },
+      })
     }
 
     // construct new permission, which will overwrite the existing one
@@ -492,7 +513,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   removePermissionsFor (
     domainName: string,
     permissionsToRemove: IOcapLdCapability[]
-  ) {
+  ): void {
     const domain = this.getDomainSettings(domainName);
 
     if (domain === undefined || domain.permissions === undefined) {
@@ -516,7 +537,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Clear all domains (and thereby remove all permissions).
    */
-  clearDomains () {
+  clearDomains (): void {
     this.setDomains({})
   }
 
@@ -555,8 +576,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     _req: JsonRpcRequest<any>,
     res: JsonRpcResponse<any>,
     _next: JsonRpcEngineNextCallback,
-    end: JsonRpcEngineEndCallback)
-  {
+    end: JsonRpcEngineEndCallback,
+  ): void {
     const permissions = this.getPermissionsForDomain(domain.origin);
     res.result = permissions;
     end();

@@ -24,7 +24,7 @@ export const filterParams: ICaveatFunctionGenerator = function filterParams(seri
     const permitted = isSubset(req.params, value);
 
     if (!permitted) {
-      res.error = unauthorized(req);
+      res.error = unauthorized({ data: req });
       return end(res.error);
     }
 
