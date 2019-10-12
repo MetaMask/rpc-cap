@@ -1,24 +1,24 @@
 /// <reference path="./@types/is-subset.d.ts" />
 
 import { JsonRpcMiddleware } from 'json-rpc-engine';
-import { isSubset } from "./@types/is-subset";
+import { isSubset } from './@types/is-subset';
+import { IOcapLdCaveat } from './@types/ocap-ld'
 import { unauthorized } from './errors';
 const isSubset = require('is-subset');
 
-export interface ISerializedCaveat {
-  type: string;
-  value?: any;
+export interface ISemanticCaveat extends IOcapLdCaveat {
+  semanticType: string;
 }
 
 export type ICaveatFunction = JsonRpcMiddleware;
 
-export type ICaveatFunctionGenerator = (caveat:ISerializedCaveat) => ICaveatFunction;
+export type ICaveatFunctionGenerator = (caveat:IOcapLdCaveat) => ICaveatFunction;
 
 /*
  * Filters params shallowly.
  * MVP caveats with lots of room for enhancement later.
  */
-export const filterParams: ICaveatFunctionGenerator = function filterParams(serialized: ISerializedCaveat) {
+export const filterParams: ICaveatFunctionGenerator = function filterParams(serialized: IOcapLdCaveat) {
   const { value } = serialized;
   return (req, res, next, end) => {
     const permitted = isSubset(req.params, value);
@@ -37,7 +37,7 @@ export const filterParams: ICaveatFunctionGenerator = function filterParams(seri
  * MVP caveat for signing in with accounts.
  * Lots of room for enhancement later.
  */
-export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: ISerializedCaveat) {
+export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: IOcapLdCaveat) {
   const { value } = serialized;
   return (_req, res, next, _end) => {
 
@@ -55,7 +55,7 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse(
 /*
  * Forces the method to be called with given params
  */
-export const forceParams: ICaveatFunctionGenerator = function forceParams(serialized: ISerializedCaveat) {
+export const forceParams: ICaveatFunctionGenerator = function forceParams(serialized: IOcapLdCaveat) {
   const { value } = serialized;
   return (req, _, next) => {
       req.params = [ ...value ]

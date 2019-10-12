@@ -19,6 +19,7 @@ import {
   filterResponse,
   forceParams,
   ICaveatFunctionGenerator,
+  ISemanticCaveat,
 } from './src/caveats';
 
 import { 
@@ -34,10 +35,12 @@ import {
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
+  ISemanticCaveatTypeConfig,
  } from './src/@types';
 
 import {
   unauthorized,
+  internalError,
   invalidReq,
   userRejectedRequest,
   methodNotFound
@@ -96,6 +99,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private caveats: { [ name: string]: ICaveatFunctionGenerator } = { filterParams, filterResponse, forceParams };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
+  private semanticCaveatTypes: { [semanticType: string]: ISemanticCaveatTypeConfig } | undefined;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
     super(config, state || {});
@@ -104,6 +108,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.restrictedMethods = config.restrictedMethods || {};
     this.methodPrefix = config.methodPrefix || '';
     this.engine = config.engine || undefined;
+    this.semanticCaveatTypes = config.semanticCaveatTypes || undefined;
 
     if (!config.requestUserApproval) {
       throw "User approval prompt required.";
@@ -379,6 +384,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     for (const method in approved) {
       const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
+      if (newPerm.caveats && !this.validateSemanticCaveats(newPerm.caveats)) {
+        res.error = internalError({
+          message: 'Invalid semantic caveats.',
+          data: newPerm,
+        })
+        return end(res.error)
+      }
       permissions[method] = newPerm;
     }
 
@@ -445,7 +457,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
     const newKeys = Object.keys(newPermissions);
 
-    // remove old permissions this will be overwritten
+    // remove old permissions so that they will be overwritten
     domain.permissions = domain.permissions.filter((oldPerm: IOcapLdCapability) => {
       return !newKeys.includes(oldPerm.parentCapability);
     });
@@ -457,20 +469,57 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.setDomain(domainName, domain);
   }
 
+  validateSemanticCaveats (caveats: Partial<ISemanticCaveat>[]): boolean {
+
+    if (this.semanticCaveatTypes) {
+      const allTypes = this.semanticCaveatTypes; // typescript complains otherwise
+      const seenTypes: { [key: string]: boolean } = {}
+      for (let c of caveats) {
+        if (
+          !c.semanticType ||
+          !allTypes[c.semanticType] ||
+          seenTypes[c.semanticType]
+        ) {
+          return false;
+        }
+        seenTypes[c.semanticType] = true;
+      }
+    }
+    return true;
+  }
+
   /**
-   * Overwrites caveats for the permission corresponding to the given domain
-   * and method. The domain must be known and the permission must exist, or
-   * this method will throw.
+   * Overwrites the caveat of the given semantic type for the permission 
+   * corresponding to the given domain and method. The domain must be known
+   * and the permission must exist, or this method will throw.
    * 
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
    * @param {Array} caveats - The new caveats for the permission.
    */
-  updateCaveatsFor (
+  updateCaveatFor (
     domainName: string,
     methodName: string,
-    caveats: IOcapLdCaveat[],
+    caveat: ISemanticCaveat,
   ): void {
+
+    if (!this.semanticCaveatTypes) {
+      throw internalError({
+        message: 'This permissions controller is not configured for semantic caveats.'
+      })
+    }
+
+    // assert caveat is valid
+    if (
+      typeof caveat !== 'object' ||
+      Array.isArray(caveat) ||
+      !this.validateSemanticCaveats([caveat])
+    ) {
+      throw internalError({
+        message: 'Invalid caveat param. Must be valid caveat object.',
+        data: caveat,
+      })
+    }
 
     // assert domain exists
     if (!this.getDomains()[domainName]) {
@@ -486,21 +535,46 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     // assert domain already has permission
-    const existing = this.getPermissionsForDomain(domainName)
+    const perm = this.getPermissionsForDomain(domainName)
       .find(p => p.parentCapability === methodName);
-    if (!existing) {
+    if (!perm) {
       throw unauthorized({
         message: 'No such permissions exists for the given domain.',
         data: { domain: domainName, method: methodName },
       })
     }
 
-    // construct new permission, which will overwrite the existing one
+    // copy over all caveats except the target
+    const newCaveats: IOcapLdCaveat[] = []
+    perm.caveats && perm.caveats.forEach(c => {
+      if (c.semanticType !== caveat.semanticType) {
+        newCaveats.push(c)
+      }
+    })
+
+    // assert that the target caveat exists
+    if (!perm.caveats || newCaveats.length !== perm.caveats.length - 1) {
+      throw unauthorized({
+        message: 'No such semantic caveat type exists for the relevant permission.',
+        data: caveat.semanticType
+      })
+    }
+
+    // create new caveats, and assert that they are valid
+    newCaveats.push(caveat)
+    if (!this.validateSemanticCaveats(newCaveats)) {
+      throw internalError({
+        message: 'The new caveats are jointly invalid.',
+        data: newCaveats,
+      })
+    }
+
+    // construct new permission with new caveat
     const newPermissions: { [methodName: string]: IOcapLdCapability } = {};
+    perm.caveats = newCaveats
+    newPermissions[methodName] = perm
 
-    existing.caveats = caveats
-    newPermissions[methodName] = existing
-
+    // overwrite the existing permission, completing the update
     this.addPermissionsFor(domainName, newPermissions);
   }
 
@@ -597,7 +671,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     // validate request
     if (!this.isValidPermissionsRequest(req)
     ) {
-      res.error = invalidReq(req);
+      res.error = invalidReq({ data: req});
       return end(res.error);
     }
 

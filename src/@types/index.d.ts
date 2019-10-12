@@ -55,13 +55,16 @@ export interface RpcCapDomainEntry {
 
 type IOriginString = string;
 
+export interface ISemanticCaveatTypeConfig {}
+
 export interface CapabilitiesConfig {
-  safeMethods?: string[];
-  restrictedMethods?: RestrictedMethodMap;
-  initState?: CapabilitiesConfig;
-  methodPrefix?: string;
   requestUserApproval: UserApprovalPrompt;
   engine?: JsonRpcEngine;
+  initState?: CapabilitiesConfig;
+  methodPrefix?: string;
+  restrictedMethods?: RestrictedMethodMap;
+  safeMethods?: string[];
+  semanticCaveatTypes?: { [semanticType: string]: ISemanticCaveatTypeConfig };
 }
 
 type RpcCapDomainRegistry = { [domain:string]: RpcCapDomainEntry };

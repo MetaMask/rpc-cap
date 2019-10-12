@@ -12,13 +12,13 @@ interface ErrorArg {
 function unauthorized (arg?: ErrorArg): IEthereumRpcError<JsonRpcRequest<any>> {
   return ethErrors.provider.unauthorized({
     message: (arg && arg.message) || 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
-    data: arg && arg.data
+    data: (arg && arg.data) || undefined
   });
 }
 
-function invalidReq (request?: JsonRpcRequest<any>): IEthereumRpcError<JsonRpcRequest<any>> {
-  return ethErrors.rpc.invalidRequest({ data: request });
-}
+const invalidReq = ethErrors.rpc.invalidRequest
+
+const internalError = ethErrors.rpc.internal
 
 function methodNotFound (data?: any): IEthereumRpcError<JsonRpcRequest<any>> {
   return ethErrors.rpc.methodNotFound({ data });
@@ -27,4 +27,4 @@ function methodNotFound (data?: any): IEthereumRpcError<JsonRpcRequest<any>> {
 function userRejectedRequest (request?: JsonRpcRequest<any>): IEthereumRpcError<JsonRpcRequest<any>> {
   return ethErrors.provider.userRejectedRequest({ data: request });
 }
-export { unauthorized, methodNotFound, invalidReq, userRejectedRequest, IEthErrors };
+export { unauthorized, methodNotFound, invalidReq, internalError, userRejectedRequest, IEthErrors };
