@@ -474,7 +474,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     if (this.semanticCaveatTypes) {
       const allTypes = this.semanticCaveatTypes; // typescript complains otherwise
       const seenTypes: { [key: string]: boolean } = {}
-      for (let c of caveats) {
+      for (const c of caveats) {
         if (
           !c.semanticType ||
           !allTypes[c.semanticType] ||
@@ -506,7 +506,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     if (!this.semanticCaveatTypes) {
       throw internalError({
         message: 'This permissions controller is not configured for semantic caveats.'
-      })
+      });
     }
 
     // assert caveat is valid
@@ -518,7 +518,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       throw internalError({
         message: 'Invalid caveat param. Must be valid caveat object.',
         data: caveat,
-      })
+      });
     }
 
     // assert domain exists
@@ -526,7 +526,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       throw unauthorized({
         message: 'Unknown domain.',
         data: domainName,
-      })
+      });
     }
 
     // assert method exists
@@ -541,23 +541,23 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       throw unauthorized({
         message: 'No such permissions exists for the given domain.',
         data: { domain: domainName, method: methodName },
-      })
+      });
     }
 
     // copy over all caveats except the target
     const newCaveats: IOcapLdCaveat[] = []
     perm.caveats && perm.caveats.forEach(c => {
       if (c.semanticType !== caveat.semanticType) {
-        newCaveats.push(c)
+        newCaveats.push(c);
       }
-    })
+    });
 
     // assert that the target caveat exists
     if (!perm.caveats || newCaveats.length !== perm.caveats.length - 1) {
       throw unauthorized({
         message: 'No such semantic caveat type exists for the relevant permission.',
         data: caveat.semanticType
-      })
+      });
     }
 
     // create new caveats, and assert that they are valid
@@ -566,13 +566,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       throw internalError({
         message: 'The new caveats are jointly invalid.',
         data: newCaveats,
-      })
+      });
     }
 
     // construct new permission with new caveat
     const newPermissions: { [methodName: string]: IOcapLdCapability } = {};
-    perm.caveats = newCaveats
-    newPermissions[methodName] = perm
+    perm.caveats = newCaveats;
+    newPermissions[methodName] = perm;
 
     // overwrite the existing permission, completing the update
     this.addPermissionsFor(domainName, newPermissions);
@@ -612,7 +612,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * Clear all domains (and thereby remove all permissions).
    */
   clearDomains (): void {
-    this.setDomains({})
+    this.setDomains({});
   }
 
   /**
@@ -669,8 +669,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   ): void {
 
     // validate request
-    if (!this.isValidPermissionsRequest(req)
-    ) {
+    if (!this.isValidPermissionsRequest(req)) {
       res.error = invalidReq({ data: req});
       return end(res.error);
     }
@@ -715,7 +714,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     .finally(() => {
       // Delete the request object
       if (permissionsRequest.metadata.id) {
-        this.removePermissionsRequest(permissionsRequest.metadata.id)
+        this.removePermissionsRequest(permissionsRequest.metadata.id);
       }
     });
   }
