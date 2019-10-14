@@ -469,11 +469,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          'foo.bar.xyz', 'testMethod', {
-            type: 'forceParams',
-            value: [0,1],
-            name: 'a'
-          }
+          'foo.bar.xyz', 'testMethod', 'a', [0,1]
         )
 
         t.notOk(true, 'should have thrown')
@@ -489,11 +485,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'doesNotExist', {
-            type: 'forceParams',
-            value: [0,1],
-            name: 'a'
-          }
+          domain.origin, 'doesNotExist', 'a', [0,1]
         )
 
         t.notOk(true, 'should have thrown')
@@ -530,11 +522,7 @@ test('updateCaveatFor', async (t) => {
         cav1.value = [0,1,2]
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', {
-            type: 'forceParams',
-            value: cav1.value,
-            name: 'a'
-          }
+          domain.origin, 'testMethod', 'a', cav1.value
         )
 
         req = {
@@ -557,11 +545,23 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', {
-            type: 'forceParams',
-            value: [0,1],
-            name: 'b'
-          }
+          domain.origin, 'testMethod', 'b', [0,1]
+        )
+
+        t.notOk(true, 'should have thrown')
+
+      } catch (err) {
+        t.ok(err, 'did throw')
+      }
+      t.end()
+    })
+
+    test('updateCaveatFor throws on existing caveat but different value type', async (t) => {
+
+      try {
+
+        ctrl.updateCaveatFor(
+          domain.origin, 'testMethod', 'b', 'foo'
         )
 
         t.notOk(true, 'should have thrown')

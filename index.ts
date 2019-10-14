@@ -473,21 +473,21 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    */
   validateCaveats (caveats: IOcapLdCaveat[]): boolean {
 
-    const seenTypes: { [key: string]: boolean } = {}
+    const seenNames: { [key: string]: boolean } = {}
     for (const c of caveats) {
       if (
         typeof c !== 'object' || Array.isArray(c) ||
         !c.type || typeof c.type !== 'string' || 
         c.name === '' || (
           c.name && (
-            typeof c.name !== 'string' || seenTypes[c.name]
+            typeof c.name !== 'string' || seenNames[c.name]
           )
         )
       ) {
         return false;
       }
       if (c.name) {
-        seenTypes[c.name] = true;
+        seenNames[c.name] = true;
       }
     }
     return true;
@@ -545,8 +545,16 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     caveat: IOcapLdCaveat
   ): void {
 
-    const perm = this._validateCaveatAndGetPermission(
-      domainName, methodName, caveat
+    // assert caveat is valid
+    if (!this.validateCaveats([caveat])) {
+      throw internalError({
+        message: 'Invalid caveat param. Must be a valid caveat object.',
+        data: caveat,
+      });
+    }
+
+    const perm = this._getPermissionForCaveat(
+      domainName, methodName
     );
 
     const newCaveats = (perm.caveats && [ ...perm.caveats ]) || [];
@@ -569,35 +577,50 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   updateCaveatFor (
     domainName: string,
     methodName: string,
-    caveat: IOcapLdCaveat
+    caveatName: string,
+    caveatValue: any
   ): void {
 
-    if (!caveat.name) {
+    if (!caveatName || typeof caveatName !== 'string') {
       throw internalError({
-        message: 'Invalid caveat param. Must specify a name.',
-        data: caveat,
+        message: 'Invalid caveat param. Must specify a string name.',
+        data: caveatName,
       });
     }
 
-    const perm = this._validateCaveatAndGetPermission(
-      domainName, methodName, caveat
+    const perm = this._getPermissionForCaveat(
+      domainName, methodName
+    );
+
+    // get target caveat
+    const caveat = perm.caveats && perm.caveats.find(
+      c => c.name === caveatName
     );
 
     // copy over all caveats except the target
     const newCaveats: IOcapLdCaveat[] = []
     perm.caveats && perm.caveats.forEach(c => {
-      if (c.name !== caveat.name) {
+      if (c.name !== caveatName) {
         newCaveats.push(c);
       }
     });
 
     // assert that the target caveat exists
-    if (!perm.caveats || newCaveats.length !== perm.caveats.length - 1) {
+    if (!caveat || !perm.caveats) {
       throw internalError({
         message: 'No such caveat exists for the relevant permission.',
-        data: caveat.name
+        data: caveatName
       });
     }
+
+    if (typeof caveat.value !== typeof caveatValue) {
+      throw internalError({
+        message: 'New caveat value is of different type than original.',
+        data: { caveat, newValue: caveatValue }
+      });
+    }
+
+    caveat.value = caveatValue;
 
     this._validateAndUpdateCaveats(
       domainName, methodName, caveat, newCaveats, perm
@@ -607,19 +630,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Internal function used in addCaveatFor and updateCaveatFor.
    */
-  private _validateCaveatAndGetPermission (
+  private _getPermissionForCaveat (
     domainName: string,
-    methodName: string,
-    caveat: IOcapLdCaveat
+    methodName: string
   ): IOcapLdCapability {
-
-    // assert caveat is valid
-    if (!this.validateCaveats([caveat])) {
-      throw internalError({
-        message: 'Invalid caveat param. Must be a valid caveat object.',
-        data: caveat,
-      });
-    }
 
     // assert domain already has permission
     const perm = this.getPermission(domainName, methodName);
