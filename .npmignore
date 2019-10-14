@@ -4,3 +4,4 @@ diagrams
 .DS_Store
 .circleci
 .python-version
+.nyc_output
