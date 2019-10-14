@@ -19,7 +19,6 @@ import {
   filterResponse,
   forceParams,
   ICaveatFunctionGenerator,
-  ISemanticCaveat,
 } from './src/caveats';
 
 import { 
@@ -35,7 +34,6 @@ import {
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
-  ISemanticCaveatTypeConfig,
  } from './src/@types';
 
 import {
@@ -99,7 +97,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private caveats: { [ name: string]: ICaveatFunctionGenerator } = { filterParams, filterResponse, forceParams };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
-  private semanticCaveatTypes: { [semanticType: string]: ISemanticCaveatTypeConfig } | undefined;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
     super(config, state || {});
@@ -108,7 +105,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.restrictedMethods = config.restrictedMethods || {};
     this.methodPrefix = config.methodPrefix || '';
     this.engine = config.engine || undefined;
-    this.semanticCaveatTypes = config.semanticCaveatTypes || undefined;
 
     if (!config.requestUserApproval) {
       throw "User approval prompt required.";
@@ -384,9 +380,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     for (const method in approved) {
       const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
-      if (newPerm.caveats && !this.validateSemanticCaveats(newPerm.caveats)) {
+      if (newPerm.caveats && !this.validateCaveats(newPerm.caveats)) {
         res.error = internalError({
-          message: 'Invalid semantic caveats.',
+          message: 'Invalid caveats.',
           data: newPerm,
         })
         return end(res.error)
@@ -469,100 +465,188 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.setDomain(domainName, domain);
   }
 
-  validateSemanticCaveats (caveats: Partial<ISemanticCaveat>[]): boolean {
+  /**
+   * Validates the given caveats. Returns true if valid, false otherwise.
+   * If the caveats have names, they must be unique.
+   * 
+   * @param {IOcapLdCaveat[]} - The caveats to validate.
+   */
+  validateCaveats (caveats: IOcapLdCaveat[]): boolean {
 
-    if (this.semanticCaveatTypes) {
-      const allTypes = this.semanticCaveatTypes; // typescript complains otherwise
-      const seenTypes: { [key: string]: boolean } = {}
-      for (const c of caveats) {
-        if (
-          !c.semanticType ||
-          !allTypes[c.semanticType] ||
-          seenTypes[c.semanticType]
-        ) {
-          return false;
-        }
-        seenTypes[c.semanticType] = true;
+    const seenTypes: { [key: string]: boolean } = {}
+    for (const c of caveats) {
+      if (
+        typeof c !== 'object' || Array.isArray(c) ||
+        !c.type || typeof c.type !== 'string' || 
+        c.name === '' || (
+          c.name && (
+            typeof c.name !== 'string' || seenTypes[c.name]
+          )
+        )
+      ) {
+        return false;
+      }
+      if (c.name) {
+        seenTypes[c.name] = true;
       }
     }
     return true;
   }
 
   /**
-   * Overwrites the caveat of the given semantic type for the permission 
-   * corresponding to the given domain and method. The domain must be known
-   * and the permission must exist, or this method will throw.
+   * Gets all caveats for the permission corresponding to the given domain and
+   * method, or undefined if the permission or its caveats does not exist.
    * 
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
-   * @param {Array} caveats - The new caveats for the permission.
+   */
+  getCaveats (
+    domainName: string,
+    methodName: string
+  ): IOcapLdCaveat[] | void {
+
+    const perm = this.getPermission(domainName, methodName);
+    return perm && perm.caveats;
+  }
+
+  /**
+   * Gets the caveat with the given name for the permission corresponding to the
+   * given domain and method, or undefined if the permission or the target
+   * caveat does not exist.
+   * 
+   * @param {string} domainName - The grantee domain.
+   * @param {string} methodName - The name of the method identifying the permission.
+   * @param {string} caveatName - The name of the caveat to retrieve.
+   */
+  getCaveat (
+    domainName: string,
+    methodName: string,
+    caveatName: string
+  ): IOcapLdCaveat | void {
+
+    const perm = this.getPermission(domainName, methodName);
+    return perm
+      ? perm.caveats && perm.caveats.find(c => c.name === caveatName)
+      : undefined;
+  }
+
+  /**
+   * Adds the given caveat to the permission corresponding to the given domain
+   * and method. Throws if the domain or method are unrecognized, or in case of
+   * a caveat name collision.
+   * 
+   * @param {string} domainName - The grantee domain.
+   * @param {string} methodName - The name of the method identifying the permission.
+   * @param {IOcapLdCaveat} caveat - The caveat to add.
+   */
+  addCaveatFor (
+    domainName: string,
+    methodName: string,
+    caveat: IOcapLdCaveat
+  ): void {
+
+    const perm = this._validateCaveatAndGetPermission(
+      domainName, methodName, caveat
+    );
+
+    const newCaveats = (perm.caveats && [ ...perm.caveats ]) || [];
+
+    this._validateAndUpdateCaveats(
+      domainName, methodName, caveat, newCaveats, perm
+    );
+  }
+
+  /**
+   * Overwrites the caveat with the given name for the permission
+   * corresponding to the given domain and method. Throws if the domain
+   * or method are unrecognized, or if a caveat with the given name doesn't
+   * exist.
+   * 
+   * @param {string} domainName - The grantee domain.
+   * @param {string} methodName - The name of the method identifying the permission.
+   * @param {IOcapLdCaveat} caveat - The new caveat for the permission.
    */
   updateCaveatFor (
     domainName: string,
     methodName: string,
-    caveat: ISemanticCaveat,
+    caveat: IOcapLdCaveat
   ): void {
 
-    if (!this.semanticCaveatTypes) {
+    if (!caveat.name) {
       throw internalError({
-        message: 'This permissions controller is not configured for semantic caveats.'
-      });
-    }
-
-    // assert caveat is valid
-    if (
-      typeof caveat !== 'object' ||
-      Array.isArray(caveat) ||
-      !this.validateSemanticCaveats([caveat])
-    ) {
-      throw internalError({
-        message: 'Invalid caveat param. Must be valid caveat object.',
+        message: 'Invalid caveat param. Must specify a name.',
         data: caveat,
       });
     }
 
-    // assert domain exists
-    if (!this.getDomains()[domainName]) {
-      throw unauthorized({
-        message: 'Unknown domain.',
-        data: domainName,
-      });
-    }
-
-    // assert method exists
-    if (!this.getMethodKeyFor(methodName)) {
-      throw methodNotFound(methodName);
-    }
-
-    // assert domain already has permission
-    const perm = this.getPermissionsForDomain(domainName)
-      .find(p => p.parentCapability === methodName);
-    if (!perm) {
-      throw unauthorized({
-        message: 'No such permissions exists for the given domain.',
-        data: { domain: domainName, method: methodName },
-      });
-    }
+    const perm = this._validateCaveatAndGetPermission(
+      domainName, methodName, caveat
+    );
 
     // copy over all caveats except the target
     const newCaveats: IOcapLdCaveat[] = []
     perm.caveats && perm.caveats.forEach(c => {
-      if (c.semanticType !== caveat.semanticType) {
+      if (c.name !== caveat.name) {
         newCaveats.push(c);
       }
     });
 
     // assert that the target caveat exists
     if (!perm.caveats || newCaveats.length !== perm.caveats.length - 1) {
-      throw unauthorized({
-        message: 'No such semantic caveat type exists for the relevant permission.',
-        data: caveat.semanticType
+      throw internalError({
+        message: 'No such caveat exists for the relevant permission.',
+        data: caveat.name
       });
     }
 
+    this._validateAndUpdateCaveats(
+      domainName, methodName, caveat, newCaveats, perm
+    );
+  }
+
+  /**
+   * Internal function used in addCaveatFor and updateCaveatFor.
+   */
+  private _validateCaveatAndGetPermission (
+    domainName: string,
+    methodName: string,
+    caveat: IOcapLdCaveat
+  ): IOcapLdCapability {
+
+    // assert caveat is valid
+    if (!this.validateCaveats([caveat])) {
+      throw internalError({
+        message: 'Invalid caveat param. Must be a valid caveat object.',
+        data: caveat,
+      });
+    }
+
+    // assert domain already has permission
+    const perm = this.getPermission(domainName, methodName);
+    if (!perm) {
+      throw internalError({
+        message: 'No such permission exists for the given domain.',
+        data: { domain: domainName, method: methodName },
+      });
+    }
+
+    return perm;
+  }
+
+  /**
+   * Internal function used in addCaveatFor and updateCaveatFor.
+   */
+  private _validateAndUpdateCaveats (
+    domainName: string,
+    methodName: string,
+    caveat: IOcapLdCaveat,
+    newCaveats: IOcapLdCaveat[],
+    perm: IOcapLdCapability
+  ): void {
+
     // create new caveats, and assert that they are valid
-    newCaveats.push(caveat)
-    if (!this.validateSemanticCaveats(newCaveats)) {
+    newCaveats.push(caveat);
+    if (!this.validateCaveats(newCaveats)) {
       throw internalError({
         message: 'The new caveats are jointly invalid.',
         data: newCaveats,

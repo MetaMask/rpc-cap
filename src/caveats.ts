@@ -6,10 +6,6 @@ import { IOcapLdCaveat } from './@types/ocap-ld'
 import { unauthorized } from './errors';
 const isSubset = require('is-subset');
 
-export interface ISemanticCaveat extends IOcapLdCaveat {
-  semanticType: string;
-}
-
 export type ICaveatFunction = JsonRpcMiddleware;
 
 export type ICaveatFunctionGenerator = (caveat:IOcapLdCaveat) => ICaveatFunction;

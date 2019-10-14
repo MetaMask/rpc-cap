@@ -30,8 +30,8 @@ export type IOcapLdCaveat = {
   type: string,
   // Any additional data required to enforce the caveat type.
   value?: any;
-  // MetaMask semantic type
-  semanticType?: string;
+  // Unique identifier for use in the client layer
+  name?: string;
 }
 
 export type IOcapLdProof = {

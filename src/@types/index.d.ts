@@ -64,7 +64,7 @@ export interface CapabilitiesConfig {
   methodPrefix?: string;
   restrictedMethods?: RestrictedMethodMap;
   safeMethods?: string[];
-  semanticCaveatTypes?: { [semanticType: string]: ISemanticCaveatTypeConfig };
+  semanticCaveatTypes?: { [name: string]: ISemanticCaveatTypeConfig };
 }
 
 type RpcCapDomainRegistry = { [domain:string]: RpcCapDomainEntry };
