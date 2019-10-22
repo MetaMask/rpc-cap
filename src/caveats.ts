@@ -17,7 +17,8 @@ export type ICaveatFunctionGenerator = (caveat:IOcapLdCaveat) => ICaveatFunction
 export const filterParams: ICaveatFunctionGenerator = function filterParams(serialized: IOcapLdCaveat) {
   const { value } = serialized;
   return (req, res, next, end) => {
-    const permitted = isSubset(req.params, value);
+    // are the params a strict subset of the caveat value?
+    const permitted = isSubset(value, req.params);
 
     if (!permitted) {
       res.error = unauthorized({ data: req });

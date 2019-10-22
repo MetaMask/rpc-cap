@@ -6,7 +6,7 @@ const sendRpcMethodWithResponse = require('./lib/utils').sendRpcMethodWithRespon
 
 const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.provider.unauthorized
 
-test('filterParams caveat throws if params are not a subset.', async (t) => {
+test('filterParams caveat throws if params are completely disjoint', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
   const ctrl = new CapabilitiesController({
@@ -65,7 +65,7 @@ test('filterParams caveat throws if params are not a subset.', async (t) => {
   t.end();
 })
 
-test('filterParams caveat passes through if params are a subset.', async (t) => {
+test('filterParams caveat throws if params are partially disjoint', async (t) => {
   const domain = { origin: 'www.metamask.io' };
   const params = [
     'foo',
@@ -106,7 +106,125 @@ test('filterParams caveat passes through if params are a subset.', async (t) => 
       ]
     };
 
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'write',
+      params,
+    }
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+    t.notOk(true, 'should have thrown');
+
+  } catch (err) {
+    t.ok(err, 'should throw');
+    t.equal(err.code, UNAUTHORIZED_CODE, 'Auth error code.');
+  }
+  t.end();
+})
+
+test('filterParams caveat throws if params are equal but out of order', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+  const params = [
+    { bar: 'baz' },
+    'foo',
+  ]
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'write': {
+        method: (req, res, next, end) => {
+          res.result = 'Success';
+          end();
+        }
+      }
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+      ]
+      return perms;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        }
+      ]
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'write',
+      params,
+    }
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+    t.notOk(true, 'should have thrown');
+
+  } catch (err) {
+    t.ok(err, 'should throw');
+    t.equal(err.code, UNAUTHORIZED_CODE, 'Auth error code.');
+  }
+  t.end();
+})
+
+test('filterParams caveat passes through if params are a strict subset', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+  const params = [
+    'foo',
+    {},
+  ]
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'write': {
+        method: (req, res, next, end) => {
+          res.result = 'Success';
+          end();
+        }
+      }
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+      ]
+      return perms;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        }
+      ]
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
 
     // Now let's call that restricted method:
     req = {
@@ -125,7 +243,124 @@ test('filterParams caveat passes through if params are a subset.', async (t) => 
   t.end();
 })
 
-test('filterResponse caveat returns empty if params are not a subset.', async (t) => {
+test('filterParams caveat passes through if params are empty', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+  const params = []
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'write': {
+        method: (req, res, next, end) => {
+          res.result = 'Success';
+          end();
+        }
+      }
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+      ]
+      return perms;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        }
+      ]
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'write',
+      params,
+    }
+
+    const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(result, 'should succeed');
+    t.equal(result, 'Success', 'Just returned the request');
+
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+  }
+  t.end();
+})
+
+test('filterParams caveat passes through if params are equal', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+  const params = [
+    'foo',
+    { bar: 'baz' },
+  ]
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'write': {
+        method: (req, res, next, end) => {
+          res.result = 'Success';
+          end();
+        }
+      }
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+      ]
+      return perms;
+    },
+  },
+  {
+    domains: {}
+  })
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        }
+      ]
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'write',
+      params,
+    }
+
+    const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(result, 'should succeed');
+    t.equal(result, 'Success', 'Just returned the request');
+
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+  }
+  t.end();
+})
+
+test('filterResponse caveat returns empty if results are not a subset.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
   const items = [
     '0x44ed36e289cd9e8de4d822ad373ae42aac890a68',
@@ -223,7 +458,7 @@ test('filterResponse caveat passes through subset portion of response', async (t
       ]
     };
 
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, req);
 
     // Now let's call that restricted method:
     req = {
