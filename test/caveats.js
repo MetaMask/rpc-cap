@@ -6,7 +6,7 @@ const sendRpcMethodWithResponse = require('./lib/utils').sendRpcMethodWithRespon
 
 const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.provider.unauthorized
 
-test('filterParams caveat throws if params are not a subset.', async (t) => {
+test('requireParams caveat throws if caveat value is not a subset of params.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
   const ctrl = new CapabilitiesController({
@@ -25,7 +25,7 @@ test('filterParams caveat throws if params are not a subset.', async (t) => {
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+        { type: 'requireParams', value: ['foo', { bar: 'baz' }] },
       ]
       return perms;
     },
@@ -65,7 +65,7 @@ test('filterParams caveat throws if params are not a subset.', async (t) => {
   t.end();
 })
 
-test('filterParams caveat passes through if params are a subset.', async (t) => {
+test('requireParams caveat passes through if caveat value is a subset of params.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
   const params = [
     'foo',
@@ -87,7 +87,7 @@ test('filterParams caveat passes through if params are a subset.', async (t) => 
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+        { type: 'requireParams', value: ['foo', { bar: 'baz' }] },
       ]
       return perms;
     },
@@ -106,7 +106,7 @@ test('filterParams caveat passes through if params are a subset.', async (t) => 
       ]
     };
 
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, req);
 
     // Now let's call that restricted method:
     req = {
@@ -223,7 +223,7 @@ test('filterResponse caveat passes through subset portion of response', async (t
       ]
     };
 
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, req);
 
     // Now let's call that restricted method:
     req = {

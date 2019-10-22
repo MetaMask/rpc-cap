@@ -15,7 +15,7 @@ import { BaseController } from 'gaba';
 
 import {
   ICaveatFunction,
-  filterParams,
+  requireParams,
   filterResponse,
   forceParams,
   ICaveatFunctionGenerator,
@@ -95,7 +95,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
-  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { filterParams, filterResponse, forceParams };
+  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { requireParams, filterResponse, forceParams };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
 

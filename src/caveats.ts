@@ -11,10 +11,9 @@ export type ICaveatFunction = JsonRpcMiddleware;
 export type ICaveatFunctionGenerator = (caveat:IOcapLdCaveat) => ICaveatFunction;
 
 /*
- * Filters params shallowly.
- * MVP caveats with lots of room for enhancement later.
+ * Require that the request params match those specified by the caveat value.
  */
-export const filterParams: ICaveatFunctionGenerator = function filterParams(serialized: IOcapLdCaveat) {
+export const requireParams: ICaveatFunctionGenerator = function requireParams(serialized: IOcapLdCaveat) {
   const { value } = serialized;
   return (req, res, next, end) => {
     const permitted = isSubset(req.params, value);
@@ -30,8 +29,6 @@ export const filterParams: ICaveatFunctionGenerator = function filterParams(seri
 
 /*
  * Filters array results shallowly.
- * MVP caveat for signing in with accounts.
- * Lots of room for enhancement later.
  */
 export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: IOcapLdCaveat) {
   const { value } = serialized;
@@ -49,7 +46,7 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse(
 }
 
 /*
- * Forces the method to be called with given params
+ * Forces the method to be called with given params.
  */
 export const forceParams: ICaveatFunctionGenerator = function forceParams(serialized: IOcapLdCaveat) {
   const { value } = serialized;

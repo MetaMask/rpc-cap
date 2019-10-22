@@ -133,7 +133,7 @@ Currently all supported caveats can be found in the [Caveats.ts file](./src/cave
 
 Right now the supported caveat types are simple, to demonstrate the concept:
 
-- filterParams: Ensures that the method can only be called with a superset of some hard-defined parametersa.
+- requireParams: Ensures that the method can only be called with a superset of some hard-defined parametersa.
 - filterResponse: Ensures that the response will only include explicitly permitted values in it (if an array).
 - forceParams: Overwrites the params of all calls to the method with a specified list of params.
 
@@ -178,7 +178,7 @@ engine.handle({
       sendEmail: {
         caveats: [
           {
-            type: 'filterParams',
+            type: 'requireParams',
             value: {
               to: 'only@my-address.com',
             }
