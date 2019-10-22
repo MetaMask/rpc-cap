@@ -34,6 +34,7 @@ import {
   RpcCapDomainEntry,
   RpcCapDomainRegistry,
   IOriginString,
+  PermittedJsonRpcMiddleware,
  } from './src/@types';
 
 import {
@@ -81,7 +82,7 @@ class Capability implements IOcapLdCapability {
       id: this.id,
       date: this.date,
       caveats: this.caveats,
-    }
+    };
   }
 
   toString(): string {
@@ -117,11 +118,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         this.restrictedMethods
       ).reduce<{[key: string]: string}>(
         (acc, methodName) => {
-          acc[methodName] = this.restrictedMethods[methodName].description
+          acc[methodName] = this.restrictedMethods[methodName].description;
           return acc;
         },
       {}),
-    }
+    };
 
     this.internalMethods = {};
     this.internalMethods[`${this.methodPrefix}getPermissions`] = this.getPermissionsMiddleware.bind(this);
@@ -130,7 +131,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.initialize();
   }
 
-  serialize () {
+  serialize (): any {
     return this.state;
   }
 
@@ -140,8 +141,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * first argument.
    * @param  {string} domain the domain to bind the middleware to
    */
-  createBoundMiddleware (domain: string) {
-    return this.providerMiddlewareFunction.bind(this, { origin: domain })
+  createBoundMiddleware (domain: string): PermittedJsonRpcMiddleware {
+    return this.providerMiddlewareFunction.bind(this, { origin: domain });
   }
 
   /**
@@ -151,9 +152,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param  {string} domain the domain to bind the middleware to
    */
   createPermissionedEngine (domain: string): IJsonRpcEngine {
-    const engine = new JsonRpcEngine()
-    engine.push(this.createBoundMiddleware(domain))
-    return engine
+    const engine = new JsonRpcEngine();
+    engine.push(this.createBoundMiddleware(domain));
+    return engine;
   }
 
   /**
@@ -221,8 +222,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     const wildCardMethodsWithoutWildCard = managedMethods.reduce<{[key: string]: boolean}>(
       (acc, methodName) => {
-        const wildCardMatch = methodName.match(/(.+)\*$/)
-        return wildCardMatch ? { ...acc, [wildCardMatch[1]]: true } : acc
+        const wildCardMatch = methodName.match(/(.+)\*$/);
+        return wildCardMatch ? { ...acc, [wildCardMatch[1]]: true } : acc;
       },
     {});
 
@@ -270,7 +271,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         });
 
         engine.push((req, res, next, end) => {
-          return this.restrictedMethods[methodKey].method(req, res, next, end, virtualEngine)
+          return this.restrictedMethods[methodKey].method(req, res, next, end, virtualEngine);
         });
 
         const middleware: JsonRpcMiddleware = asMiddleware(engine);
@@ -343,7 +344,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   removePermissionsRequest (requestId: string): void {
     const reqs = this.getPermissionsRequests().filter((oldReq) => {
       return oldReq.metadata.id !== requestId;
-    })
+    });
     this.setPermissionsRequests(reqs);
   }
 
@@ -384,8 +385,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         res.error = internalError({
           message: 'Invalid caveats.',
           data: newPerm,
-        })
-        return end(res.error)
+        });
+        return end(res.error);
       }
       permissions[method] = newPerm;
     }
@@ -433,9 +434,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     if (domainSettings.permissions.length > 0) {
       domains[domain] = domainSettings;
     } else {
-      delete domains[domain]
+      delete domains[domain];
     }
-    this.setDomains(domains)
+    this.setDomains(domains);
   }
 
   /**
@@ -466,29 +467,48 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   }
 
   /**
-   * Validates the given caveats. Returns true if valid, false otherwise.
+   * Validates the given caveats (of a single permission).
    * If the caveats have names, they must be unique.
+   * Returns true if valid, false otherwise.
    * 
    * @param {IOcapLdCaveat[]} - The caveats to validate.
    */
   validateCaveats (caveats: IOcapLdCaveat[]): boolean {
 
-    const seenNames: { [key: string]: boolean } = {}
+    const seenNames: { [key: string]: boolean } = {};
+
     for (const c of caveats) {
+
       if (
-        typeof c !== 'object' || Array.isArray(c) ||
-        !c.type || typeof c.type !== 'string' || 
-        c.name === '' || (
-          c.name && (
-            typeof c.name !== 'string' || seenNames[c.name]
-          )
-        )
+        !this.validateCaveat(c) ||
+        (c.name && seenNames[c.name]) // names must be unique
       ) {
         return false;
       }
+
+      // record name if it exists
       if (c.name) {
         seenNames[c.name] = true;
       }
+    }
+    return true;
+  }
+
+  /**
+   * Validates the given caveat. Returns true if valid, false otherwise.
+   * 
+   * @param {IOcapLdCaveat} - The caveat to validate.
+   */
+  validateCaveat (caveat: IOcapLdCaveat): boolean {
+
+    if (
+      typeof caveat !== 'object' || Array.isArray(caveat) ||
+      !caveat.type || typeof caveat.type !== 'string' || 
+      caveat.name === '' || (
+        caveat.name && typeof caveat.name !== 'string'
+      )
+    ) {
+      return false;
     }
     return true;
   }
@@ -546,7 +566,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   ): void {
 
     // assert caveat is valid
-    if (!this.validateCaveats([caveat])) {
+    if (!this.validateCaveat(caveat)) {
       throw internalError({
         message: 'Invalid caveat param. Must be a valid caveat object.',
         data: caveat,
@@ -557,10 +577,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       domainName, methodName
     );
 
-    const newCaveats = (perm.caveats && [ ...perm.caveats ]) || [];
+    const newCaveats = (
+      perm.caveats
+      ? [ ...perm.caveats, caveat ]
+      : [caveat]
+    );
 
     this._validateAndUpdateCaveats(
-      domainName, methodName, caveat, newCaveats, perm
+      domainName, methodName, newCaveats, perm
     );
   }
 
@@ -598,7 +622,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     );
 
     // copy over all caveats except the target
-    const newCaveats: IOcapLdCaveat[] = []
+    const newCaveats: IOcapLdCaveat[] = [];
     perm.caveats && perm.caveats.forEach(c => {
       if (c.name !== caveatName) {
         newCaveats.push(c);
@@ -621,9 +645,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     caveat.value = caveatValue;
+    newCaveats.push(caveat);
 
     this._validateAndUpdateCaveats(
-      domainName, methodName, caveat, newCaveats, perm
+      domainName, methodName, newCaveats, perm
     );
   }
 
@@ -653,13 +678,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private _validateAndUpdateCaveats (
     domainName: string,
     methodName: string,
-    caveat: IOcapLdCaveat,
     newCaveats: IOcapLdCaveat[],
     perm: IOcapLdCapability
   ): void {
 
-    // create new caveats, and assert that they are valid
-    newCaveats.push(caveat);
+    // assert that new caveats are valid
     if (!this.validateCaveats(newCaveats)) {
       throw internalError({
         message: 'The new caveats are jointly invalid.',
@@ -726,7 +749,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return false;
     }
 
-    const perms: IRequestedPermissions = req.params[0]
+    const perms: IRequestedPermissions = req.params[0];
     for (const key of Object.keys(perms)) {
       if (
         perms[key].parentCapability !== undefined &&
