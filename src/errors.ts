@@ -11,7 +11,7 @@ interface ErrorArg {
 
 function unauthorized (arg?: ErrorArg): IEthereumRpcError<JsonRpcRequest<any>> {
   return ethErrors.provider.unauthorized({
-    message: (arg && arg.message) || 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/json-rpc-capabilities-middleware',
+    message: (arg && arg.message) || 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/rpc-cap',
     data: (arg && arg.data) || undefined
   });
 }

@@ -1,4 +1,4 @@
-# JSON RPC Capabilities Middleware [![CircleCI](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware.svg?style=svg)](https://circleci.com/gh/MetaMask/json-rpc-capabilities-middleware)
+# `rpc-cap`: JSON RPC Capabilities Middleware [![CircleCI](https://circleci.com/gh/MetaMask/rpc-cap.svg?style=svg)](https://circleci.com/gh/MetaMask/rpc-cap)
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine), to instantly add a user-consent based permissions system on top of any JSON-RPC API.
 
@@ -9,7 +9,7 @@ A fairly minimal server example, hosted over a [socket.io-like](https://www.npmj
 
 ```typescript
 const JsonRpcEngine = require('json-rpc-engine');
-const RpcCap = require('json-rpc-capabilities-middleware');
+const RpcCap = require('rpc-cap');
 
 // Here we will restrict access to subsequent functions:
 const capabilities = new RpcCap({
@@ -65,13 +65,13 @@ Once this middleware is added to a server that is directing requests to a [JsonR
 
 ## Installation
 
-`yarn add json-rpc-capabilities-middleware`
+`yarn add rpc-cap`
 
 ## Usage
 
 The capability system is initialized with a variety of options, and is itself a [gaba](https://github.com/MetaMask/gaba/) compatible controller, which defines how new permissions are persisted to state, and how they are restored in the constructor.
 
-Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/json-rpc-capabilities-middleware/blob/master/src/%40types/index.d.ts#L7-L15) type method `providerMiddlewareFunction(domainInfo, req, res, next, end)`, which requires an assumed-authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
+Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/rpc-cap/blob/master/src/%40types/index.d.ts#L7-L15) type method `providerMiddlewareFunction(domainInfo, req, res, next, end)`, which requires an assumed-authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
 
 It simply passes through methods that are listed in the optional `safeMethods` array, but otherwise requires the requesting domain to have a permissions entry.
 
@@ -330,7 +330,7 @@ None of these features are used yet, but we've used this schema internally to pr
 
 ```javascript
 const Engine = require('json-rpc-engine')
-const CapabilitiesController = require('json-rpc-capabilities-middleware')
+const CapabilitiesController = require('rpc-cap')
 
 const capabilitiesConfig = {
 

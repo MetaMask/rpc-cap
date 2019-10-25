@@ -55,7 +55,7 @@ const JsonRpcEngine = require('json-rpc-engine');
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
 
 class Capability implements IOcapLdCapability {
-  public '@context': string[] = ['https://github.com/MetaMask/json-rpc-capabilities-middleware'];
+  public '@context': string[] = ['https://github.com/MetaMask/rpc-cap'];
   public parentCapability: string;
   public caveats: IOcapLdCaveat[] | undefined;
   public id: string;
@@ -589,14 +589,15 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   }
 
   /**
-   * Overwrites the caveat with the given name for the permission
+   * Updates the value of the caveat with the given name for the permission
    * corresponding to the given domain and method. Throws if the domain
    * or method are unrecognized, or if a caveat with the given name doesn't
    * exist.
    * 
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
-   * @param {IOcapLdCaveat} caveat - The new caveat for the permission.
+   * @param {string} caveatName - The name of the caveat.
+   * @param {any} caveatValue - The new value for the caveat.
    */
   updateCaveatFor (
     domainName: string,
