@@ -1,4 +1,5 @@
-# `rpc-cap`: JSON RPC Capabilities Middleware [![CircleCI](https://circleci.com/gh/MetaMask/rpc-cap.svg?style=svg)](https://circleci.com/gh/MetaMask/rpc-cap)
+# `rpc-cap` [![CircleCI](https://circleci.com/gh/MetaMask/rpc-cap.svg?style=svg)](https://circleci.com/gh/MetaMask/rpc-cap)
+## JSON RPC Capabilities Middleware 
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine), to instantly add a user-consent based permissions system on top of any JSON-RPC API.
 
