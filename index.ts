@@ -709,9 +709,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     domainName: string,
     permissionsToRemove: IOcapLdCapability[]
   ): void {
+    // returns { permissions: [] } for new domains
     const domain = this.getDomainSettings(domainName);
 
-    if (domain === undefined || domain.permissions === undefined) {
+    if (domain.permissions.length === 0) {
       return;
     }
 
@@ -817,11 +818,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     .then((approved: IRequestedPermissions) => {
       if (Object.keys(approved).length === 0) {
         res.error = userRejectedRequest(req);
-        return end(res.error);
-      }
-
-      if (!permissionsRequest.metadata.id) {
-        res.error = invalidReq();
         return end(res.error);
       }
 
