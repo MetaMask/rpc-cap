@@ -1,4 +1,6 @@
 
+import { EventEmitter } from 'events';
+
 import uuid from 'uuid/v4';
 
 import {
@@ -53,6 +55,7 @@ import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
 
 const JsonRpcEngine = require('json-rpc-engine');
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
+const SafeEventEmitter = require('safe-event-emitter');
 
 class Capability implements IOcapLdCapability {
   public '@context': string[] = ['https://github.com/MetaMask/rpc-cap'];
@@ -98,6 +101,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private caveats: { [ name: string]: ICaveatFunctionGenerator } = { requireParams, filterResponse, forceParams };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
+  private events: EventEmitter;
 
   constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
     super(config, state || {});
@@ -106,9 +110,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.restrictedMethods = config.restrictedMethods || {};
     this.methodPrefix = config.methodPrefix || '';
     this.engine = config.engine || undefined;
+    this.events = new SafeEventEmitter();
 
     if (!config.requestUserApproval) {
-      throw "User approval prompt required.";
+      throw new Error('User approval prompt required.');
     }
     this.requestUserApproval = config.requestUserApproval;
 
@@ -133,6 +138,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   serialize (): any {
     return this.state;
+  }
+
+  /**
+   * Registers a one-time event handler.
+   */
+  once (event: string, handler: (...args: any[]) => void): void {
+    this.events.once(event, handler);
   }
 
   /**
@@ -342,10 +354,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param request The request that no longer requires user attention.
    */
   removePermissionsRequest (requestId: string): void {
-    const reqs = this.getPermissionsRequests().filter((oldReq) => {
+    const currentReqs = this.getPermissionsRequests();
+    const newReqs = currentReqs.filter((oldReq) => {
       return oldReq.metadata.id !== requestId;
     });
-    this.setPermissionsRequests(reqs);
+    if (newReqs.length < currentReqs.length) {
+      this.setPermissionsRequests(newReqs);
+    }
   }
 
   setPermissionsRequests (
@@ -355,8 +370,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   }
 
   /**
-   * Used for granting a new set of permissions,
-   * after the user has approved it.
+   * Used for granting a new set of permissions, after user approval.
+   * Assumes caller catches errors.
    * 
    * @param {string} domain - The domain receiving new permissions.
    * @param {IRequestedPermissions} approvedPermissions - An object of objects describing the granted permissions.
@@ -364,16 +379,17 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {JsonRpcEngineEndCallback} end - The end function.
    */
   grantNewPermissions (
+    requestId: string,
     domain: string,
     approved: IRequestedPermissions, 
     res: JsonRpcResponse<any>,
     end: JsonRpcEngineEndCallback
   ): void {
-    // Enforce actual approving known methods:
+
+    // only approve known methods
     for (const methodName in approved) {
       if (!this.getMethodKeyFor(methodName)) {
-        res.error = methodNotFound(methodName);
-        return end(res.error);
+        throw methodNotFound(methodName);
       }
     }
 
@@ -382,11 +398,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     for (const method in approved) {
       const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
       if (newPerm.caveats && !this.validateCaveats(newPerm.caveats)) {
-        res.error = internalError({
+        throw internalError({
           message: 'Invalid caveats.',
           data: newPerm,
         });
-        return end(res.error);
       }
       permissions[method] = newPerm;
     }
@@ -394,6 +409,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.addPermissionsFor(domain, permissions);
     res.result = this.getPermissionsForDomain(domain);
     end();
+    // indicate successful granting of permissions to the client
+    this.events.emit(requestId, res.result);
   }
 
   getDomains (): RpcCapDomainRegistry {
@@ -801,6 +818,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       metadata.id = uuid();
     }
 
+    const { id, origin } = metadata;
     const permissions: IRequestedPermissions = req.params[0];
     const requests = this.getPermissionsRequests();
 
@@ -823,17 +841,19 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       }
 
       // If user approval is different, use it as the permissions:
-      this.grantNewPermissions(metadata.origin, approved, res, end);
+      this.grantNewPermissions(id, origin, approved, res, end);
     })
     .catch((reason) => {
+
       res.error = reason;
-      return end(reason);
+      end(reason);
+      // indicated failure to grant permission for the convenience
+      // of the client
+      this.events.emit(id, null);
     })
     .finally(() => {
       // Delete the request object
-      if (permissionsRequest.metadata.id) {
-        this.removePermissionsRequest(permissionsRequest.metadata.id);
-      }
+      this.removePermissionsRequest(id);
     });
   }
 }

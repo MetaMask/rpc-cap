@@ -20,6 +20,18 @@
     "type": "git",
     "url": "git+https://github.com/MetaMask/rpc-cap.git"
   },
+  "dependencies": {
+    "clone": "^2.1.2",
+    "eth-json-rpc-errors": "^2.0.0",
+    "fast-deep-equal": "^2.0.1",
+    "gaba": "^1.6.0",
+    "intersect-objects": "^1.0.0",
+    "is-subset": "^0.1.1",
+    "json-rpc-engine": "^5.1.3",
+    "obs-store": "^4.0.3",
+    "safe-event-emitter": "^1.0.1",
+    "uuid": "^3.3.2"
+  },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^0.1.3",
     "@types/node": "^12.0.7",
@@ -32,16 +44,5 @@
     "tape": "^4.9.2",
     "ts-node": "^8.2.0",
     "typescript": "^3.5.1"
-  },
-  "dependencies": {
-    "clone": "^2.1.2",
-    "eth-json-rpc-errors": "^2.0.0",
-    "fast-deep-equal": "^2.0.1",
-    "gaba": "^1.6.0",
-    "intersect-objects": "^1.0.0",
-    "is-subset": "^0.1.1",
-    "json-rpc-engine": "^5.1.3",
-    "obs-store": "^4.0.3",
-    "uuid": "^3.3.2"
   }
 }

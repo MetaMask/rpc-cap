@@ -87,10 +87,11 @@ export interface RestrictedMethodMap {
 }
 
 export interface RpcCapInterface {
+  once: (event: string, handler: (...args: any[]) => void) => void;
   getPermissionsForDomain: (domain: string) => IOcapLdCapability[];
   getPermission: (domain: string, method: string) => IOcapLdCapability | undefined;
   getPermissionsRequests: () => IPermissionsRequest[];
-  grantNewPermissions (domain: string, approved: IRequestedPermissions, res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?: string): void;
+  grantNewPermissions (requestId: string, domain: string, approved: IRequestedPermissions, res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?: string): void;
   getDomains: () => RpcCapDomainRegistry;
   setDomains: (domains: RpcCapDomainRegistry) => void;
   getDomainSettings: (domain: string) => RpcCapDomainEntry;
@@ -100,6 +101,14 @@ export interface RpcCapInterface {
   removePermissionsFor: (domain: string, permissionsToRemove: IOcapLdCapability[]) => void;
   createBoundMiddleware: (domain: string) => PermittedJsonRpcMiddleware;
   createPermissionedEngine: (domain: string) => JsonRpcEngine;
+  validateCaveats: (caveats: IOcapLdCaveat[]) => boolean;
+  validateCaveat: (caveat: IOcapLdCaveat) => boolean;
+  getCaveats: (domainName: string, methodName: string) => IOcapLdCaveat[] | void;
+  getCaveat: (domainName: string, methodName: string, caveatName: string) => IOcapLdCaveat | void;
+  addCaveatFor: (domainName: string, methodName: string, caveat: IOcapLdCaveat) => void;
+  updateCaveatFor: (domainName: string, methodName: string, caveatName: string, caveatValue: any) => void;
+
+
 
   // Injected permissions-handling methods:
   providerMiddlewareFunction: AuthenticatedJsonRpcMiddleware;
