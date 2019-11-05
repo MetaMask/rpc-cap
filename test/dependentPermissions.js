@@ -25,8 +25,8 @@ test('restricted permission gets restricted provider', async (t) => {
         method: (req, res, next, end, engine) => {
           engine.handle({ method: 'getName' }, (err, nameRes) => {
             if (err) {
-              res.error = reason;
-              return end(reason);
+              res.error = err;
+              return end(err);
             }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;

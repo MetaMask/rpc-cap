@@ -25,7 +25,7 @@ test('filterParams caveat throws if params are completely disjoint', async (t) =
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+        { type: 'requireParams', value: ['foo', { bar: 'baz' }] },
       ]
       return perms;
     },
@@ -87,7 +87,7 @@ test('filterParams caveat throws if params are partially disjoint', async (t) =>
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'filterParams', value: ['foo', { bar: 'baz' }] },
+        { type: 'requireParams', value: ['foo', { bar: 'baz' }] },
       ]
       return perms;
     },

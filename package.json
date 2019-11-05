@@ -1,6 +1,6 @@
 {
-  "name": "json-rpc-capabilities-middleware",
-  "version": "0.17.1",
+  "name": "rpc-cap",
+  "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,7 +18,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MetaMask/json-rpc-capabilities-middleware.git"
+    "url": "git+https://github.com/MetaMask/rpc-cap.git"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^0.1.3",

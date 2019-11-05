@@ -15,7 +15,7 @@ import { BaseController } from 'gaba';
 
 import {
   ICaveatFunction,
-  filterParams,
+  requireParams,
   filterResponse,
   forceParams,
   ICaveatFunctionGenerator,
@@ -55,7 +55,7 @@ const JsonRpcEngine = require('json-rpc-engine');
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
 
 class Capability implements IOcapLdCapability {
-  public '@context': string[] = ['https://github.com/MetaMask/json-rpc-capabilities-middleware'];
+  public '@context': string[] = ['https://github.com/MetaMask/rpc-cap'];
   public parentCapability: string;
   public caveats: IOcapLdCaveat[] | undefined;
   public id: string;
@@ -95,7 +95,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
-  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { filterParams, filterResponse, forceParams };
+  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { requireParams, filterResponse, forceParams };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
 
@@ -589,14 +589,15 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   }
 
   /**
-   * Overwrites the caveat with the given name for the permission
+   * Updates the value of the caveat with the given name for the permission
    * corresponding to the given domain and method. Throws if the domain
    * or method are unrecognized, or if a caveat with the given name doesn't
    * exist.
    * 
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
-   * @param {IOcapLdCaveat} caveat - The new caveat for the permission.
+   * @param {string} caveatName - The name of the caveat.
+   * @param {any} caveatValue - The new value for the caveat.
    */
   updateCaveatFor (
     domainName: string,
@@ -709,9 +710,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     domainName: string,
     permissionsToRemove: IOcapLdCapability[]
   ): void {
+    // returns { permissions: [] } for new domains
     const domain = this.getDomainSettings(domainName);
 
-    if (domain === undefined || domain.permissions === undefined) {
+    if (domain.permissions.length === 0) {
       return;
     }
 
@@ -817,11 +819,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     .then((approved: IRequestedPermissions) => {
       if (Object.keys(approved).length === 0) {
         res.error = userRejectedRequest(req);
-        return end(res.error);
-      }
-
-      if (!permissionsRequest.metadata.id) {
-        res.error = invalidReq();
         return end(res.error);
       }
 
