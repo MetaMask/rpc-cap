@@ -410,7 +410,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     res.result = this.getPermissionsForDomain(domain);
     end();
     // indicate successful granting of permissions to the client
-    this.events.emit(requestId, res.result);
+    requestId && this.events.emit(requestId, res.result);
   }
 
   getDomains (): RpcCapDomainRegistry {
@@ -849,7 +849,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       end(reason);
       // indicated failure to grant permission for the convenience
       // of the client
-      this.events.emit(id, null);
+      id && this.events.emit(id, null);
     })
     .finally(() => {
       // Delete the request object
