@@ -2,6 +2,7 @@ const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController
 
 const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.provider.unauthorized
+const METHOD_NOT_FOUND_CODE = require('eth-json-rpc-errors').ERROR_CODES.rpc.methodNotFound
 
 test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result'
@@ -72,6 +73,54 @@ test('requesting restricted method is rejected', async (t) => {
     t.ok(res.error, 'should have error object')
     t.equal(reason.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`)
     t.equal(res.error.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`)
+    t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.')
+    t.end()
+  }
+
+})
+
+test('requesting unknown method is rejected', async (t) => {
+  const WRITE_RESULT = 'impeccable result'
+  const domain = {origin: 'login.metamask.io'}
+
+  const ctrl = new CapabilitiesController({
+
+    // safe methods never require approval,
+    // are considered trivial / no risk.
+    // maybe reading should be a permission, though!
+    safeMethods: ['eth_read'],
+
+    // optional prefix for internal methods
+    methodPrefix: 'wallet_',
+
+    restrictedMethods: {
+      'eth_write': {
+        method: (req, res, next, end) => {
+          res.result = WRITE_RESULT
+        }
+      }
+    },
+
+    requestUserApproval: async (permsReq) => permsReq.permissions,
+},
+{
+  domains: {}
+})
+
+  let req = { method: 'fooBar' }
+  let res = {}
+  ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+
+  function next() {
+    t.ok(false, 'next should not be called')
+    t.end()
+  }
+
+  function end(reason) {
+    t.ok(reason, 'error should be thrown')
+    t.ok(res.error, 'should have error object')
+    t.equal(reason.code, METHOD_NOT_FOUND_CODE, `error code should be ${METHOD_NOT_FOUND_CODE}.`)
+    t.equal(res.error.code, METHOD_NOT_FOUND_CODE, `error code should be ${METHOD_NOT_FOUND_CODE}.`)
     t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.')
     t.end()
   }

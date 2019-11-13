@@ -184,7 +184,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     // if the method also is not a restricted method, the method does not exist
-    if (!this.restrictedMethods[methodName]) {
+    if (!this.getMethodKeyFor(methodName)) {
       res.error = methodNotFound({ data: req });
       return end(res.error);
     }
