@@ -183,14 +183,18 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return this.internalMethods[methodName](domain, req, res, next, end);
     }
 
+    // if the method also is not a restricted method, the method does not exist
+    if (!this.restrictedMethods[methodName]) {
+      res.error = methodNotFound({ data: req });
+      return end(res.error);
+    }
+
     let permission;
     try {
       permission = this.getPermission(domain.origin, methodName);
     } catch (err) {
-      res.error = {
-        message: err.message,
-        code: 1,
-      };
+      // unexpected internal error
+      res.error = internalError({ data: err });
       return end(res.error);
     }
 
