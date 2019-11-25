@@ -185,7 +185,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     // if the method also is not a restricted method, the method does not exist
     if (!this.getMethodKeyFor(methodName)) {
-      res.error = methodNotFound({ data: req });
+      res.error = methodNotFound({ methodName, data: req });
       return end(res.error);
     }
 
@@ -286,7 +286,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       }
     }
 
-    res.error = methodNotFound(req);
+    res.error = methodNotFound({ methodName: req.method, data: req });
     return end(res.error);
   }
 
@@ -376,7 +376,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     // Enforce actual approving known methods:
     for (const methodName in approved) {
       if (!this.getMethodKeyFor(methodName)) {
-        res.error = methodNotFound(methodName);
+        res.error = methodNotFound({ methodName });
         return end(res.error);
       }
     }
