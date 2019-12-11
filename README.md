@@ -84,7 +84,7 @@ This module is written in TypeScript, and so type definitions can be found in [o
 
 Here is a more detailed look at the methods that are added to a JSON-RPC service using this module.
 
-#### getPermissions() => IOcapLdCapability[]
+#### getPermissions() => IGrantedPermissions
 
 ```typescript
 engine.handle({

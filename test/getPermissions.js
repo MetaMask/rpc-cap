@@ -20,7 +20,7 @@ const arbitraryCaps = [
 ]
 
 test('getPermissions with none returns empty object', async (t) => {
-  const expected = []
+  const expected = {}
 
   const ctrl = new CapabilitiesController({
     requestUserApproval: noop,

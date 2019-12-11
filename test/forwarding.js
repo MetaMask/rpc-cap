@@ -153,12 +153,12 @@ test('requesting restricted method with permission is called', async (t) => {
   {
     domains: {
       'login.metamask.io': {
-        permissions: [
-          {
+        permissions: {
+          eth_write: {
             parentCapability: 'eth_write',
             date: '0',
           }
-        ]
+        }
       }
     }
   })

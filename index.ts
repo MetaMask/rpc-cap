@@ -28,6 +28,7 @@ import {
   AuthenticatedJsonRpcMiddleware,
   CapabilitiesConfig,
   CapabilitiesState,
+  IGrantedPermissions,
   IOriginMetadata,
   IPermissionsRequest,
   IRequestedPermissions,
@@ -306,13 +307,13 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return engine;
   }
 
-  getPermissionsForDomain (domain: string): IOcapLdCapability[] {
+  getPermissionsForDomain (domain: string): IGrantedPermissions {
     const { domains = {} } = this.state;
     if (domains[domain]) {
       const { permissions } = domains[domain];
       return permissions;
     }
-    return [];
+    return {};
   }
 
   /**
@@ -323,12 +324,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} method - The method
    */
   getPermission (domain: string, method: string): IOcapLdCapability | undefined {
-    const permissions = this.getPermissionsForDomain(domain).filter(p => {
-      return p.parentCapability === method;
-    });
-    if (permissions.length > 0) { return permissions.shift(); }
+    const permissions = this.getPermissionsForDomain(domain);
 
-    return undefined;
+    return permissions[method];
   }
 
   /**
@@ -412,7 +410,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   getOrCreateDomainSettings (domain: string): RpcCapDomainEntry {
     const entry = this.getDomainSettings(domain);
     if (entry === undefined) {
-      return { permissions: [] };
+      return { permissions: {} };
     } else {
       return entry;
     }
@@ -423,7 +421,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     // Setup if not yet existent:
     if (!domains[domain]) {
-      const newDomain = { permissions: [] };
+      const newDomain = { permissions: {} };
       domains[domain] = newDomain;
       return newDomain;
     }
@@ -435,7 +433,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     domain: IOriginString, domainSettings: RpcCapDomainEntry
   ): void {
     const domains = this.getDomains();
-    if (domainSettings.permissions.length > 0) {
+    if (Object.keys(domainSettings.permissions).length > 0) {
       domains[domain] = domainSettings;
     } else {
       delete domains[domain];
@@ -456,16 +454,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     newPermissions: { [methodName: string]: IOcapLdCapability }
   ): void {
     const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
-    const newKeys = Object.keys(newPermissions);
 
-    // remove old permissions so that they will be overwritten
-    domain.permissions = domain.permissions.filter((oldPerm: IOcapLdCapability) => {
-      return !newKeys.includes(oldPerm.parentCapability);
-    });
-
-    for (const methodName in newPermissions) {
-      domain.permissions.push(newPermissions[methodName]);
-    }
+    // add new permissions, overwriting existing ones
+    domain.permissions = {
+      ...domain.permissions,
+      ...newPermissions,
+    };
 
     this.setDomain(domainName, domain);
   }
@@ -712,25 +706,18 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    */
   removePermissionsFor (
     domainName: string,
-    permissionsToRemove: IOcapLdCapability[]
+    permissionsToRemove: string[]
   ): void {
-    // returns { permissions: [] } for new domains
+    // returns { permissions: {} } for new domains
     const domain = this.getDomainSettings(domainName);
 
-    if (domain.permissions.length === 0) {
+    if (Object.keys(domain.permissions).length === 0) {
       return;
     }
 
-    domain.permissions = domain.permissions.filter(
-      (perm: IOcapLdCapability) => {
-        for (const r of permissionsToRemove) {
-          if (r.parentCapability === perm.parentCapability) {
-            return false;
-          }
-        }
-        return true;
-      }
-    );
+    permissionsToRemove.forEach(permissionName => {
+      delete domain.permissions[permissionName];
+    })
 
     this.setDomain(domainName, domain);
   }

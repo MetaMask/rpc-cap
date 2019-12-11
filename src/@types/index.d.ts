@@ -49,8 +49,13 @@ export interface UserApprovalPrompt {
   (permissionsRequest: IPermissionsRequest): Promise<IRequestedPermissions>;
 }
 
+/**
+ * The format in which permissions are stored, keyed by 'parentCapability', i.e. 'methodName'.
+ */
+export interface IGrantedPermissions { [parentCapability: string]: IOcapLdCapability }
+
 export interface RpcCapDomainEntry {
-  permissions: IOcapLdCapability[];
+  permissions: IGrantedPermissions;
 }
 
 type IOriginString = string;
@@ -87,7 +92,7 @@ export interface RestrictedMethodMap {
 }
 
 export interface RpcCapInterface {
-  getPermissionsForDomain: (domain: string) => IOcapLdCapability[];
+  getPermissionsForDomain: (domain: string) => IGrantedPermissions;
   getPermission: (domain: string, method: string) => IOcapLdCapability | undefined;
   getPermissionsRequests: () => IPermissionsRequest[];
   grantNewPermissions (domain: string, approved: IRequestedPermissions, res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?: string): void;
@@ -97,7 +102,7 @@ export interface RpcCapInterface {
   getOrCreateDomainSettings: (domain: string) => RpcCapDomainEntry;
   setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
   addPermissionsFor: (domainName: string, newPermissions: { [methodName: string]: IOcapLdCapability }) => void;
-  removePermissionsFor: (domain: string, permissionsToRemove: IOcapLdCapability[]) => void;
+  removePermissionsFor: (domain: string, permissionsToRemove: string[]) => void;
   createBoundMiddleware: (domain: string) => PermittedJsonRpcMiddleware;
   createPermissionedEngine: (domain: string) => JsonRpcEngine;
 

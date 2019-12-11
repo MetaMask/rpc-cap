@@ -586,8 +586,8 @@ test('updateCaveatFor', async (t) => {
         t.deepEqual(result, [0,1,2], 'returned the correct subset');
 
         const perms = ctrl.getPermissionsForDomain(domain.origin)
-        t.ok(perms.length === 1, 'expected number of permissions remain')
-        const { caveats } = perms[0]
+        t.ok(Object.keys(perms).length === 1, 'expected number of permissions remain')
+        const { caveats } = perms['testMethod']
         t.ok(caveats.length === 2, 'expected number of caveats remain')
         const c1 = caveats.find(p => p.name === 'a') 
         t.deepEqual(c1, cav1, 'caveat "a" as expected')
@@ -779,8 +779,8 @@ test('addCaveatFor', async (t) => {
         t.deepEqual(result, cav1.value, 'returned the correct subset');
 
         const perms = ctrl.getPermissionsForDomain(domain.origin)
-        t.ok(perms.length === 1, 'has expected number of permissions')
-        const { caveats } = perms[0]
+        t.ok(Object.keys(perms).length === 1, 'has expected number of permissions')
+        const { caveats } = perms['testMethod']
         t.ok(caveats.length === 3, 'has expected number of caveats')
         let cav = caveats.find(p => p.name === 'a') 
         t.deepEqual(cav, cav1, 'caveat "a" as expected')

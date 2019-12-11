@@ -7,7 +7,7 @@ const USER_REJECTION_CODE = rpcErrors.ERROR_CODES.provider.userRejectedRequest
 const INVALID_REQUEST_CODE = rpcErrors.ERROR_CODES.rpc.invalidRequest
 
 test('requestPermissions with user rejection creates no permissions', async (t) => {
-  const expected = []
+  const expected = {}
 
   const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve({}),
@@ -44,7 +44,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
 })
 
 test('requestPermissions with invalid requested permissions object fails', async (t) => {
-  const expected = []
+  const expected = {}
 
   const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve({}),
@@ -115,10 +115,10 @@ test('requestPermissions with user approval creates permission', async (t) => {
   }
 
   try {
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, req);
     const endState = ctrl.state
     const perms = endState.domains[domain.origin].permissions;
-    t.equal(perms[0].parentCapability, 'restricted', 'permission added.')
+    t.ok(perms.hasOwnProperty('restricted'), 'permission added.')
     t.end()
 
   } catch (error) {
