@@ -93,7 +93,7 @@ export interface RpcCapInterface {
   grantNewPermissions (domain: string, approved: IRequestedPermissions, res: JsonRpcResponse<any>, end: JsonRpcEngineEndCallback, granter?: string): void;
   getDomains: () => RpcCapDomainRegistry;
   setDomains: (domains: RpcCapDomainRegistry) => void;
-  getDomainSettings: (domain: string) => RpcCapDomainEntry;
+  getDomainSettings: (domain: string) => RpcCapDomainEntry | undefined;
   getOrCreateDomainSettings: (domain: string) => RpcCapDomainEntry;
   setDomain: (domain: string, settings: RpcCapDomainEntry) => void;
   addPermissionsFor: (domainName: string, newPermissions: { [methodName: string]: IOcapLdCapability }) => void;

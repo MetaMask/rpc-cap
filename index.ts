@@ -409,7 +409,15 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.update({ domains });
   }
 
-  getOrCreateDomainSettings (domain: string): RpcCapDomainEntry {
+  /**
+   * Gets the domain settings for the given IOriginString.
+   * Returns a template RpcCapDomainEntry if no entry exists, but does NOT
+   * store the settings. That is left to the consumer.
+   * 
+   * @param {IOriginString} domain - The origin string of the domain.
+   * @returns {RpcCapDomainEntry} - The settings for the domain.
+   */
+  getOrCreateDomainSettings (domain: IOriginString): RpcCapDomainEntry {
     const entry = this.getDomainSettings(domain);
     if (entry === undefined) {
       return { permissions: [] };
@@ -418,19 +426,26 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
   }
 
-  getDomainSettings (domain: string): RpcCapDomainEntry {
-    const domains = this.getDomains();
-
-    // Setup if not yet existent:
-    if (!domains[domain]) {
-      const newDomain = { permissions: [] };
-      domains[domain] = newDomain;
-      return newDomain;
-    }
-
-    return domains[domain];
+  /**
+   * Gets the domain settings for the given IOriginString, or undefined if
+   * none exist.
+   * 
+   * @param {IOriginString} domain - The origin string of the domain.
+   * @returns {RpcCapDomainEntry | undefined} - The settings for the domain,
+   * or undefined if none exist.
+   */
+  getDomainSettings (domain: IOriginString): RpcCapDomainEntry | undefined {
+    return this.getDomains()[domain];
   }
 
+  /**
+   * Sets the domain identified by the given IOriginString.
+   * If the domain has no permissions, its key will be deleted from the
+   * controller's domains.
+   * 
+   * @param {IOriginString} domain - The origin string of the domain.
+   * @param {RpcCapDomainEntry} domainSettings - The associated domain settings.
+   */
   setDomain (
     domain: IOriginString, domainSettings: RpcCapDomainEntry
   ): void {
@@ -717,7 +732,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     // returns { permissions: [] } for new domains
     const domain = this.getDomainSettings(domainName);
 
-    if (domain.permissions.length === 0) {
+    if (!domain) {
       return;
     }
 
