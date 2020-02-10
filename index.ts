@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 
 import uuid from 'uuid/v4';
 
@@ -8,7 +9,7 @@ import {
   JsonRpcMiddleware,
   JsonRpcRequest,
   JsonRpcResponse,
-  JsonRpcEngine
+  JsonRpcEngine,
 } from 'json-rpc-engine';
 
 import { BaseController } from 'gaba';
@@ -21,7 +22,7 @@ import {
   ICaveatFunctionGenerator,
 } from './src/caveats';
 
-import { 
+import {
   RpcCapInterface,
   RestrictedMethodMap,
   UserApprovalPrompt,
@@ -35,19 +36,19 @@ import {
   RpcCapDomainRegistry,
   IOriginString,
   PermittedJsonRpcMiddleware,
- } from './src/@types';
+} from './src/@types';
 
 import {
   unauthorized,
   internalError,
   invalidReq,
   userRejectedRequest,
-  methodNotFound
+  methodNotFound,
 } from './src/errors';
 
-export interface AnnotatedJsonRpcEngine extends JsonRpcEngine {
+export type AnnotatedJsonRpcEngine = {
   domain?: IOriginString;
-}
+} & JsonRpcEngine;
 
 import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
 
@@ -68,13 +69,15 @@ class Capability implements IOcapLdCapability {
     invoker: IOriginString;
   }) {
     this.parentCapability = method;
-    this.caveats = caveats;
     this.id = uuid();
     this.date = Date.now();
     this.invoker = invoker;
+    if (caveats) {
+      this.caveats = caveats;
+    }
   }
 
-  toJSON(): IOcapLdCapability {
+  toJSON (): IOcapLdCapability {
     return {
       '@context': this['@context'],
       invoker: this.invoker,
@@ -85,7 +88,7 @@ class Capability implements IOcapLdCapability {
     };
   }
 
-  toString(): string {
+  toString (): string {
     return JSON.stringify(this.toJSON());
   }
 }
@@ -94,12 +97,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private safeMethods: string[];
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
-  private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware }
+  private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware };
   private caveats: { [ name: string]: ICaveatFunctionGenerator } = { requireParams, filterResponse, forceParams };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
 
-  constructor(config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
+  constructor (config: CapabilitiesConfig, state?: Partial<CapabilitiesState>) {
     super(config, state || {});
 
     this.safeMethods = config.safeMethods || [];
@@ -108,7 +111,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.engine = config.engine || undefined;
 
     if (!config.requestUserApproval) {
-      throw "User approval prompt required.";
+      throw new Error('User approval prompt required.');
     }
     this.requestUserApproval = config.requestUserApproval;
 
@@ -121,7 +124,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
           acc[methodName] = this.restrictedMethods[methodName].description;
           return acc;
         },
-      {}),
+        {}),
     };
 
     this.internalMethods = {};
@@ -209,14 +212,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Used for retrieving the key that manages the restricted method
    * associated with the current RPC `method` key.
-   * 
+   *
    * Used to support our namespaced method feature, which allows blocks
    * of methods to be hidden behind a restricted method with a trailing `_` character.
-   * 
+   *
    * @param method string - The requested rpc method.
    * @returns methodKey string
    */
-  getMethodKeyFor(method: string): string {
+  getMethodKeyFor (method: string): string {
     const managedMethods: string[] = Object.keys(this.restrictedMethods);
 
     // Return exact matches:
@@ -229,7 +232,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
         const wildCardMatch = methodName.match(/(.+)\*$/);
         return wildCardMatch ? { ...acc, [wildCardMatch[1]]: true } : acc;
       },
-    {});
+      {});
 
     // Check for potentially nested namespaces:
     // Ex: wildzone_
@@ -264,7 +267,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       const virtualEngine = this.createVirtualEngineFor(domain);
 
       // Check for Caveats:
-      if (permission !== undefined && permission.caveats && permission.caveats.length > 0) {
+      if (permission?.caveats && permission.caveats.length > 0) {
         const engine: IJsonRpcEngine = new JsonRpcEngine();
 
         permission.caveats.forEach((serializedCaveat: IOcapLdCaveat) => {
@@ -318,7 +321,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Get the parent-most permission granting the requested domain's method permission.
    * Follows the delegation chain of the first matching permission found.
-   * 
+   *
    * @param {string} domain - The domain whose permission to retrieve.
    * @param {string} method - The method
    */
@@ -326,7 +329,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const permissions = this.getPermissionsForDomain(domain).filter(p => {
       return p.parentCapability === method;
     });
-    if (permissions.length > 0) { return permissions.shift(); }
+    if (permissions.length > 0) {
+      return permissions.shift();
+    }
 
     return undefined;
   }
@@ -342,7 +347,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   /**
    * Used for removing a permissions request from the permissions request array.
-   * 
+   *
    * @param request The request that no longer requires user attention.
    */
   removePermissionsRequest (requestId: string): void {
@@ -361,7 +366,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Used for granting a new set of permissions,
    * after the user has approved it.
-   * 
+   *
    * @param {string} domain - The domain receiving new permissions.
    * @param {IRequestedPermissions} approvedPermissions - An object of objects describing the granted permissions.
    * @param {JsonRpcResponse} res - The response.
@@ -369,10 +374,16 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    */
   grantNewPermissions (
     domain: string,
-    approved: IRequestedPermissions, 
+    approved: IRequestedPermissions,
     res: JsonRpcResponse<any>,
     end: JsonRpcEngineEndCallback
   ): void {
+
+    if (!domain || typeof domain !== 'string') {
+      res.error = invalidReq(`Invalid domain: '${domain}'.`);
+      return end(res.error);
+    }
+
     // Enforce actual approving known methods:
     for (const methodName in approved) {
       if (!this.getMethodKeyFor(methodName)) {
@@ -384,14 +395,23 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const permissions: { [methodName: string]: IOcapLdCapability } = {};
 
     for (const method in approved) {
-      const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
+
+      const newPerm = new Capability({
+        method,
+        invoker: domain,
+        caveats: approved[method].caveats,
+      });
+
       if (newPerm.caveats && !this.validateCaveats(newPerm.caveats)) {
+
         res.error = internalError({
           message: 'Invalid caveats.',
           data: newPerm,
         });
+
         return end(res.error);
       }
+
       permissions[method] = newPerm;
     }
 
@@ -409,7 +429,15 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.update({ domains });
   }
 
-  getOrCreateDomainSettings (domain: string): RpcCapDomainEntry {
+  /**
+   * Gets the domain settings for the given IOriginString.
+   * Returns a template RpcCapDomainEntry if no entry exists, but does NOT
+   * store the settings. That is left to the consumer.
+   *
+   * @param {IOriginString} domain - The origin string of the domain.
+   * @returns {RpcCapDomainEntry} - The settings for the domain.
+   */
+  getOrCreateDomainSettings (domain: IOriginString): RpcCapDomainEntry {
     const entry = this.getDomainSettings(domain);
     if (entry === undefined) {
       return { permissions: [] };
@@ -418,19 +446,26 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
   }
 
-  getDomainSettings (domain: string): RpcCapDomainEntry {
-    const domains = this.getDomains();
-
-    // Setup if not yet existent:
-    if (!domains[domain]) {
-      const newDomain = { permissions: [] };
-      domains[domain] = newDomain;
-      return newDomain;
-    }
-
-    return domains[domain];
+  /**
+   * Gets the domain settings for the given IOriginString, or undefined if
+   * none exist.
+   *
+   * @param {IOriginString} domain - The origin string of the domain.
+   * @returns {RpcCapDomainEntry | undefined} - The settings for the domain,
+   * or undefined if none exist.
+   */
+  getDomainSettings (domain: IOriginString): RpcCapDomainEntry | undefined {
+    return this.getDomains()[domain];
   }
 
+  /**
+   * Sets the domain identified by the given IOriginString.
+   * If the domain has no permissions, its key will be deleted from the
+   * controller's domains.
+   *
+   * @param {IOriginString} domain - The origin string of the domain.
+   * @param {RpcCapDomainEntry} domainSettings - The associated domain settings.
+   */
   setDomain (
     domain: IOriginString, domainSettings: RpcCapDomainEntry
   ): void {
@@ -447,7 +482,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * Adds permissions to the given domain. Overwrites existing identical
    * permissions (same domain, and method). Other existing permissions
    * remain unaffected.
-   * 
+   *
    * @param {string} domainName - The grantee domain.
    * @param {Array} newPermissions - The unique, new permissions for the grantee domain.
    */
@@ -474,7 +509,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * Validates the given caveats (of a single permission).
    * If the caveats have names, they must be unique.
    * Returns true if valid, false otherwise.
-   * 
+   *
    * @param {IOcapLdCaveat[]} - The caveats to validate.
    */
   validateCaveats (caveats: IOcapLdCaveat[]): boolean {
@@ -485,7 +520,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
       if (
         !this.validateCaveat(c) ||
-        (c.name && seenNames[c.name]) // names must be unique
+        c.name && seenNames[c.name] // names must be unique
       ) {
         return false;
       }
@@ -500,17 +535,17 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   /**
    * Validates the given caveat. Returns true if valid, false otherwise.
-   * 
+   *
    * @param {IOcapLdCaveat} - The caveat to validate.
    */
   validateCaveat (caveat: IOcapLdCaveat): boolean {
 
     if (
       typeof caveat !== 'object' || Array.isArray(caveat) ||
-      !caveat.type || typeof caveat.type !== 'string' || 
-      caveat.name === '' || (
-        caveat.name && typeof caveat.name !== 'string'
-      )
+      !caveat.type || typeof caveat.type !== 'string' ||
+      caveat.name === '' ||
+      caveat.name && typeof caveat.name !== 'string'
+
     ) {
       return false;
     }
@@ -520,7 +555,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Gets all caveats for the permission corresponding to the given domain and
    * method, or undefined if the permission or its caveats does not exist.
-   * 
+   *
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
    */
@@ -530,14 +565,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   ): IOcapLdCaveat[] | void {
 
     const perm = this.getPermission(domainName, methodName);
-    return perm && perm.caveats;
+    return perm?.caveats;
   }
 
   /**
    * Gets the caveat with the given name for the permission corresponding to the
    * given domain and method, or undefined if the permission or the target
    * caveat does not exist.
-   * 
+   *
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
    * @param {string} caveatName - The name of the caveat to retrieve.
@@ -558,7 +593,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * Adds the given caveat to the permission corresponding to the given domain
    * and method. Throws if the domain or method are unrecognized, or in case of
    * a caveat name collision.
-   * 
+   *
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
    * @param {IOcapLdCaveat} caveat - The caveat to add.
@@ -581,11 +616,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       domainName, methodName
     );
 
-    const newCaveats = (
+    const newCaveats =
       perm.caveats
-      ? [ ...perm.caveats, caveat ]
-      : [caveat]
-    );
+        ? [ ...perm.caveats, caveat ]
+        : [caveat]
+    ;
 
     this._validateAndUpdateCaveats(
       domainName, methodName, newCaveats, perm
@@ -597,7 +632,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * corresponding to the given domain and method. Throws if the domain
    * or method are unrecognized, or if a caveat with the given name doesn't
    * exist.
-   * 
+   *
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
    * @param {string} caveatName - The name of the caveat.
@@ -638,14 +673,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     if (!caveat || !perm.caveats) {
       throw internalError({
         message: 'No such caveat exists for the relevant permission.',
-        data: caveatName
+        data: caveatName,
       });
     }
 
     if (typeof caveat.value !== typeof caveatValue) {
       throw internalError({
         message: 'New caveat value is of different type than original.',
-        data: { caveat, newValue: caveatValue }
+        data: { caveat, newValue: caveatValue },
       });
     }
 
@@ -706,7 +741,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
   /**
    * Removes the specified permissions from the given domain.
-   * 
+   *
    * @param {string} domainName - The domain name whose permissions to remove.
    * @param {Array} permissionsToRemove - Objects identifying the permissions to remove.
    */
@@ -717,7 +752,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     // returns { permissions: [] } for new domains
     const domain = this.getDomainSettings(domainName);
 
-    if (domain.permissions.length === 0) {
+    if (!domain) {
       return;
     }
 
@@ -797,7 +832,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     // validate request
     if (!this.isValidPermissionsRequest(req)) {
-      res.error = invalidReq({ data: req});
+      res.error = invalidReq({ data: req });
       return end(res.error);
     }
 
@@ -820,24 +855,24 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.requestUserApproval(permissionsRequest)
     // TODO: Allow user to pass back an object describing
     // the approved permissions, allowing user-customization.
-    .then((approved: IRequestedPermissions) => {
-      if (Object.keys(approved).length === 0) {
-        res.error = userRejectedRequest(req);
-        return end(res.error);
-      }
+      .then((approved: IRequestedPermissions) => {
+        if (Object.keys(approved).length === 0) {
+          res.error = userRejectedRequest(req);
+          return end(res.error);
+        }
 
-      // If user approval is different, use it as the permissions:
-      this.grantNewPermissions(metadata.origin, approved, res, end);
-    })
-    .catch((reason) => {
-      res.error = reason;
-      return end(reason);
-    })
-    .finally(() => {
+        // If user approval is different, use it as the permissions:
+        this.grantNewPermissions(metadata.origin, approved, res, end);
+      })
+      .catch((reason) => {
+        res.error = reason;
+        return end(reason);
+      })
+      .finally(() => {
       // Delete the request object
-      if (permissionsRequest.metadata.id) {
-        this.removePermissionsRequest(permissionsRequest.metadata.id);
-      }
-    });
+        if (permissionsRequest.metadata.id) {
+          this.removePermissionsRequest(permissionsRequest.metadata.id);
+        }
+      });
   }
 }
