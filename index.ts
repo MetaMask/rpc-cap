@@ -68,10 +68,12 @@ class Capability implements IOcapLdCapability {
     invoker: IOriginString;
   }) {
     this.parentCapability = method;
-    this.caveats = caveats;
     this.id = uuid();
     this.date = Date.now();
     this.invoker = invoker;
+    if (caveats) {
+      this.caveats = caveats;
+    }
   }
 
   toJSON(): IOcapLdCapability {
@@ -108,7 +110,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.engine = config.engine || undefined;
 
     if (!config.requestUserApproval) {
-      throw "User approval prompt required.";
+      throw new Error('User approval prompt required.');
     }
     this.requestUserApproval = config.requestUserApproval;
 
@@ -373,6 +375,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     res: JsonRpcResponse<any>,
     end: JsonRpcEngineEndCallback
   ): void {
+
+    if (!domain || typeof domain !== 'string') {
+      res.error = invalidReq(`Invalid domain: '${domain}'.`);
+      return end(res.error);
+    }
+
     // Enforce actual approving known methods:
     for (const methodName in approved) {
       if (!this.getMethodKeyFor(methodName)) {
@@ -384,14 +392,23 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const permissions: { [methodName: string]: IOcapLdCapability } = {};
 
     for (const method in approved) {
-      const newPerm = new Capability({ method, invoker: domain, caveats: approved[method].caveats });
+
+      const newPerm = new Capability({
+        method,
+        invoker: domain,
+        caveats: approved[method].caveats,
+      });
+
       if (newPerm.caveats && !this.validateCaveats(newPerm.caveats)) {
+
         res.error = internalError({
           message: 'Invalid caveats.',
           data: newPerm,
         });
+
         return end(res.error);
       }
+
       permissions[method] = newPerm;
     }
 
