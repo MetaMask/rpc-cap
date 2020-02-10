@@ -544,7 +544,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       typeof caveat !== 'object' || Array.isArray(caveat) ||
       !caveat.type || typeof caveat.type !== 'string' ||
       caveat.name === '' ||
-        caveat.name && typeof caveat.name !== 'string'
+      caveat.name && typeof caveat.name !== 'string'
 
     ) {
       return false;
