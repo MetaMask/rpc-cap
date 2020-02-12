@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rm -rf dist && tsc",
+    "build": "yarn build:typescript && yarn build:types",
+    "build:typescript": "rm -rf dist && tsc",
+    "build:types": "./scripts/copyDistTypes.sh",
     "build:watch": "yarn build && tsc -w",
     "lint": "./node_modules/.bin/eslint index.ts",
     "lint:fix": "./node_modules/.bin/eslint index.ts --fix",
@@ -45,5 +47,8 @@
     "json-rpc-engine": "^5.1.8",
     "obs-store": "^4.0.3",
     "uuid": "^3.3.2"
-  }
+  },
+  "files": [
+    "dist/"
+  ]
 }

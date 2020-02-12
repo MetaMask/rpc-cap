@@ -541,9 +541,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   validateCaveat (caveat: IOcapLdCaveat): boolean {
 
     if (
-      typeof caveat !== 'object' || Array.isArray(caveat) ||
+      !caveat || typeof caveat !== 'object' || Array.isArray(caveat) ||
       !caveat.type || typeof caveat.type !== 'string' ||
-      caveat.name === '' ||
+      caveat.name === '' || // name may be omitted, but not empty
       caveat.name && typeof caveat.name !== 'string'
 
     ) {

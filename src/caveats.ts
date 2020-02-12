@@ -1,5 +1,3 @@
-/// <reference path="./@types/is-subset.d.ts" />
-
 import { JsonRpcMiddleware } from 'json-rpc-engine';
 import { isSubset } from './@types/is-subset';
 import { IOcapLdCaveat } from './@types/ocap-ld'

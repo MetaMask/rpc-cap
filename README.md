@@ -1,4 +1,5 @@
 # `rpc-cap` [![CircleCI](https://circleci.com/gh/MetaMask/rpc-cap.svg?style=svg)](https://circleci.com/gh/MetaMask/rpc-cap)
+
 ## JSON RPC Capabilities Middleware 
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine), to instantly add a user-consent based permissions system on top of any JSON-RPC API.
@@ -6,6 +7,7 @@ A module for managing basic [capability-based security](https://en.wikipedia.org
 Requires that you are able to authenticate a requesting `domain`, which can be any unique string you use to identify a remote entity, be it a user ID whose cookie you've verified, or a public key that you've challenged:
 
 ## Minimal Example
+
 A fairly minimal server example, hosted over a [socket.io-like](https://www.npmjs.com/package/socket.io) server API.
 
 ```typescript
@@ -96,6 +98,7 @@ engine.handle({
    **/
 })
 ```
+
 If the `method` requested is `getPermissions` (optionally preceded by `methodPrefix`), the response will be an array of capability objects, which each represent the permission to call a function, with the key `parentCapability` to indicate the restricted method's name.
 
 ```typescript
@@ -126,6 +129,7 @@ export type IOcapLdCaveat = {
   value?: any;
 }
 ```
+
 Of particular interest will be the `caveats` array, which will eventually be customizable by the platform, and describe possible limitations being imposed on the way that particular method is called:
 
 ##### Currently Supported Caveats
@@ -317,6 +321,7 @@ interface IOcapLdCapability {
   proof?: IOcapLdProof;
 }
 ```
+
 A promise-returning function representing
 
 You can see our `IMethodRequest` objects, along with our internal permissions storage, are in a schema based on the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) proposal, which may allow us to add signatures to these permissions in the future. That would allow:
@@ -325,7 +330,6 @@ You can see our `IMethodRequest` objects, along with our internal permissions st
 - Unauthenticated, stateless connections, which are authenticated by signed "invocations" by the keys that these permissions would be signed "to".
 
 None of these features are used yet, but we've used this schema internally to provide an interesting possible future path for the project.
-
 
 ## A more detailed Example
 
