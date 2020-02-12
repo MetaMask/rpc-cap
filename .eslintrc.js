@@ -4,6 +4,8 @@ module.exports = {
 
   plugins: ['@typescript-eslint'],
 
+  ignorePatterns: ['scripts/'],
+
   extends: [
     '@metamask/eslint-config',
     '@metamask/eslint-config/config/typescript',

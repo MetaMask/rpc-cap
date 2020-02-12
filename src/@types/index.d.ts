@@ -1,5 +1,3 @@
-/// <reference path="./ocap-ld.d.ts" />
-
 import { JsonRpcRequest, JsonRpcResponse, JsonRpcError, JsonRpcEngine } from 'json-rpc-engine';
 import { IOcapLdCapability, IOcapLdCaveat } from './ocap-ld';
 import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from 'json-rpc-engine';

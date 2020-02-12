@@ -12,7 +12,7 @@ test('requireParams caveat throws if caveat value is not a subset of params.', a
   const ctrl = new CapabilitiesController({
     restrictedMethods: {
       'write': {
-        method: (req, res, next, end) => {
+        method: (req, res, _next, end) => {
           const params = req.params;
           res.result = params;
           end();
