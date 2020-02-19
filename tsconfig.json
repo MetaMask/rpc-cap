@@ -1,5 +1,5 @@
 {
-	"include": ["src/", "index.ts"],
+  "include": ["src/", "index.ts"],
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
@@ -9,17 +9,17 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
-		"experimentalDecorators": true,
-		"importHelpers": false,
-		"module": "commonjs",
-		"moduleResolution": "node",
-		"noImplicitAny": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"outDir": "dist",
-		"removeComments": false,
-		"sourceMap": true,
-		"strict": true,
-		"target": "es6"
+    "experimentalDecorators": true,
+    "importHelpers": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "removeComments": false,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es6"
   }
 }
