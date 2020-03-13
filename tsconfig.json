@@ -18,7 +18,7 @@
     "noUnusedParameters": true,
     "outDir": "dist",
     "removeComments": false,
-    "inlineSourceMap": true,
+    "sourceMap": true,
     "inlineSources": true,
     "strict": true,
     "target": "es6"
