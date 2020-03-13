@@ -19,6 +19,7 @@
     "outDir": "dist",
     "removeComments": false,
     "sourceMap": true,
+    "inlineSources": true,
     "strict": true,
     "target": "es6"
   }
