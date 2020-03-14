@@ -780,27 +780,32 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Check if a request to requestPermissionsMiddleware is valid.
    */
-  isValidPermissionsRequest (req: JsonRpcRequest<any>): boolean {
+  validatePermissionsRequest (req: JsonRpcRequest<any>): void {
+
     if (
       !req ||
       !Array.isArray(req.params) ||
       typeof req.params[0] !== 'object' ||
       Array.isArray(req.params[0])
     ) {
-      return false;
+      throw invalidReq({ data: req });
     }
 
     const perms: IRequestedPermissions = req.params[0];
-    for (const key of Object.keys(perms)) {
+
+    for (const methodName in perms) {
+
       if (
-        perms[key].parentCapability !== undefined &&
-        key !== perms[key].parentCapability
+        perms[methodName].parentCapability !== undefined &&
+        methodName !== perms[methodName].parentCapability
       ) {
-        return false;
+        throw invalidReq({ data: req });
+      }
+
+      if (!this.getMethodKeyFor(methodName)) {
+        throw methodNotFound({ methodName, data: req });
       }
     }
-
-    return true;
   }
 
   /**
@@ -830,9 +835,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     end: JsonRpcEngineEndCallback,
   ): void {
 
-    // validate request
-    if (!this.isValidPermissionsRequest(req)) {
-      res.error = invalidReq({ data: req });
+    try {
+      this.validatePermissionsRequest(req);
+    } catch (err) {
+      res.error = err;
       return end(res.error);
     }
 
