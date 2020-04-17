@@ -12,9 +12,8 @@
     "lint": "eslint --ext .ts index.ts",
     "lint:fix": "eslint --ext .ts --fix index.ts",
     "prepublishOnly": "yarn build",
-    "test": "ts-node test",
-    "test:clean": "yarn build && yarn test",
-    "test:coverage": "nyc ts-node test"
+    "test": "yarn build:typescript && node test",
+    "test:coverage": "nyc node test"
   },
   "keywords": [],
   "author": "",
@@ -33,7 +32,6 @@
     "eslint": "^6.2.1",
     "nyc": "^15.0.0",
     "tape": "^4.9.2",
-    "ts-node": "^8.2.0",
     "typescript": "^3.7.5"
   },
   "dependencies": {
