@@ -414,9 +414,7 @@ engine.start()
 
 ### Testing
 
-To run unit tests on a fresh build: `yarn test:clean`
-
-To run unit tests without building: `yarn test`
+To run unit tests: `yarn test`
 
 To test against an example dapp, serve the example using `yarn serve` and explore using [this branch of MetaMask](https://github.com/MetaMask/metamask-extension/tree/LoginPerSite).
 
