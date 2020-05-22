@@ -242,7 +242,7 @@ test('filterResponse caveat passes through subset portion of response', async (t
   t.end();
 });
 
-test('limitResponse caveat returns all results if less than value.', async (t) => {
+test('limitResponseLength caveat returns all results if less than value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
   const items = [
     '0x44ed36e289cd9e8de4d822ad373ae42aac890a68',
@@ -263,7 +263,7 @@ test('limitResponse caveat returns all results if less than value.', async (t) =
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.readAccounts.caveats = [
-        { type: 'limitResponse', value: 10 },
+        { type: 'limitResponseLength', value: 10 },
       ];
       return perms;
     },
@@ -303,7 +303,7 @@ test('limitResponse caveat returns all results if less than value.', async (t) =
   t.end();
 });
 
-test('limitResponse caveat returns only the specified number of values when original exceeds that number', async (t) => {
+test('limitResponseLength caveat returns only the specified number of values when original exceeds that number', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
   const ctrl = new CapabilitiesController({
@@ -321,7 +321,7 @@ test('limitResponse caveat returns only the specified number of values when orig
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'limitResponse', value: 3 },
+        { type: 'limitResponseLength', value: 3 },
       ];
       return perms;
     },

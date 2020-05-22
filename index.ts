@@ -18,7 +18,7 @@ import {
   ICaveatFunction,
   requireParams,
   filterResponse,
-  limitResponse,
+  limitResponseLength,
   forceParams,
   ICaveatFunctionGenerator,
 } from './src/caveats';
@@ -99,7 +99,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware };
-  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { requireParams, filterResponse, limitResponse, forceParams };
+  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { requireParams, filterResponse, limitResponseLength, forceParams };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
 

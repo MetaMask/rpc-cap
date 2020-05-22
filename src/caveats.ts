@@ -45,7 +45,7 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse 
 /*
  * Limits array results to a specific integer length.
  */
-export const limitResponse: ICaveatFunctionGenerator = function limitResponse (serialized: IOcapLdCaveat) {
+export const limitResponseLength: ICaveatFunctionGenerator = function limitResponseLength (serialized: IOcapLdCaveat) {
   const { value } = serialized;
   return (_req, res, next, _end): void => {
 
