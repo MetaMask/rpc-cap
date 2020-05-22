@@ -1,7 +1,7 @@
 import { JsonRpcMiddleware } from 'json-rpc-engine';
 import { IOcapLdCaveat } from './@types/ocap-ld';
 import { unauthorized } from './errors';
-import isSubset from 'is-subset'; // eslint-disable-line
+import isSubset from 'is-subset';
 
 export type ICaveatFunction = JsonRpcMiddleware;
 
