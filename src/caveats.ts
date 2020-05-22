@@ -1,19 +1,19 @@
 import { JsonRpcMiddleware } from 'json-rpc-engine';
 import { isSubset } from './@types/is-subset';
-import { IOcapLdCaveat } from './@types/ocap-ld'
+import { IOcapLdCaveat } from './@types/ocap-ld';
 import { unauthorized } from './errors';
-const isSubset = require('is-subset');
+const isSubset = require('is-subset'); // eslint-disable-line
 
 export type ICaveatFunction = JsonRpcMiddleware;
 
-export type ICaveatFunctionGenerator = (caveat:IOcapLdCaveat) => ICaveatFunction;
+export type ICaveatFunctionGenerator = (caveat: IOcapLdCaveat) => ICaveatFunction;
 
 /*
  * Require that the request params match those specified by the caveat value.
  */
-export const requireParams: ICaveatFunctionGenerator = function requireParams(serialized: IOcapLdCaveat) {
+export const requireParams: ICaveatFunctionGenerator = function requireParams (serialized: IOcapLdCaveat) {
   const { value } = serialized;
-  return (req, res, next, end) => {
+  return (req, res, next, end): void => {
     const permitted = isSubset(req.params, value);
 
     if (!permitted) {
@@ -22,34 +22,34 @@ export const requireParams: ICaveatFunctionGenerator = function requireParams(se
     }
 
     next();
-  }
-}
+  };
+};
 
 /*
  * Filters array results shallowly.
  */
-export const filterResponse: ICaveatFunctionGenerator = function filterResponse(serialized: IOcapLdCaveat) {
+export const filterResponse: ICaveatFunctionGenerator = function filterResponse (serialized: IOcapLdCaveat) {
   const { value } = serialized;
-  return (_req, res, next, _end) => {
+  return (_req, res, next, _end): void => {
 
     next((done) => {
       if (Array.isArray(res.result)) {
         res.result = res.result.filter((item) => {
           return value.includes(item);
-        })
+        });
       }
       done();
     });
-  }
-}
+  };
+};
 
 /*
  * Forces the method to be called with given params.
  */
-export const forceParams: ICaveatFunctionGenerator = function forceParams(serialized: IOcapLdCaveat) {
+export const forceParams: ICaveatFunctionGenerator = function forceParams (serialized: IOcapLdCaveat) {
   const { value } = serialized;
-  return (req, _, next) => {
-      req.params = [ ...value ]
-      next();
+  return (req, _, next): void => {
+    req.params = [ ...value ];
+    next();
   };
-}
+};

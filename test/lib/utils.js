@@ -1,6 +1,6 @@
 const RpcEngine = require('json-rpc-engine');
 
-async function sendRpcMethodWithResponse(ctrl, domain, req) {
+async function sendRpcMethodWithResponse (ctrl, domain, req) {
   return new Promise((resolve, reject) => {
     const engine = new RpcEngine();
     engine.push(ctrl.providerMiddlewareFunction.bind(ctrl, domain));
@@ -12,10 +12,10 @@ async function sendRpcMethodWithResponse(ctrl, domain, req) {
 
       resolve(res.result);
     });
-  })
+  });
 }
 
 module.exports = {
   sendRpcMethodWithResponse,
-}
+};
 
