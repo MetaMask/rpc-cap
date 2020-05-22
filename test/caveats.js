@@ -242,6 +242,124 @@ test('filterResponse caveat passes through subset portion of response', async (t
   t.end();
 });
 
+test('limitResponseLength caveat returns all results if less than value.', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+  const items = [
+    '0x44ed36e289cd9e8de4d822ad373ae42aac890a68',
+    '0x404d0886ad4933630160c169fffa1084d15b7beb',
+    '0x30476e1d96ae0ebaae94558afa146b0023df2d07',
+  ];
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'readAccounts': {
+        method: (_req, res, _next, end) => {
+          res.result = items;
+          end();
+        },
+      },
+    },
+
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.readAccounts.caveats = [
+        { type: 'limitResponseLength', value: 10 },
+      ];
+      return perms;
+    },
+  },
+  {
+    domains: {},
+  });
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'readAccounts': {},
+        },
+      ],
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'readAccounts',
+      params: [
+        'notAllowed',
+        { definitely: 'restricted' },
+      ],
+    };
+
+    const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+    t.equal(result.length, 3, 'All(3) items');
+    t.equal(result[0], items[0], 'Returns in original order');
+
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+  }
+  t.end();
+});
+
+test('limitResponseLength caveat returns only the specified number of values when original exceeds that number', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'write': {
+        method: (_req, res, _next, end) => {
+          res.result = [1, 2, 3, 4, 5];
+          end();
+        },
+      },
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'limitResponseLength', value: 3 },
+      ];
+      return perms;
+    },
+  },
+  {
+    domains: {},
+  });
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        },
+      ],
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'write',
+      params: [],
+    };
+
+    const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(result, 'should succeed');
+    t.deepEqual(result, [1, 2, 3], 'returned the correct subset');
+
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+  }
+  t.end();
+});
+
+
 test('forceParams caveat overwrites', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 

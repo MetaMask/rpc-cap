@@ -43,6 +43,22 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse 
 };
 
 /*
+ * Limits array results to a specific integer length.
+ */
+export const limitResponseLength: ICaveatFunctionGenerator = function limitResponseLength (serialized: IOcapLdCaveat) {
+  const { value } = serialized;
+  return (_req, res, next, _end): void => {
+
+    next((done) => {
+      if (Array.isArray(res.result)) {
+        res.result = res.result.slice(0, value);
+      }
+      done();
+    });
+  };
+};
+
+/*
  * Forces the method to be called with given params.
  */
 export const forceParams: ICaveatFunctionGenerator = function forceParams (serialized: IOcapLdCaveat) {
