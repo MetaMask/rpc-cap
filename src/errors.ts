@@ -5,31 +5,31 @@ import { IEthErrors, IEthereumRpcError } from 'eth-json-rpc-errors/@types';
 const ethErrors: IEthErrors = require('eth-json-rpc-errors').ethErrors;
 
 interface ErrorArg {
-  message?: string,
-  data?: JsonRpcRequest<any> | any
+  message?: string;
+  data?: JsonRpcRequest<any> | any;
 }
 
 interface MethodNotFoundArg extends ErrorArg {
-  methodName?: string,
+  methodName?: string;
 }
 
 function unauthorized (arg?: ErrorArg): IEthereumRpcError<JsonRpcRequest<any>> {
   return ethErrors.provider.unauthorized({
-    message: (arg && arg.message) || 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/rpc-cap',
-    data: (arg && arg.data) || undefined
+    message: arg?.message || 'Unauthorized to perform action. Try requesting permission first using the `requestPermissions` method. More info available at https://github.com/MetaMask/rpc-cap',
+    data: arg?.data || undefined,
   });
 }
 
-const invalidReq = ethErrors.rpc.invalidRequest
+const invalidReq = ethErrors.rpc.invalidRequest;
 
-const internalError = ethErrors.rpc.internal
+const internalError = ethErrors.rpc.internal;
 
 function methodNotFound (opts: MethodNotFoundArg): IEthereumRpcError<JsonRpcRequest<any>> {
-  const message = (
+  const message =
     opts.methodName
       ? `The method '${opts.methodName}' does not exist / is not available.`
-      : null
-  )
+      : null;
+
   return ethErrors.rpc.methodNotFound({ data: opts.data, message });
 }
 

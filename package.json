@@ -9,8 +9,8 @@
     "build:typescript": "rm -rf dist && tsc",
     "build:types": "./scripts/copyDistTypes.sh",
     "build:watch": "yarn build && tsc -w",
-    "lint": "eslint --ext .ts index.ts",
-    "lint:fix": "eslint --ext .ts --fix index.ts",
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js --fix .",
     "prepublishOnly": "yarn build",
     "test": "yarn build:typescript && node test",
     "test:coverage": "nyc node test"
@@ -29,7 +29,7 @@
     "@types/uuid": "^3.4.4",
     "@typescript-eslint/eslint-plugin": "^2.17.0",
     "@typescript-eslint/parser": "^2.17.0",
-    "eslint": "^6.2.1",
+    "eslint": "^6.8.0",
     "nyc": "^15.0.0",
     "tape": "^4.9.2",
     "typescript": "^3.7.5"

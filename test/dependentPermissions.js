@@ -1,4 +1,4 @@
-const test = require('tape')
+const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController;
 const JsonRpcEngine = require('json-rpc-engine');
 
@@ -11,18 +11,18 @@ test('restricted permission gets restricted provider', async (t) => {
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-    
+
       'getName': {
         description: 'Returns user name',
-        method: (req, res, next, end) => {
+        method: (_req, res, _next, end) => {
           res.result = name;
           end();
-        }
+        },
       },
 
       'greet': {
         description: 'Greets the current name, if allowed.',
-        method: (req, res, next, end, engine) => {
+        method: (_req, res, _next, end, engine) => {
           engine.handle({ method: 'getName' }, (err, nameRes) => {
             if (err) {
               res.error = err;
@@ -31,19 +31,19 @@ test('restricted permission gets restricted provider', async (t) => {
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
             end();
-          })
-        }
+          });
+        },
       },
     },
-  })
+  });
 
-  const domain = { origin: 'login.metamask.io' }
-  let req = { method: 'greet' }
+  const domain = { origin: 'login.metamask.io' };
+  const req = { method: 'greet' };
 
   try {
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, req);
 
-    t.fail('should not complete successfully.')
+    t.fail('should not complete successfully.');
     t.end();
 
   } catch (error) {
@@ -52,7 +52,6 @@ test('restricted permission gets restricted provider', async (t) => {
     t.end();
   }
 });
-
 
 test('restricted permission gets domain permissions', async (t) => {
   const name = 'Glen Runciter';
@@ -63,53 +62,53 @@ test('restricted permission gets domain permissions', async (t) => {
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-    
+
       'getName': {
         description: 'Returns user name',
-        method: (req, res, next, end) => {
+        method: (_req, res, _next, end) => {
           res.result = name;
           end();
-        }
+        },
       },
 
       'greet': {
         description: 'Greets the current name, if allowed.',
-        method: (req, res, next, end, engine) => {
+        method: (_req, res, _next, end, engine) => {
           engine.handle({ method: 'getName' }, (err, nameRes) => {
             if (err) {
-              res.error = reason;
-              return end(reason);
+              res.error = err;
+              return end(err);
             }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
             end();
-          })
-        }
+          });
+        },
       },
     },
-  })
+  });
 
-  const domain = { origin: 'login.metamask.io' }
+  const domain = { origin: 'login.metamask.io' };
 
-  let permReq = {
+  const permReq = {
     method: 'requestPermissions',
     params: [
-      { 
+      {
         getName: {},
         greet: {},
-      }
-    ]
-  }
+      },
+    ],
+  };
 
-  let req = { method: 'greet' }
+  const req = { method: 'greet' };
 
   try {
     await sendRpcMethodWithResponse(ctrl, domain, permReq);
-    let res = await sendRpcMethodWithResponse(ctrl, domain, req);
+    const res = await sendRpcMethodWithResponse(ctrl, domain, req);
 
-    t.ok(res, 'should complete successfully.')
-    t.ok(res.result.includes(name), 'greeting included name')
-    t.notEqual(res.result.indexOf(name), 0, 'Name is not beginning.')
+    t.ok(res, 'should complete successfully.');
+    t.ok(res.result.includes(name), 'greeting included name');
+    t.notEqual(res.result.indexOf(name), 0, 'Name is not beginning.');
     t.end();
 
   } catch (error) {
@@ -122,7 +121,7 @@ test('permitted provider can pass through to other methods', async (t) => {
   const name = 'Glen Runciter';
   const domain = { origin: 'login.metamask.io' };
 
-  const getNameMiddleware = (req, res, next, end) => {
+  const getNameMiddleware = (_req, res, _next, end) => {
     res.result = name;
     end();
   };
@@ -140,27 +139,25 @@ test('permitted provider can pass through to other methods', async (t) => {
     safeMethods: ['getName'],
 
     restrictedMethods: {
-    
-      
       'greet': {
         description: 'Greets the current name, if allowed.',
-        method: (req, res, next, end, engine) => {
+        method: (_req, res, _next, end, engine) => {
           engine.handle({ method: 'getName' }, (err, nameRes) => {
             if (err) {
-              res.error = reason;
-              return end(reason);
+              res.error = err;
+              return end(err);
             }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
             end();
-          })
-        }
+          });
+        },
       },
     },
-  })
+  });
 
   const engine = new JsonRpcEngine();
-  engine.push(ctrl.providerMiddlewareFunction.bind(ctrl, domain))
+  engine.push(ctrl.providerMiddlewareFunction.bind(ctrl, domain));
   engine.push(getNameMiddleware);
 
   function send (request) {
@@ -170,27 +167,27 @@ test('permitted provider can pass through to other methods', async (t) => {
           rej(err || result.error);
         }
         res(result);
-      })
+      });
     });
   }
 
   const permReq = {
     method: 'requestPermissions',
     params: [
-      { 
+      {
         greet: {},
-      }
-    ]
+      },
+    ],
   };
-  let req = { method: 'greet' };
+  const req = { method: 'greet' };
 
   try {
     await send(permReq);
-    let res = await send(req);
+    const res = await send(req);
 
-    t.ok(res, 'should complete successfully.')
-    t.ok(res.result.includes(name), 'greeting included name')
-    t.notEqual(res.result.indexOf(name), 0, 'Name is not beginning.')
+    t.ok(res, 'should complete successfully.');
+    t.ok(res.result.includes(name), 'greeting included name');
+    t.notEqual(res.result.indexOf(name), 0, 'Name is not beginning.');
     t.end();
 
   } catch (error) {
@@ -199,25 +196,24 @@ test('permitted provider can pass through to other methods', async (t) => {
   }
 });
 
-async function sendRpcMethodWithResponse(ctrl, domain, req) {
-  let res = {}
+async function sendRpcMethodWithResponse (ctrl, domain, req) {
+  const res = {};
   return new Promise((resolve, reject) => {
-    ctrl.providerMiddlewareFunction(domain, req, res, next, end)
+    ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-    function next() {
-      reject()
+    function next () {
+      reject();
     }
 
-    function end(reason) {
+    function end (reason) {
       if (reason) {
-        reject(reason)
+        reject(reason);
       }
       if (res.error) {
-        reject(res.error)
+        reject(res.error);
       }
 
-      resolve(res)
+      resolve(res);
     }
-  })
+  });
 }
-
