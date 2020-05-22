@@ -1,6 +1,14 @@
-import { JsonRpcRequest, JsonRpcResponse, JsonRpcError, JsonRpcEngine } from 'json-rpc-engine';
-import { IOcapLdCapability, IOcapLdCaveat } from './ocap-ld';
-import { JsonRpcMiddleware, JsonRpcEngineEndCallback, JsonRpcEngineNextCallback } from 'json-rpc-engine';
+import {
+  JsonRpcRequest,
+  JsonRpcResponse,
+  JsonRpcEngine,
+} from 'json-rpc-engine';
+import {
+  JsonRpcMiddleware,
+  JsonRpcEngineEndCallback,
+  JsonRpcEngineNextCallback
+} from 'json-rpc-engine';
+import { IOcapLdCapability } from './ocap-ld';
 
 export interface AuthenticatedJsonRpcMiddleware {
   (
