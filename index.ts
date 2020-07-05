@@ -852,7 +852,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const requests = this.getPermissionsRequests();
 
     const permissionsRequest: IPermissionsRequest = {
-      origin: domain.origin,
       metadata: {
         origin: domain.origin,
         id,

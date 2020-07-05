@@ -21,7 +21,6 @@ export type AuthenticatedJsonRpcMiddleware = (
  * Includes information about the domain granted, as well as the permissions assigned.
  */
 export interface IPermissionsRequest {
-  origin: string;
   metadata: IPermissionsRequestMetadata ;
   permissions: IRequestedPermissions;
 }
