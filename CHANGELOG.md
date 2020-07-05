@@ -1,8 +1,25 @@
 # Changelog
 
-## 0.18.0 (Current)
+All notable changes to this project will be documented in this file.
 
-- Enable updating caveats
-  - To do so, we introduce the `name: string` field on caveats
-- Rename `filterParams` caveat to `requireParams`
-  - This is a better representation of its intent and action
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+For changes prior to `3.0.0`, please see the package's [GitHub Releases](https://github.com/MetaMask/rpc-cap/releases).
+
+## [Unreleased]
+
+## [3.0.0] - 2020-07-05
+
+### Changed
+
+- **BREAKING:** `requestPermissionsMiddleware`: Stop using or setting the `id` property from the `IOriginMetadata` parameter
+- **BREAKING:** `requestPermissionsMiddleware`: Default to `req.id` value as the pending permissions request object `id`, with `uuid()` as a fallback
+- `requestPermissionsMiddleware`: Rename `IOriginMetadata` parameter from `metadata` to `domain`, in line with other middleware functions
+  - Its former name led to confused usage by this package and its consumers
+- Types
+  - `IPermissionsRequest`
+    - Remove top-level `origin` property, since there's already a `metadata.origin` property
+    - Update type of `metadata.id` from `string` to `string | number`
+  - `IOriginMetadata`
+    - Remove `id` property, which is now never used in practice
