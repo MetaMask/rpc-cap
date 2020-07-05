@@ -160,6 +160,55 @@ test('approving unknown permission should fail', async (t) => {
   }
 });
 
+test('uses req.id as metadata.id of pending permissions request object', async (t) => {
+
+  const domain = { origin: 'login.metamask.io' };
+  const getReq = (id) => {
+    return {
+      id,
+      method: 'requestPermissions',
+      params: [
+        { restricted: {} },
+      ],
+    };
+  };
+  const res = {};
+
+  // valid ids with different types and boolean values
+  const requestIds = ['1', 'abc', 1, 0, -1];
+  let index = 0;
+
+  const ctrl = new CapabilitiesController({
+    requestUserApproval: (permissionsRequest) => {
+      t.equal(
+        permissionsRequest.metadata.id, requestIds[index],
+        'permissions request object should have expected metadata.id'
+      );
+      if (index === requestIds.length - 1) {
+        t.end();
+      } else {
+        index = index + 1;
+      }
+      return Promise.resolve({});
+    },
+    restrictedMethods: {
+      restricted: (_req, res, _next, end) => {
+        res.result = 'Wahoo!';
+        end();
+      },
+    },
+  });
+
+  for (const id of requestIds) {
+    ctrl.providerMiddlewareFunction(domain, getReq(id), res, next, () => {});
+  }
+
+  function next () {
+    t.fail('next should not be called');
+    t.end();
+  }
+});
+
 async function sendRpcMethodWithResponse (ctrl, domain, req) {
   const res = {};
   return new Promise((resolve, reject) => {
