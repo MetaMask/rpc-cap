@@ -1,8 +1,8 @@
 import {
   JsonRpcEngine,
-  JsonRpcMiddleware,
   JsonRpcEngineEndCallback,
   JsonRpcEngineNextCallback,
+  JsonRpcMiddleware,
   JsonRpcRequest,
   JsonRpcResponse,
 } from 'json-rpc-engine';
@@ -21,13 +21,16 @@ export type AuthenticatedJsonRpcMiddleware = (
  * Includes information about the domain granted, as well as the permissions assigned.
  */
 export interface IPermissionsRequest {
-  origin: string;
-  metadata: IOriginMetadata;
+  metadata: IPermissionsRequestMetadata ;
   permissions: IRequestedPermissions;
 }
 
+export interface IPermissionsRequestMetadata {
+  id: string | number;
+  origin: IOriginString;
+}
+
 export interface IOriginMetadata {
-  id?: string;
   origin: IOriginString;
 }
 

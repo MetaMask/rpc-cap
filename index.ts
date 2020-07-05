@@ -349,9 +349,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   /**
    * Used for removing a permissions request from the permissions request array.
    *
-   * @param request The request that no longer requires user attention.
+   * @param requestId The id of the pending permissions request that no longer
+   * requires user attention.
    */
-  removePermissionsRequest (requestId: string): void {
+  removePermissionsRequest (requestId: string | number): void {
     const reqs = this.getPermissionsRequests().filter((oldReq) => {
       return oldReq.metadata.id !== requestId;
     });
@@ -829,7 +830,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * The capabilities middleware function used for requesting additional permissions from the user.
    */
   requestPermissionsMiddleware (
-    metadata: IOriginMetadata,
+    domain: IOriginMetadata,
     req: JsonRpcRequest<any>,
     res: JsonRpcResponse<any>,
     _next: JsonRpcEngineNextCallback,
@@ -843,16 +844,18 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return end(res.error);
     }
 
-    if (!metadata.id) {
-      metadata.id = uuid();
-    }
+    const id = typeof req.id === 'number' || req.id
+      ? req.id
+      : uuid();
 
     const permissions: IRequestedPermissions = req.params[0];
     const requests = this.getPermissionsRequests();
 
     const permissionsRequest: IPermissionsRequest = {
-      origin: metadata.origin,
-      metadata,
+      metadata: {
+        origin: domain.origin,
+        id,
+      },
       permissions: permissions,
     };
 
@@ -860,26 +863,20 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.setPermissionsRequests(requests);
 
     this.requestUserApproval(permissionsRequest)
-    // TODO: Allow user to pass back an object describing
-    // the approved permissions, allowing user-customization.
       .then((approved: IRequestedPermissions) => {
         if (Object.keys(approved).length === 0) {
           res.error = userRejectedRequest(req);
           return end(res.error);
         }
-
-        // If user approval is different, use it as the permissions:
-        this.grantNewPermissions(metadata.origin, approved, res, end);
+        this.grantNewPermissions(domain.origin, approved, res, end);
       })
       .catch((reason) => {
         res.error = reason;
         return end(reason);
       })
       .finally(() => {
-      // Delete the request object
-        if (permissionsRequest.metadata.id) {
-          this.removePermissionsRequest(permissionsRequest.metadata.id);
-        }
+        // Delete the request object
+        this.removePermissionsRequest(permissionsRequest.metadata.id);
       });
   }
 }
