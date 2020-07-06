@@ -352,7 +352,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param requestId The id of the pending permissions request that no longer
    * requires user attention.
    */
-  removePermissionsRequest (requestId: string | number): void {
+  removePermissionsRequest (requestId: string): void {
     const reqs = this.getPermissionsRequests().filter((oldReq) => {
       return oldReq.metadata.id !== requestId;
     });
@@ -845,7 +845,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     const id = typeof req.id === 'number' || req.id
-      ? req.id
+      ? req.id.toString()
       : uuid();
 
     const permissions: IRequestedPermissions = req.params[0];

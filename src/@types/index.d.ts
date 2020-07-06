@@ -26,7 +26,7 @@ export interface IPermissionsRequest {
 }
 
 export interface IPermissionsRequestMetadata {
-  id: string | number;
+  id: string;
   origin: IOriginString;
 }
 

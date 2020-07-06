@@ -181,7 +181,7 @@ test('uses req.id as metadata.id of pending permissions request object', async (
   const ctrl = new CapabilitiesController({
     requestUserApproval: (permissionsRequest) => {
       t.equal(
-        permissionsRequest.metadata.id, requestIds[index],
+        permissionsRequest.metadata.id, requestIds[index].toString(),
         'permissions request object should have expected metadata.id'
       );
       if (index === requestIds.length - 1) {
