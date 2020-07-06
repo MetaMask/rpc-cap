@@ -9,6 +9,15 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
 
 ## [Unreleased]
 
+## [3.0.1] - 2020-07-06
+
+### Changed
+
+- `requestPermissionsMiddleware`: Stringify `req.id` when defaulting to it as the permissions request ID
+  - Allowing numerical IDs was a mistake
+- `IPermissionsRequest`
+  - Update type of `metadata.id` from `string | number` to `string`
+
 ## [3.0.0] - 2020-07-05
 
 ### Changed
