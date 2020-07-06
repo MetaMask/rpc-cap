@@ -1,6 +1,6 @@
 {
   "name": "rpc-cap",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A module for adding an object-capabilities system to any JSON-RPC API as middleware for json-rpc-engine",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
