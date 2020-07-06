@@ -845,7 +845,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     }
 
     const id = typeof req.id === 'number' || req.id
-      ? req.id
+      ? req.id.toString()
       : uuid();
 
     const permissions: IRequestedPermissions = req.params[0];
