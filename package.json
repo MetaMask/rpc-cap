@@ -30,19 +30,16 @@
     "@typescript-eslint/eslint-plugin": "^2.17.0",
     "@typescript-eslint/parser": "^2.17.0",
     "eslint": "^6.8.0",
+    "fast-deep-equal": "^2.0.1",
     "nyc": "^15.0.0",
     "tape": "^4.9.2",
     "typescript": "^3.7.5"
   },
   "dependencies": {
     "@metamask/controllers": "^2.0.2",
-    "clone": "^2.1.2",
     "eth-rpc-errors": "^2.1.1",
-    "fast-deep-equal": "^2.0.1",
-    "intersect-objects": "^1.0.0",
     "is-subset": "^0.1.1",
     "json-rpc-engine": "^5.1.8",
-    "obs-store": "^4.0.3",
     "uuid": "^3.3.2"
   },
   "files": [
