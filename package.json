@@ -36,8 +36,8 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "eth-json-rpc-errors": "^2.0.2",
-    "gaba": "^1.9.3",
+    "@metamask/controllers": "^2.0.2",
+    "eth-rpc-errors": "^2.1.1",
     "is-subset": "^0.1.1",
     "json-rpc-engine": "^5.1.8",
     "uuid": "^3.3.2"
