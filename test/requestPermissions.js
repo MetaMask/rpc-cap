@@ -1,7 +1,7 @@
 const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController;
 const equal = require('fast-deep-equal');
-const rpcErrors = require('eth-json-rpc-errors');
+const rpcErrors = require('eth-rpc-errors');
 
 const USER_REJECTION_CODE = rpcErrors.ERROR_CODES.provider.userRejectedRequest;
 const INVALID_REQUEST_CODE = rpcErrors.ERROR_CODES.rpc.invalidRequest;
