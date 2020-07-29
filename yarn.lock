@@ -707,7 +707,7 @@ cliui@^6.0.0:
     strip-ansi "^6.0.0"
     wrap-ansi "^6.2.0"
 
-clone@^2.0.0, clone@^2.1.1, clone@^2.1.2:
+clone@^2.0.0, clone@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/clone/-/clone-2.1.2.tgz#1b7f4b9f591f1e8f83670401600345a02887435f"
   integrity sha1-G39Ln1kfHo+DZwQBYANFoCiHQ18=
@@ -2005,11 +2005,6 @@ inquirer@^7.0.0:
     string-width "^4.1.0"
     strip-ansi "^6.0.0"
     through "^2.3.6"
-
-intersect-objects@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/intersect-objects/-/intersect-objects-1.0.0.tgz#b7630d28994b89b0f04d44728106136549ce816e"
-  integrity sha512-MS1xypHKJhWopnJgn4IbitVvt2vFy2KjINQJAPhAtDejZ+ZbMDfyPc6JsS/mWFRt9Eoku4A4usE4f2loEOoeKQ==
 
 is-callable@^1.1.3, is-callable@^1.1.4:
   version "1.1.4"
