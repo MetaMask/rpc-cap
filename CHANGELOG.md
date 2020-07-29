@@ -9,6 +9,12 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
 
 ## [Unreleased]
 
+## [3.1.0] - 2020-07-29
+
+### Changed
+
+- Updated or removed a large number of dependencies, resulting in a smaller bundle and better performance
+
 ## [3.0.1] - 2020-07-06
 
 ### Changed
