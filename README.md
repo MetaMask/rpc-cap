@@ -72,7 +72,7 @@ Once this middleware is added to a server that is directing requests to a [JsonR
 
 ## Usage
 
-The capability system is initialized with a variety of options, and is itself a [gaba](https://github.com/MetaMask/gaba/) compatible controller, which defines how new permissions are persisted to state, and how they are restored in the constructor.
+The capability system is initialized with a variety of options, and is itself a [@metamask/controllers](https://github.com/MetaMask/controllers/)-compatible controller, which defines how new permissions are persisted to state, and how they are restored in the constructor.
 
 Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://github.com/MetaMask/rpc-cap/blob/master/src/%40types/index.d.ts#L7-L15) type method `providerMiddlewareFunction(domainInfo, req, res, next, end)`, which requires an assumed-authenticated `domain` object, followed by normal `json-rpc-engine` middleware parameters.
 
@@ -206,7 +206,7 @@ If consuming this module for your own JSON-RPC API, here are the options require
 
 #### initState?: CapabilitiesConfig
 
-Our persistence model depends on the gaba architecture, which means state updates are emitted via `controller.subscribe((update) => {/* handle update */});`
+Our persistence model depends on the `@metamask/controllers` architecture, which means state updates are emitted via `controller.subscribe((update) => {/* handle update */});`
 
 This `update` value should then be fed back in as the `initState` value.
 
