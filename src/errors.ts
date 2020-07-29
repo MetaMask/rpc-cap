@@ -1,8 +1,8 @@
 import { JsonRpcRequest } from 'json-rpc-engine';
 
-import { IEthErrors, IEthereumRpcError } from 'eth-json-rpc-errors/@types';
+import { IEthErrors, IEthereumRpcError } from 'eth-rpc-errors/@types';
 
-const ethErrors: IEthErrors = require('eth-json-rpc-errors').ethErrors;
+const ethErrors: IEthErrors = require('eth-rpc-errors').ethErrors;
 
 interface ErrorArg {
   message?: string;

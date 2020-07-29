@@ -1,8 +1,8 @@
 const test = require('tape');
 const CapabilitiesController = require('../dist').CapabilitiesController;
 
-const UNAUTHORIZED_CODE = require('eth-json-rpc-errors').ERROR_CODES.provider.unauthorized;
-const METHOD_NOT_FOUND_CODE = require('eth-json-rpc-errors').ERROR_CODES.rpc.methodNotFound;
+const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
+const METHOD_NOT_FOUND_CODE = require('eth-rpc-errors').ERROR_CODES.rpc.methodNotFound;
 
 test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result';
