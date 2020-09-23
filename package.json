@@ -39,7 +39,7 @@
     "@metamask/controllers": "^2.0.2",
     "eth-rpc-errors": "^3.0.0",
     "is-subset": "^0.1.1",
-    "json-rpc-engine": "^5.2.0",
+    "json-rpc-engine": "^5.3.0",
     "uuid": "^3.3.2"
   },
   "files": [
