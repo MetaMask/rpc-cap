@@ -9,11 +9,20 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
 
 ## [Unreleased]
 
+## [3.2.0] - 2020-09-23
+
+### Changed
+
+- Update various dependencies
+  - eth-rpc-errors@3.0.0 ([#116](https://github.com/MetaMask/rpc-cap/pull/116))
+  - json-rpc-engine@5.3.0 ([#115](https://github.com/MetaMask/rpc-cap/pull/115))
+  - @metamask/controllers@3.1.0 ([#114](https://github.com/MetaMask/rpc-cap/pull/114))
+
 ## [3.1.0] - 2020-07-29
 
 ### Changed
 
-- Updated or removed a large number of dependencies, resulting in a smaller bundle and better performance
+- Update/remove various dependencies, resulting in a smaller bundle and better performance
 
 ## [3.0.1] - 2020-07-06
 
@@ -38,3 +47,7 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
     - Update type of `metadata.id` from `string` to `string | number`
   - `IOriginMetadata`
     - Remove `id` property, which is now never used in practice
+
+[Unreleased]:https://github.com/MetaMask/rpc-cap/compare/v3.0.1...HEAD
+[3.1.0]:https://github.com/MetaMask/rpc-cap/compare/v3.0.1...v3.1.0
+[3.0.1]:https://github.com/MetaMask/rpc-cap/compare/v3.0.0...v3.0.1
