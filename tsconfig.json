@@ -1,27 +1,24 @@
 {
-  "include": ["src/", "index.ts"],
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "*": ["definitions/*"]
-    },
-    "declaration": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "downlevelIteration": true,
-    "experimentalDecorators": true,
-    "importHelpers": false,
+    "target": "es5",
     "module": "commonjs",
-    "moduleResolution": "node",
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "outDir": "dist",
-    "removeComments": false,
-    "sourceMap": true,
-    "inlineSources": true,
+    "lib": [
+      "es2015",
+      "dom"
+    ],
+    "declaration": true,
+    "outDir": "./build",
     "strict": true,
-    "target": "es6",
-    "typeRoots": ["./node_modules/@types", "./typings"]
-  }
+    "esModuleInterop": true,
+    "types": [
+      "node"
+    ],
+    "baseUrl": "./",
+    "paths": {
+      "*": ["typings/*"]
+    },
+  },
+  "include": [
+    "src"
+  ]
 }

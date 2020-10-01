@@ -1,18 +1,18 @@
 {
-  "name": "rpc-cap",
-  "version": "3.2.0",
+  "name": "@xops.net/rpc-cap",
+  "version": "0.0.0-development",
   "description": "A module for adding an object-capabilities system to any JSON-RPC API as middleware for json-rpc-engine",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
   "scripts": {
-    "build": "yarn build:typescript && yarn build:types",
-    "build:typescript": "rm -rf dist && tsc",
+    "build": "npm run build:typescript",
+    "build:typescript": "rm -rf build && tsc",
     "build:types": "./scripts/copyDistTypes.sh",
-    "build:watch": "yarn build && tsc -w",
+    "build:watch": "npm run build && tsc -w",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js --fix .",
-    "prepublishOnly": "yarn build",
-    "test": "yarn build:typescript && node test",
+    "prepublishOnly": "npm run build",
+    "test": "npm run build:typescript && node test",
     "test:coverage": "nyc node test"
   },
   "keywords": [],
@@ -20,12 +20,12 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MetaMask/rpc-cap.git"
+    "url": "git+https://github.com/xops/rpc-cap.git"
   },
   "devDependencies": {
     "@istanbuljs/nyc-config-typescript": "^0.1.3",
     "@metamask/eslint-config": "^1.0.0",
-    "@types/node": "^12.0.7",
+    "@types/node": "^12.12.62",
     "@types/uuid": "^3.4.4",
     "@typescript-eslint/eslint-plugin": "^2.17.0",
     "@typescript-eslint/parser": "^2.17.0",
@@ -35,14 +35,14 @@
     "typescript": "^4.0.3"
   },
   "dependencies": {
-    "fast-deep-equal": "^2.0.1",
-    "@metamask/controllers": "^3.1.0",
+    "@xops.net/metamask-controllers-base": "^3.2.4",
     "eth-rpc-errors": "^3.0.0",
+    "fast-deep-equal": "^2.0.1",
     "is-subset": "^0.1.1",
     "json-rpc-engine": "^5.3.0",
     "uuid": "^3.3.2"
   },
   "files": [
-    "dist/"
+    "build/"
   ]
 }

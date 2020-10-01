@@ -1,5 +1,9 @@
 # `rpc-cap` [![CircleCI](https://circleci.com/gh/MetaMask/rpc-cap.svg?style=svg)](https://circleci.com/gh/MetaMask/rpc-cap)
 
+##### Note:
+
+This is forked from https://github.com/MetaMask/rpc-cap/ but uses https://github.com/xops/metamask-controllers-base to get rid of the dependency on web3/other libs, and improvements like [`responseFilter` uses fast-deep-equal](https://github.com/MetaMask/rpc-cap/pull/119)
+
 ## JSON RPC Capabilities Middleware 
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine), to instantly add a user-consent based permissions system on top of any JSON-RPC API.

@@ -36,4 +36,4 @@ function methodNotFound (opts: MethodNotFoundArg): IEthereumRpcError<JsonRpcRequ
 function userRejectedRequest (request?: JsonRpcRequest<any>): IEthereumRpcError<JsonRpcRequest<any>> {
   return ethErrors.provider.userRejectedRequest({ data: request });
 }
-export { unauthorized, methodNotFound, invalidReq, internalError, userRejectedRequest, IEthErrors };
+export { unauthorized, methodNotFound, invalidReq, internalError, userRejectedRequest };

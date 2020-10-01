@@ -58,7 +58,7 @@ export interface RpcCapDomainEntry {
   permissions: IOcapLdCapability[];
 }
 
-type IOriginString = string;
+export type IOriginString = string;
 
 export interface CapabilitiesConfig {
   requestUserApproval: UserApprovalPrompt;
@@ -69,7 +69,7 @@ export interface CapabilitiesConfig {
   safeMethods?: string[];
 }
 
-interface RpcCapDomainRegistry {
+export interface RpcCapDomainRegistry {
   [domain: string]: RpcCapDomainEntry;
 }
 

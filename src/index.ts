@@ -12,7 +12,7 @@ import {
   JsonRpcEngine,
 } from 'json-rpc-engine';
 
-import { BaseController } from '@metamask/controllers';
+import { BaseController } from '@xops.net/metamask-controllers-base';
 
 import {
   ICaveatFunction,
@@ -21,7 +21,7 @@ import {
   limitResponseLength,
   forceParams,
   ICaveatFunctionGenerator,
-} from './src/caveats';
+} from './caveats';
 
 import {
   RpcCapInterface,
@@ -37,7 +37,7 @@ import {
   RpcCapDomainRegistry,
   IOriginString,
   PermittedJsonRpcMiddleware,
-} from './src/@types';
+} from './@types';
 
 import {
   unauthorized,
@@ -45,13 +45,13 @@ import {
   invalidReq,
   userRejectedRequest,
   methodNotFound,
-} from './src/errors';
+} from './errors';
 
 export type AnnotatedJsonRpcEngine = {
   domain?: IOriginString;
 } & JsonRpcEngine;
 
-import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
+import { IOcapLdCapability, IOcapLdCaveat } from './@types/ocap-ld';
 
 const JsonRpcEngine = require('json-rpc-engine');
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
@@ -880,3 +880,5 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       });
   }
 }
+export * from './@types/index';
+export * from './@types/ocap-ld';

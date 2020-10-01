@@ -1,8 +1,8 @@
 import { JsonRpcMiddleware } from 'json-rpc-engine';
 import { IOcapLdCaveat } from './@types/ocap-ld';
 import { unauthorized } from './errors';
-import isSubset from 'is-subset';
 import equal from 'fast-deep-equal';
+import isSubset from 'is-subset';
 
 export type ICaveatFunction = JsonRpcMiddleware;
 
@@ -68,7 +68,7 @@ export const limitResponseLength: ICaveatFunctionGenerator = function limitRespo
 export const forceParams: ICaveatFunctionGenerator = function forceParams (serialized: IOcapLdCaveat) {
   const { value } = serialized;
   return (req, _, next): void => {
-    req.params = [ ...value ];
+    req.params = [...value];
     next();
   };
 };

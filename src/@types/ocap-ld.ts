@@ -9,7 +9,7 @@
  * in that direction at digitalbazaar:
  * https://github.com/digitalbazaar/ocapld.js/
  */
-interface IOcapLdCapability {
+export interface IOcapLdCapability {
   '@context': string[];
   // A GUID representing this method.
   id: string;
