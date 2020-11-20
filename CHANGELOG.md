@@ -9,6 +9,12 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
 
 ## [Unreleased]
 
+## [3.2.1] - 2020-11-19
+
+### Changed
+
+- @metamask/controllers@5.0.0 ([#121](https://github.com/MetaMask/rpc-cap/pull/121))
+
 ## [3.2.0] - 2020-09-23
 
 ### Changed
@@ -48,6 +54,8 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
   - `IOriginMetadata`
     - Remove `id` property, which is now never used in practice
 
-[Unreleased]:https://github.com/MetaMask/rpc-cap/compare/v3.0.1...HEAD
+[Unreleased]:https://github.com/MetaMask/rpc-cap/compare/v3.2.1...HEAD
+[3.2.1]:https://github.com/MetaMask/rpc-cap/compare/v3.2.1...v3.2.1
+[3.2.0]:https://github.com/MetaMask/rpc-cap/compare/v3.1.0...v3.2.0
 [3.1.0]:https://github.com/MetaMask/rpc-cap/compare/v3.0.1...v3.1.0
 [3.0.1]:https://github.com/MetaMask/rpc-cap/compare/v3.0.0...v3.0.1
