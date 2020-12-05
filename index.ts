@@ -310,6 +310,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     return engine;
   }
 
+  /**
+   * Checks the permissions for the given domain, or an empty array.
+   *
+   * @param domain - The domain whose permissions to retrieve.
+   * @returns The permissions for the domain.
+   */
   getPermissionsForDomain (domain: string): IOcapLdCapability[] {
     const { domains = {} } = this.state;
     if (domains[domain]) {
@@ -324,17 +330,41 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * Follows the delegation chain of the first matching permission found.
    *
    * @param {string} domain - The domain whose permission to retrieve.
-   * @param {string} method - The method
+   * @param {string} method - The method of the permission to retrieve.
    */
   getPermission (domain: string, method: string): IOcapLdCapability | undefined {
-    const permissions = this.getPermissionsForDomain(domain).filter(p => {
-      return p.parentCapability === method;
-    });
+    const permissions = this.getPermissionsForDomain(domain)
+      .filter(permission => {
+        return permission.parentCapability === method;
+      });
     if (permissions.length > 0) {
       return permissions.shift();
     }
 
     return undefined;
+  }
+
+  /**
+   * Checks whether the given domain has permissions.
+   *
+   * @param domain - The domain to check.
+   * @returns Whether the given domain has any permissions.
+   */
+  hasPermissions (domain: string): boolean {
+    return Boolean(this.state.domains[domain]);
+  }
+
+  /**
+   * Checks whether the given domain has the given permission.
+   *
+   * @param domain - The domain to check.
+   * @param method - The method of the permission to check for.
+   * @returns Whether the given domain has the given permission.
+   */
+  hasPermission (domain: string, method: string): boolean {
+    return this.getPermissionsForDomain(domain).some(permission => {
+      return permission.parentCapability === method;
+    });
   }
 
   /**
