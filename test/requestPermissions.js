@@ -1,5 +1,5 @@
 const test = require('tape');
-const CapabilitiesController = require('../dist').CapabilitiesController;
+const { CapabilitiesController } = require('../dist');
 const equal = require('fast-deep-equal');
 const rpcErrors = require('eth-rpc-errors');
 

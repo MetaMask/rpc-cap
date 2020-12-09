@@ -351,7 +351,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @returns Whether the given domain has any permissions.
    */
   hasPermissions (domain: string): boolean {
-    return Boolean(this.state.domains[domain]);
+    return Boolean(this.state.domains?.[domain]);
   }
 
   /**
