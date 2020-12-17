@@ -5,3 +5,4 @@ dist/
 .python-version
 *.log
 .nyc_output
+coverage

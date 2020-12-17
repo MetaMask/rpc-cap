@@ -1,8 +1,8 @@
 // / <reference path="../index.ts" />
 
 const test = require('tape');
-const CapabilitiesController = require('../dist').CapabilitiesController;
-const sendRpcMethodWithResponse = require('./lib/utils').sendRpcMethodWithResponse;
+const { CapabilitiesController } = require('../dist');
+const { sendRpcMethodWithResponse } = require('./lib/utils');
 
 const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
 
