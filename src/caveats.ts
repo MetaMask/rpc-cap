@@ -2,6 +2,7 @@ import { JsonRpcMiddleware } from 'json-rpc-engine';
 import { IOcapLdCaveat } from './@types/ocap-ld';
 import { unauthorized } from './errors';
 import isSubset from 'is-subset';
+import equal from 'fast-deep-equal';
 
 export type ICaveatFunction = JsonRpcMiddleware;
 
@@ -25,7 +26,7 @@ export const requireParams: ICaveatFunctionGenerator = function requireParams (s
 };
 
 /*
- * Filters array results shallowly.
+ * Filters array results.
  */
 export const filterResponse: ICaveatFunctionGenerator = function filterResponse (serialized: IOcapLdCaveat) {
   const { value } = serialized;
@@ -34,7 +35,10 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse 
     next((done) => {
       if (Array.isArray(res.result)) {
         res.result = res.result.filter((item) => {
-          return value.includes(item);
+          const findResult = value.find((v: any) => {
+            return equal(v, item);
+          });
+          return findResult !== undefined;
         });
       }
       done();
