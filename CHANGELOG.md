@@ -9,6 +9,16 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
 
 ## [Unreleased]
 
+## [4.0.0] - 2020-12-22
+
+### Changed
+
+- **(SEMVER-MAJOR)** `filterResponse` caveat now performs a deep equality check ([#127](https://github.com/MetaMask/rpc-cap/pull/127))
+  - The filter was previously just a strict equality check per array item.
+  Anything that can be compared by [`fast-deep-equal@^2.0.1`](https://npmjs.com/package/fast-deep-equal) can now be added to the caveat value.
+  Whether something _should_ be added we leave to the consumer.
+  - Since consumers may have relied on the previous behavior for object and/or array values, this change justifies a major version bump.
+
 ## [3.2.1] - 2020-11-19
 
 ### Changed
@@ -43,8 +53,8 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
 
 ### Changed
 
-- **BREAKING:** `requestPermissionsMiddleware`: Stop using or setting the `id` property from the `IOriginMetadata` parameter
-- **BREAKING:** `requestPermissionsMiddleware`: Default to `req.id` value as the pending permissions request object `id`, with `uuid()` as a fallback
+- **(SEMVER-MAJOR)** `requestPermissionsMiddleware`: Stop using or setting the `id` property from the `IOriginMetadata` parameter
+- **(SEMVER-MAJOR)** `requestPermissionsMiddleware`: Default to `req.id` value as the pending permissions request object `id`, with `uuid()` as a fallback
 - `requestPermissionsMiddleware`: Rename `IOriginMetadata` parameter from `metadata` to `domain`, in line with other middleware functions
   - Its former name led to confused usage by this package and its consumers
 - Types

@@ -26,7 +26,7 @@ export const requireParams: ICaveatFunctionGenerator = function requireParams (s
 };
 
 /*
- * Filters array results.
+ * Filters array results deeply.
  */
 export const filterResponse: ICaveatFunctionGenerator = function filterResponse (serialized: IOcapLdCaveat) {
   const { value } = serialized;
@@ -35,7 +35,7 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse 
     next((done) => {
       if (Array.isArray(res.result)) {
         res.result = res.result.filter((item) => {
-          const findResult = value.find((v: any) => {
+          const findResult = value.find((v: unknown) => {
             return equal(v, item);
           });
           return findResult !== undefined;
