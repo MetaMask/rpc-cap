@@ -14,7 +14,7 @@ For changes prior to `3.0.0`, please see the package's [GitHub Releases](https:/
 ### Changed
 
 - **(SEMVER-MAJOR)** `filterResponse` caveat now performs a deep equality check ([#127](https://github.com/MetaMask/rpc-cap/pull/127))
-  - The filter was previously just a strict equality check.
+  - The filter was previously just a strict equality check per array item.
   Anything that can be compared by [`fast-deep-equal@^2.0.1`](https://npmjs.com/package/fast-deep-equal) can now be added to the caveat value.
   Whether something _should_ be added we leave to the consumer.
   - Since consumers may have relied on the previous behavior for object and/or array values, this change justifies a major version bump.
