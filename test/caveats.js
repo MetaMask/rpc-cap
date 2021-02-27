@@ -937,6 +937,26 @@ test('addCaveatFor', async (t) => {
       t.end();
     });
 
+    test('addCaveatFor throws on adding non-existing type', async (t) => {
+
+      try {
+
+        ctrl.addCaveatFor(
+          domain.origin, 'testMethod', {
+            type: 'NON_EXISTING_TYPE',
+            value: [0, 1],
+            name: 'NOT_PREVIOUSLY_ADDED',
+          }
+        );
+
+        t.notOk(true, 'should have thrown');
+
+      } catch (err) {
+        t.ok(err, 'did throw');
+      }
+      t.end();
+    });
+
     test('final state after multiple addCaveatFor calls', async (t) => {
 
       try {
