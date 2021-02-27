@@ -8,10 +8,24 @@ export type ICaveatFunction = JsonRpcMiddleware;
 
 export type ICaveatFunctionGenerator = (caveat: IOcapLdCaveat) => ICaveatFunction;
 
+export enum CaveatTypes {
+  filterResponse = 'filterResponse',
+  forceParams = 'forceParams',
+  limitResponseLength = 'limitResponseLength',
+  requireParams = 'requireParams',
+}
+
+export const caveatFunctions = {
+  filterResponse,
+  forceParams,
+  limitResponseLength,
+  requireParams,
+};
+
 /*
  * Require that the request params match those specified by the caveat value.
  */
-export const requireParams: ICaveatFunctionGenerator = function requireParams (serialized: IOcapLdCaveat) {
+export function requireParams (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, res, next, end): void => {
     const permitted = isSubset(req.params, value);
@@ -23,12 +37,12 @@ export const requireParams: ICaveatFunctionGenerator = function requireParams (s
 
     next();
   };
-};
+}
 
 /*
  * Filters array results deeply.
  */
-export const filterResponse: ICaveatFunctionGenerator = function filterResponse (serialized: IOcapLdCaveat) {
+export function filterResponse (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (_req, res, next, _end): void => {
 
@@ -44,12 +58,12 @@ export const filterResponse: ICaveatFunctionGenerator = function filterResponse 
       done();
     });
   };
-};
+}
 
 /*
  * Limits array results to a specific integer length.
  */
-export const limitResponseLength: ICaveatFunctionGenerator = function limitResponseLength (serialized: IOcapLdCaveat) {
+export function limitResponseLength (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (_req, res, next, _end): void => {
 
@@ -60,15 +74,15 @@ export const limitResponseLength: ICaveatFunctionGenerator = function limitRespo
       done();
     });
   };
-};
+}
 
 /*
  * Forces the method to be called with given params.
  */
-export const forceParams: ICaveatFunctionGenerator = function forceParams (serialized: IOcapLdCaveat) {
+export function forceParams (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, _, next): void => {
     req.params = [ ...value ];
     next();
   };
-};
+}
