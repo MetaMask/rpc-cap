@@ -12,20 +12,20 @@ export enum CaveatTypes {
   filterResponse = 'filterResponse',
   forceParams = 'forceParams',
   limitResponseLength = 'limitResponseLength',
-  requireParams = 'requireParams',
+  requireParamsIsSubset = 'requireParamsIsSubset',
 }
 
 export const caveatFunctions = {
   filterResponse,
   forceParams,
   limitResponseLength,
-  requireParams,
+  requireParamsIsSubset,
 };
 
 /*
- * Require that the request params match those specified by the caveat value.
+ * Require that the request params are a subset of the caveat value.
  */
-export function requireParams (serialized: IOcapLdCaveat): ICaveatFunction {
+export function requireParamsIsSubset (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, res, next, end): void => {
     const permitted = isSubset(req.params, value);
@@ -82,7 +82,7 @@ export function limitResponseLength (serialized: IOcapLdCaveat): ICaveatFunction
 export function forceParams (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, _, next): void => {
-    req.params = [ ...value ];
+    req.params = Array.isArray(value) ? [ ...value ] : { ...value };
     next();
   };
 }
