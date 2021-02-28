@@ -130,7 +130,7 @@ test('requireParamsIsSuperset caveat throws if params is not a superset of the c
     restrictedMethods: {
       'write': {
         method: (req, res, _next, end) => {
-          const params = req.params;
+          const { params } = req;
           res.result = params;
           end();
         },

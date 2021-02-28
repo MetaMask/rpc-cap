@@ -42,7 +42,7 @@ export function requireParamsIsSubset(serialized: OcapLdCaveat): CaveatFunction<
  * Require that request.params is a superset of or equal to the caveat value.
  * Arrays are order-dependent, objects are order-independent.
  */
-export function requireParamsIsSuperset (serialized: IOcapLdCaveat): ICaveatFunction {
+export function requireParamsIsSuperset(serialized: OcapLdCaveat): CaveatFunction<unknown[] | Record<string, unknown>, unknown> {
   const { value } = serialized;
   return (req, res, next, end): void => {
     // Ensure that the params are a superset of or equal to the caveat value
