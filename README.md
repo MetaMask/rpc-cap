@@ -138,7 +138,8 @@ Currently all supported caveats can be found in the [Caveats.ts file](./src/cave
 
 Right now the supported caveat types are simple, to demonstrate the concept:
 
-- requireParamsIsSuperset: Ensures that the method can only be called with a superset of some hard-defined parameters.
+- requireParamsIsSubset: Ensures that the method can only be called with a subset of some predefined parameters.
+- requireParamsIsSuperset: Ensures that the method can only be called with a superset of some predefined parameters.
 - filterResponse: Ensures that the response will only include explicitly permitted values in it (if an array).
 - limitResponse: Ensures that the response will only include a maximum number of entries as defined by the value (if an array).
 - forceParams: Overwrites the params of all calls to the method with a specified list of params.
