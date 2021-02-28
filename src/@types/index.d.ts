@@ -7,10 +7,10 @@ import {
   JsonRpcResponse,
   PendingJsonRpcResponse,
 } from 'json-rpc-engine';
-import { IOcapLdCapability } from './ocap-ld';
+import { OcapLdCapability } from './ocap-ld';
 
 export type AuthenticatedJsonRpcMiddleware = (
-  domain: IOriginMetadata,
+  domain: OriginMetadata,
   req: JsonRpcRequest<any>,
   res: PendingJsonRpcResponse<any>,
   next: JsonRpcEngineNextCallback,
@@ -21,18 +21,18 @@ export type AuthenticatedJsonRpcMiddleware = (
  * Used for prompting the user about a proposed new permission.
  * Includes information about the domain granted, as well as the permissions assigned.
  */
-export interface IPermissionsRequest {
-  metadata: IPermissionsRequestMetadata ;
-  permissions: IRequestedPermissions;
+export interface PermissionsRequest {
+  metadata: PermissionsRequestMetadata ;
+  permissions: RequestedPermissions;
 }
 
-export interface IPermissionsRequestMetadata {
+export interface PermissionsRequestMetadata {
   id: string;
-  origin: IOriginString;
+  origin: OriginString;
 }
 
-export interface IOriginMetadata {
-  origin: IOriginString;
+export interface OriginMetadata {
+  origin: OriginString;
 }
 
 /**
@@ -41,25 +41,25 @@ export interface IOriginMetadata {
  *
  * Uses a map to emphasize that there will ultimately be one set of permissions per domain per method.
  *
- * Is a key-value store of method names, to IMethodRequest objects, which have a caveats array.
+ * Is a key-value store of method names, to MethodRequest objects, which have a caveats array.
  */
-export interface IRequestedPermissions {
-  [methodName: string]: IMethodRequest;
+export interface RequestedPermissions {
+  [methodName: string]: MethodRequest;
 }
 
 /**
  * Object used to request a given permission within reasonable terms.
  * This can be an empty object, but can also include a caveat array.
  */
-type IMethodRequest = Partial<IOcapLdCapability>;
+type MethodRequest = Partial<OcapLdCapability>;
 
-export type UserApprovalPrompt = (permissionsRequest: IPermissionsRequest) => Promise<IRequestedPermissions>;
+export type UserApprovalPrompt = (permissionsRequest: PermissionsRequest) => Promise<RequestedPermissions>;
 
 export interface RpcCapDomainEntry {
-  permissions: IOcapLdCapability[];
+  permissions: OcapLdCapability[];
 }
 
-type IOriginString = string;
+type OriginString = string;
 
 export interface CapabilitiesConfig {
   requestUserApproval: UserApprovalPrompt;
@@ -92,12 +92,12 @@ export interface RestrictedMethodMap {
 }
 
 export interface RpcCapInterface {
-  getPermissionsForDomain: (domain: string) => IOcapLdCapability[];
-  getPermission: (domain: string, method: string) => IOcapLdCapability | undefined;
-  getPermissionsRequests: () => IPermissionsRequest[];
+  getPermissionsForDomain: (domain: string) => OcapLdCapability[];
+  getPermission: (domain: string, method: string) => OcapLdCapability | undefined;
+  getPermissionsRequests: () => PermissionsRequest[];
   grantNewPermissions (
     domain: string,
-    approved: IRequestedPermissions,
+    approved: RequestedPermissions,
     res: JsonRpcResponse<any>,
     end: JsonRpcEngineEndCallback,
     granter?: string
@@ -110,10 +110,10 @@ export interface RpcCapInterface {
   addPermissionsFor: (
     domainName: string,
     newPermissions: {
-      [methodName: string]: IOcapLdCapability;
+      [methodName: string]: OcapLdCapability;
     }
   ) => void;
-  removePermissionsFor: (domain: string, permissionsToRemove: IOcapLdCapability[]) => void;
+  removePermissionsFor: (domain: string, permissionsToRemove: OcapLdCapability[]) => void;
   createBoundMiddleware: <T, U>(domain: string) => PermittedJsonRpcMiddleware<T, U>;
   createPermissionedEngine: (domain: string) => JsonRpcEngine;
 

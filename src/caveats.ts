@@ -1,12 +1,12 @@
 import { JsonRpcMiddleware } from 'json-rpc-engine';
 import isSubset from 'is-subset';
 import equal from 'fast-deep-equal';
-import { IOcapLdCaveat } from './@types/ocap-ld';
+import { OcapLdCaveat } from './@types/ocap-ld';
 import { unauthorized } from './errors';
 
-export type ICaveatFunction<T, U> = JsonRpcMiddleware<T, U>;
+export type CaveatFunction<T, U> = JsonRpcMiddleware<T, U>;
 
-export type ICaveatFunctionGenerator<T, U> = (caveat: IOcapLdCaveat) => ICaveatFunction<T, U>;
+export type CaveatFunctionGenerator<T, U> = (caveat: OcapLdCaveat) => CaveatFunction<T, U>;
 
 export const caveatFunctions = {
   filterResponse,
@@ -25,7 +25,7 @@ export const CaveatTypes = Object.keys(caveatFunctions).reduce((map, name) => {
  * Require that request.params is a subset of or equal to the caveat value.
  * Arrays are order-dependent, objects are order-independent.
  */
-export function requireParamsIsSubset(serialized: IOcapLdCaveat): ICaveatFunction<unknown[] | Record<string, unknown>, unknown> {
+export function requireParamsIsSubset(serialized: OcapLdCaveat): CaveatFunction<unknown[] | Record<string, unknown>, unknown> {
   const { value } = serialized;
   return (req, res, next, end): void => {
     // Ensure that the params are a subset of or equal to the caveat value
@@ -58,7 +58,7 @@ export function requireParamsIsSuperset (serialized: IOcapLdCaveat): ICaveatFunc
 /*
  * Filters array results deeply.
  */
-export function filterResponse(serialized: IOcapLdCaveat): ICaveatFunction<unknown, unknown[]> {
+export function filterResponse(serialized: OcapLdCaveat): CaveatFunction<unknown, unknown[]> {
   const { value } = serialized;
   return (_req, res, next, _end): void => {
     next((done) => {
@@ -79,7 +79,7 @@ export function filterResponse(serialized: IOcapLdCaveat): ICaveatFunction<unkno
 /*
  * Limits array results to a specific integer length.
  */
-export function limitResponseLength(serialized: IOcapLdCaveat): ICaveatFunction<unknown, unknown[]> {
+export function limitResponseLength(serialized: OcapLdCaveat): CaveatFunction<unknown, unknown[]> {
   const { value } = serialized;
   return (_req, res, next, _end): void => {
 
@@ -95,7 +95,7 @@ export function limitResponseLength(serialized: IOcapLdCaveat): ICaveatFunction<
 /*
  * Forces the method to be called with given params.
  */
-export function forceParams(serialized: IOcapLdCaveat): ICaveatFunction<unknown, unknown> {
+export function forceParams(serialized: OcapLdCaveat): CaveatFunction<unknown, unknown> {
   const { value } = serialized;
   return (req, _, next): void => {
     req.params = Array.isArray(value) ? [...value] : { ...value };
