@@ -8,34 +8,50 @@ export type ICaveatFunction = JsonRpcMiddleware;
 
 export type ICaveatFunctionGenerator = (caveat: IOcapLdCaveat) => ICaveatFunction;
 
-export enum CaveatTypes {
-  filterResponse = 'filterResponse',
-  forceParams = 'forceParams',
-  limitResponseLength = 'limitResponseLength',
-  requireParamsIsSubset = 'requireParamsIsSubset',
-}
-
 export const caveatFunctions = {
   filterResponse,
   forceParams,
   limitResponseLength,
   requireParamsIsSubset,
+  requireParamsIsSuperset,
 };
 
-/*
- * Require that the request params are a subset of the caveat value.
+export const CaveatTypes = Object.keys(caveatFunctions).reduce((map, name) => {
+  map[name] = name;
+  return map;
+}, {} as Record<string, string>);
+
+/**
+ * Require that request.params is a subset of or equal to the caveat value.
+ * Arrays are order-dependent, objects are order-independent.
  */
 export function requireParamsIsSubset (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, res, next, end): void => {
-    const permitted = isSubset(req.params, value);
-
-    if (!permitted) {
+    // Ensure that the params are a subset of or equal to the caveat value
+    if (!isSubset(value, req.params)) {
       res.error = unauthorized({ data: req });
       return end(res.error);
     }
 
-    next();
+    return next();
+  };
+}
+
+/**
+ * Require that request.params is a superset of or equal to the caveat value.
+ * Arrays are order-dependent, objects are order-independent.
+ */
+export function requireParamsIsSuperset (serialized: IOcapLdCaveat): ICaveatFunction {
+  const { value } = serialized;
+  return (req, res, next, end): void => {
+    // Ensure that the params are a superset of or equal to the caveat value
+    if (!isSubset(req.params, value)) {
+      res.error = unauthorized({ data: req });
+      return end(res.error);
+    }
+
+    return next();
   };
 }
 
