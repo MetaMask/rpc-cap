@@ -1,8 +1,8 @@
 import { JsonRpcMiddleware } from 'json-rpc-engine';
-import { IOcapLdCaveat } from './@types/ocap-ld';
-import { unauthorized } from './errors';
 import isSubset from 'is-subset';
 import equal from 'fast-deep-equal';
+import { IOcapLdCaveat } from './@types/ocap-ld';
+import { unauthorized } from './errors';
 
 export type ICaveatFunction = JsonRpcMiddleware;
 
@@ -25,7 +25,7 @@ export const CaveatTypes = Object.keys(caveatFunctions).reduce((map, name) => {
  * Require that request.params is a subset of or equal to the caveat value.
  * Arrays are order-dependent, objects are order-independent.
  */
-export function requireParamsIsSubset (serialized: IOcapLdCaveat): ICaveatFunction {
+export function requireParamsIsSubset(serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, res, next, end): void => {
     // Ensure that the params are a subset of or equal to the caveat value
@@ -58,7 +58,7 @@ export function requireParamsIsSuperset (serialized: IOcapLdCaveat): ICaveatFunc
 /*
  * Filters array results deeply.
  */
-export function filterResponse (serialized: IOcapLdCaveat): ICaveatFunction {
+export function filterResponse(serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (_req, res, next, _end): void => {
 
@@ -79,7 +79,7 @@ export function filterResponse (serialized: IOcapLdCaveat): ICaveatFunction {
 /*
  * Limits array results to a specific integer length.
  */
-export function limitResponseLength (serialized: IOcapLdCaveat): ICaveatFunction {
+export function limitResponseLength(serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (_req, res, next, _end): void => {
 
@@ -95,10 +95,10 @@ export function limitResponseLength (serialized: IOcapLdCaveat): ICaveatFunction
 /*
  * Forces the method to be called with given params.
  */
-export function forceParams (serialized: IOcapLdCaveat): ICaveatFunction {
+export function forceParams(serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, _, next): void => {
-    req.params = Array.isArray(value) ? [ ...value ] : { ...value };
+    req.params = Array.isArray(value) ? [...value] : { ...value };
     next();
   };
 }

@@ -1,8 +1,8 @@
 const test = require('tape');
-const { CapabilitiesController } = require('../dist');
 const equal = require('fast-deep-equal');
+const { CapabilitiesController } = require('../dist');
 
-function noop () {}
+function noop() {}
 
 const arbitraryCaps = [
   {
@@ -32,12 +32,12 @@ test('getPermissions with none returns empty object', async (t) => {
 
   ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-  function next () {
+  function next() {
     t.ok(false, 'next should not be called');
     t.end();
   }
 
-  function end (reason) {
+  function end(reason) {
     t.error(reason, 'error thrown');
     t.ok(equal(res.result, expected), 'should be equal');
     t.end();
@@ -64,12 +64,12 @@ test('getPermissions with some returns them', async (t) => {
 
   ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-  function next () {
+  function next() {
     t.ok(false, 'next should not be called');
     t.end();
   }
 
-  function end (reason) {
+  function end(reason) {
     t.error(reason, 'error thrown');
     t.ok(equal(res.result, expected), 'should be equal');
     t.end();

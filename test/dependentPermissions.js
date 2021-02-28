@@ -1,6 +1,6 @@
 const test = require('tape');
+const { JsonRpcEngine } = require('json-rpc-engine');
 const { CapabilitiesController } = require('../dist');
-const JsonRpcEngine = require('json-rpc-engine');
 
 test('restricted permission gets restricted provider', async (t) => {
   const name = 'Glen Runciter';
@@ -160,7 +160,7 @@ test('permitted provider can pass through to other methods', async (t) => {
   engine.push(ctrl.providerMiddlewareFunction.bind(ctrl, domain));
   engine.push(getNameMiddleware);
 
-  function send (request) {
+  function send(request) {
     return new Promise((res, rej) => {
       engine.handle(request, (err, result) => {
         if (err || result.error) {
@@ -196,16 +196,16 @@ test('permitted provider can pass through to other methods', async (t) => {
   }
 });
 
-async function sendRpcMethodWithResponse (ctrl, domain, req) {
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
   const res = {};
   return new Promise((resolve, reject) => {
     ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-    function next () {
+    function next() {
       reject();
     }
 
-    function end (reason) {
+    function end(reason) {
       if (reason) {
         reject(reason);
       }

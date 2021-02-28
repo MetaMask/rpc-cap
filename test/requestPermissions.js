@@ -1,7 +1,7 @@
 const test = require('tape');
-const { CapabilitiesController } = require('../dist');
 const equal = require('fast-deep-equal');
 const rpcErrors = require('eth-rpc-errors');
+const { CapabilitiesController } = require('../dist');
 
 const USER_REJECTION_CODE = rpcErrors.ERROR_CODES.provider.userRejectedRequest;
 const INVALID_REQUEST_CODE = rpcErrors.ERROR_CODES.rpc.invalidRequest;
@@ -30,12 +30,12 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
 
   ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-  function next () {
+  function next() {
     t.ok(false, 'next should not be called');
     t.end();
   }
 
-  function end (reason) {
+  function end(reason) {
     t.ok(reason, 'error thrown');
     t.equal(reason.code, USER_REJECTION_CODE, 'Rejection error returned');
     t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still');
@@ -67,12 +67,12 @@ test('requestPermissions with invalid requested permissions object fails', async
 
   ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-  function next () {
+  function next() {
     t.ok(false, 'next should not be called');
     t.end();
   }
 
-  function end (reason) {
+  function end(reason) {
     t.ok(reason, 'error thrown');
     t.equal(reason.code, INVALID_REQUEST_CODE, 'Invalid request error returned');
     t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still');
@@ -187,7 +187,7 @@ test('uses req.id as metadata.id of pending permissions request object', async (
       if (index === requestIds.length - 1) {
         t.end();
       } else {
-        index = index + 1;
+        index += 1;
       }
       return Promise.resolve({});
     },
@@ -203,22 +203,22 @@ test('uses req.id as metadata.id of pending permissions request object', async (
     ctrl.providerMiddlewareFunction(domain, getReq(id), res, next, () => {});
   }
 
-  function next () {
+  function next() {
     t.fail('next should not be called');
     t.end();
   }
 });
 
-async function sendRpcMethodWithResponse (ctrl, domain, req) {
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
   const res = {};
   return new Promise((resolve, reject) => {
     ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-    function next () {
+    function next() {
       reject();
     }
 
-    function end (reason) {
+    function end(reason) {
       if (reason) {
         reject(reason);
       }

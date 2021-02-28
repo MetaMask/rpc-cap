@@ -18,12 +18,12 @@ test('safe method should pass through', async (t) => {
 
   ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-  function next () {
+  function next() {
     t.ok(true, 'next was called');
     t.end();
   }
 
-  function end (reason) {
+  function end(reason) {
     t.error(reason, 'error thrown');
     t.equal(res.result, WRITE_RESULT);
     t.end();
@@ -63,12 +63,12 @@ test('requesting restricted method is rejected', async (t) => {
   const res = {};
   ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-  function next () {
+  function next() {
     t.ok(false, 'next should not be called');
     t.end();
   }
 
-  function end (reason) {
+  function end(reason) {
     t.ok(reason, 'error should be thrown');
     t.ok(res.error, 'should have error object');
     t.equal(reason.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`);
@@ -111,12 +111,12 @@ test('requesting unknown method is rejected', async (t) => {
   const res = {};
   ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-  function next () {
+  function next() {
     t.ok(false, 'next should not be called');
     t.end();
   }
 
-  function end (reason) {
+  function end(reason) {
     t.ok(reason, 'error should be thrown');
     t.ok(res.error, 'should have error object');
     t.equal(reason.code, METHOD_NOT_FOUND_CODE, `error code should be ${METHOD_NOT_FOUND_CODE}.`);
@@ -175,16 +175,16 @@ test('requesting restricted method with permission is called', async (t) => {
   }
 });
 
-async function sendRpcMethodWithResponse (ctrl, domain, req) {
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
   const res = {};
   return new Promise((resolve, reject) => {
     ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-    function next () {
+    function next() {
       reject();
     }
 
-    function end (reason) {
+    function end(reason) {
       if (reason) {
         reject(reason);
       }

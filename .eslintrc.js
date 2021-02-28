@@ -2,12 +2,13 @@ module.exports = {
   extends: [
     '@metamask/eslint-config',
     '@metamask/eslint-config/config/nodejs',
-    '@metamask/eslint-config/config/typescript',
   ],
   rules: {
-    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-    '@typescript-eslint/interface-name-prefix': 'off',
+    // '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
   },
+  plugins: [
+    'json',
+  ],
   ignorePatterns: [
     '!.eslintrc.js',
     'node_modules/',
@@ -15,12 +16,24 @@ module.exports = {
   ],
   overrides: [
     {
-      files: ['*.js'],
+      files: [
+        '**/*.ts',
+      ],
+      extends: [
+        '@metamask/eslint-config/config/typescript',
+      ],
+    },
+    {
+      files: [
+        '*.js',
+        '*.json',
+      ],
+      parserOptions: {
+        sourceType: 'script',
+      },
       rules: {
-        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/no-require-imports': 'off',
         '@typescript-eslint/no-var-requires': 'off',
-        '@typescript-eslint/no-empty-function': 'off',
-        '@typescript-eslint/camelcase': 'off',
       },
     },
   ],

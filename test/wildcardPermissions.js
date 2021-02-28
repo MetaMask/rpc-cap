@@ -188,16 +188,16 @@ test('requestPermissions on namespaced method with user approval does not permit
   }
 });
 
-async function sendRpcMethodWithResponse (ctrl, domain, req) {
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
   const res = {};
   return new Promise((resolve, reject) => {
     ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-    function next () {
+    function next() {
       reject();
     }
 
-    function end (reason) {
+    function end(reason) {
       if (reason) {
         reject(reason);
       }

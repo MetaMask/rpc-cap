@@ -1,8 +1,8 @@
-const RpcEngine = require('json-rpc-engine');
+const { JsonRpcEngine } = require('json-rpc-engine');
 
-async function sendRpcMethodWithResponse (ctrl, domain, req) {
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
   return new Promise((resolve, reject) => {
-    const engine = new RpcEngine();
+    const engine = new JsonRpcEngine();
     engine.push(ctrl.providerMiddlewareFunction.bind(ctrl, domain));
 
     engine.handle(req, (err, res) => {

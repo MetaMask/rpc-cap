@@ -13,7 +13,7 @@ test('requireParamsIsSubset caveat throws if params is not a subset of the cavea
     restrictedMethods: {
       'write': {
         method: (req, res, _next, end) => {
-          const params = req.params;
+          const { params } = req;
           res.result = params;
           end();
         },
@@ -531,7 +531,6 @@ test('limitResponseLength caveat returns only the specified number of values whe
   t.end();
 });
 
-
 test('forceParams caveat overwrites', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
@@ -878,9 +877,9 @@ test('updateCaveatFor', async (t) => {
         t.ok(perms.length === 1, 'expected number of permissions remain');
         const { caveats } = perms[0];
         t.ok(caveats.length === 2, 'expected number of caveats remain');
-        const c1 = caveats.find(p => p.name === 'a');
+        const c1 = caveats.find((p) => p.name === 'a');
         t.deepEqual(c1, cav1, 'caveat "a" as expected');
-        const c2 = caveats.find(p => p.name === 'c');
+        const c2 = caveats.find((p) => p.name === 'c');
         t.deepEqual(c2, cav2, 'caveat "b" as expected');
 
       } catch (err) {
@@ -1090,11 +1089,11 @@ test('addCaveatFor', async (t) => {
         t.ok(perms.length === 1, 'has expected number of permissions');
         const { caveats } = perms[0];
         t.ok(caveats.length === 3, 'has expected number of caveats');
-        let cav = caveats.find(p => p.name === 'a');
+        let cav = caveats.find((p) => p.name === 'a');
         t.deepEqual(cav, cav1, 'caveat "a" as expected');
-        cav = caveats.find(p => p.name === 'b');
+        cav = caveats.find((p) => p.name === 'b');
         t.deepEqual(cav, { ...cav1, name: 'b' }, 'caveat "b" as expected');
-        cav = caveats.find(p => p.name === 'c');
+        cav = caveats.find((p) => p.name === 'c');
         t.deepEqual(cav, cav2, 'caveat "c" as expected');
 
       } catch (err) {
@@ -1186,9 +1185,9 @@ test('caveat getters', async (t) => {
         );
 
         t.ok(caveats.length === 2, 'has expected number of caveats');
-        let cav = caveats.find(p => p.name === 'a');
+        let cav = caveats.find((p) => p.name === 'a');
         t.deepEqual(cav, cav1, 'caveat "a" as expected');
-        cav = caveats.find(p => p.name === 'c');
+        cav = caveats.find((p) => p.name === 'c');
         t.deepEqual(cav, cav2, 'caveat "c" as expected');
 
       } catch (err) {

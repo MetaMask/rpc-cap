@@ -1,8 +1,8 @@
 const test = require('tape');
-const { CapabilitiesController } = require('../dist');
 const clone = require('clone');
+const { CapabilitiesController } = require('../dist');
 
-function noop () {}
+function noop() {}
 
 const domain1 = 'foo.com';
 const domain2 = 'bar.io';
