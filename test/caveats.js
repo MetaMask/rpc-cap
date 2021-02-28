@@ -6,7 +6,7 @@ const { sendRpcMethodWithResponse } = require('./lib/utils');
 
 const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
 
-test('requireParamsIsSubset caveat throws if caveat value is not a subset of params.', async (t) => {
+test('requireParamsIsSubset caveat throws if params is not a subset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
   const ctrl = new CapabilitiesController({
@@ -50,8 +50,8 @@ test('requireParamsIsSubset caveat throws if caveat value is not a subset of par
     req = {
       method: 'write',
       params: [
-        'notAllowed',
-        { definitely: 'restricted' },
+        'foo',
+        { bar: 'baz', definitely: 'restricted' },
       ],
     };
 
@@ -65,12 +65,8 @@ test('requireParamsIsSubset caveat throws if caveat value is not a subset of par
   t.end();
 });
 
-test('requireParamsIsSubset caveat passes through if caveat value is a subset of params.', async (t) => {
+test('requireParamsIsSubset caveat passes through if params is a subset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
-  const params = [
-    'foo',
-    { bar: 'baz', also: 'bonusParams!' },
-  ];
 
   const ctrl = new CapabilitiesController({
     restrictedMethods: {
@@ -87,7 +83,7 @@ test('requireParamsIsSubset caveat passes through if caveat value is a subset of
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'requireParamsIsSubset', value: ['foo', { bar: 'baz' }] },
+        { type: 'requireParamsIsSubset', value: [{ bar: 'baz' }, 'foo'] },
       ];
       return perms;
     },
@@ -111,7 +107,127 @@ test('requireParamsIsSubset caveat passes through if caveat value is a subset of
     // Now let's call that restricted method:
     req = {
       method: 'write',
-      params,
+      params: [
+        { bar: 'baz' },
+      ],
+    };
+
+    const result = await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    t.ok(result, 'should succeed');
+    t.equal(result, 'Success', 'Just returned the request');
+
+  } catch (err) {
+    t.notOk(err, 'should not throw');
+  }
+  t.end();
+});
+
+test('requireParamsIsSuperset caveat throws if params is not a superset of the caveat value.', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'write': {
+        method: (req, res, _next, end) => {
+          const params = req.params;
+          res.result = params;
+          end();
+        },
+      },
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'requireParamsIsSuperset', value: ['foo', { bar: 'baz' }] },
+      ];
+      return perms;
+    },
+  },
+  {
+    domains: {},
+  });
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        },
+      ],
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'write',
+      params: [
+        'foo',
+        { definitely: 'restricted' },
+      ],
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+    t.notOk(true, 'should have thrown');
+
+  } catch (err) {
+    t.ok(err, 'should throw');
+    t.equal(err.code, UNAUTHORIZED_CODE, 'Auth error code.');
+  }
+  t.end();
+});
+
+test('requireParamsIsSuperset caveat passes through if params is a superset of the caveat value.', async (t) => {
+  const domain = { origin: 'www.metamask.io' };
+
+  const ctrl = new CapabilitiesController({
+    restrictedMethods: {
+      'write': {
+        method: (_req, res, _next, end) => {
+          res.result = 'Success';
+          end();
+        },
+      },
+    },
+
+    // User approves on condition of first arg being 'foo',
+    // and second arg having the 'bar': 'baz' value.
+    requestUserApproval: async (permissionsRequest) => {
+      const perms = permissionsRequest.permissions;
+      perms.write.caveats = [
+        { type: 'requireParamsIsSuperset', value: ['foo', { bar: 'baz' }] },
+      ];
+      return perms;
+    },
+  },
+  {
+    domains: {},
+  });
+
+  try {
+    let req = {
+      method: 'requestPermissions',
+      params: [
+        {
+          'write': {},
+        },
+      ],
+    };
+
+    await sendRpcMethodWithResponse(ctrl, domain, req);
+
+    // Now let's call that restricted method:
+    req = {
+      method: 'write',
+      params: [
+        'foo',
+        { bar: 'baz', also: 'bonusParams!' },
+      ],
     };
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
