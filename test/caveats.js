@@ -6,7 +6,7 @@ const { sendRpcMethodWithResponse } = require('./lib/utils');
 
 const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
 
-test('requireParams caveat throws if caveat value is not a subset of params.', async (t) => {
+test('requireParamsIsSubset caveat throws if caveat value is not a subset of params.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
   const ctrl = new CapabilitiesController({
@@ -25,7 +25,7 @@ test('requireParams caveat throws if caveat value is not a subset of params.', a
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'requireParams', value: ['foo', { bar: 'baz' }] },
+        { type: 'requireParamsIsSubset', value: ['foo', { bar: 'baz' }] },
       ];
       return perms;
     },
@@ -65,7 +65,7 @@ test('requireParams caveat throws if caveat value is not a subset of params.', a
   t.end();
 });
 
-test('requireParams caveat passes through if caveat value is a subset of params.', async (t) => {
+test('requireParamsIsSubset caveat passes through if caveat value is a subset of params.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
   const params = [
     'foo',
@@ -87,7 +87,7 @@ test('requireParams caveat passes through if caveat value is a subset of params.
     requestUserApproval: async (permissionsRequest) => {
       const perms = permissionsRequest.permissions;
       perms.write.caveats = [
-        { type: 'requireParams', value: ['foo', { bar: 'baz' }] },
+        { type: 'requireParamsIsSubset', value: ['foo', { bar: 'baz' }] },
       ];
       return perms;
     },
@@ -926,6 +926,26 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: [0, 1],
             name: 'b',
+          }
+        );
+
+        t.notOk(true, 'should have thrown');
+
+      } catch (err) {
+        t.ok(err, 'did throw');
+      }
+      t.end();
+    });
+
+    test('addCaveatFor throws on adding non-existing type', async (t) => {
+
+      try {
+
+        ctrl.addCaveatFor(
+          domain.origin, 'testMethod', {
+            type: 'NON_EXISTING_TYPE',
+            value: [0, 1],
+            name: 'NOT_PREVIOUSLY_ADDED',
           }
         );
 

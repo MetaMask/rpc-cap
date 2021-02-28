@@ -16,11 +16,8 @@ import { BaseController } from '@metamask/controllers';
 
 import {
   ICaveatFunction,
-  requireParams,
-  filterResponse,
-  limitResponseLength,
-  forceParams,
   ICaveatFunctionGenerator,
+  caveatFunctions,
 } from './src/caveats';
 
 import {
@@ -47,11 +44,13 @@ import {
   methodNotFound,
 } from './src/errors';
 
+import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
+
+export { CaveatTypes } from './src/caveats';
+
 export type AnnotatedJsonRpcEngine = {
   domain?: IOriginString;
 } & JsonRpcEngine;
-
-import { IOcapLdCapability, IOcapLdCaveat } from './src/@types/ocap-ld';
 
 const JsonRpcEngine = require('json-rpc-engine');
 const asMiddleware = require('json-rpc-engine/src/asMiddleware');
@@ -99,7 +98,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
   private restrictedMethods: RestrictedMethodMap;
   private requestUserApproval: UserApprovalPrompt;
   private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware };
-  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { requireParams, filterResponse, limitResponseLength, forceParams };
+  private caveats: { [ name: string]: ICaveatFunctionGenerator } = { ...caveatFunctions };
   private methodPrefix: string;
   private engine: JsonRpcEngine | undefined;
 
@@ -574,10 +573,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     if (
       !caveat || typeof caveat !== 'object' || Array.isArray(caveat) ||
-      !caveat.type || typeof caveat.type !== 'string' ||
-      caveat.name === '' || // name may be omitted, but not empty
-      caveat.name && typeof caveat.name !== 'string'
-
+      !(caveat.type in this.caveats) ||
+      // name may be omitted, but not empty
+      'name' in caveat && (!caveat.name || typeof caveat.name !== 'string')
     ) {
       return false;
     }
