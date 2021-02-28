@@ -28,7 +28,7 @@ export const CaveatTypes = Object.keys(caveatFunctions).reduce((map, name) => {
 export function requireParamsIsSubset (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, res, next, end): void => {
-    // Check that the caveat value is a superset of or equal to the params
+    // Ensure that the params are a subset of or equal to the caveat value
     if (!isSubset(value, req.params)) {
       res.error = unauthorized({ data: req });
       return end(res.error);
@@ -45,7 +45,7 @@ export function requireParamsIsSubset (serialized: IOcapLdCaveat): ICaveatFuncti
 export function requireParamsIsSuperset (serialized: IOcapLdCaveat): ICaveatFunction {
   const { value } = serialized;
   return (req, res, next, end): void => {
-    // Check that the caveat value is a subset of or equal to the params
+    // Ensure that the params are a superset of or equal to the caveat value
     if (!isSubset(req.params, value)) {
       res.error = unauthorized({ data: req });
       return end(res.error);
