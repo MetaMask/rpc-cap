@@ -13,6 +13,7 @@
     "lint:fix": "yarn lint --fix",
     "prepublishOnly": "yarn build",
     "test": "yarn build:typescript && node test",
+    "test:nobuild": "node test",
     "coverage": "nyc node test",
     "coverage:html": "nyc --reporter=html node test"
   },
@@ -41,7 +42,7 @@
   },
   "dependencies": {
     "@metamask/controllers": "^5.0.0",
-    "eth-rpc-errors": "^3.0.0",
+    "eth-rpc-errors": "^4.0.2",
     "fast-deep-equal": "^2.0.1",
     "is-subset": "^0.1.1",
     "json-rpc-engine": "^6.1.0",

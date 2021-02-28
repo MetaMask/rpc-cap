@@ -71,12 +71,12 @@ test('hasPermission returns true with permissions and correct method', (t) => {
   t.equal(
     ctrl.hasPermission(domain1, method1),
     true,
-    'should return true for domain1 and method1'
+    'should return true for domain1 and method1',
   );
   t.equal(
     ctrl.hasPermission(domain2, method2),
     true,
-    'should return true for domain2 and method2'
+    'should return true for domain2 and method2',
   );
   t.end();
 });
@@ -107,12 +107,12 @@ test('hasPermission returns false with permissions but wrong method', (t) => {
   t.equal(
     ctrl.hasPermission(domain1, method2),
     false,
-    'should return false for domain1 and method2'
+    'should return false for domain1 and method2',
   );
   t.equal(
     ctrl.hasPermission(domain2, method1),
     false,
-    'should return false for domain2 and method1'
+    'should return false for domain2 and method1',
   );
   t.end();
 });

@@ -3,16 +3,11 @@ module.exports = {
     '@metamask/eslint-config',
     '@metamask/eslint-config/config/nodejs',
   ],
-  rules: {
-    // '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+  parserOptions: {
+    ecmaVersion: 2018,
   },
   plugins: [
     'json',
-  ],
-  ignorePatterns: [
-    '!.eslintrc.js',
-    'node_modules/',
-    'dist/',
   ],
   overrides: [
     {
@@ -36,5 +31,10 @@ module.exports = {
         '@typescript-eslint/no-var-requires': 'off',
       },
     },
+  ],
+  ignorePatterns: [
+    '!.eslintrc.js',
+    'node_modules/',
+    'dist/',
   ],
 };

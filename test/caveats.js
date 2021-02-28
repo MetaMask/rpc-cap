@@ -4,7 +4,7 @@ const test = require('tape');
 const { CapabilitiesController } = require('../dist');
 const { sendRpcMethodWithResponse } = require('./lib/utils');
 
-const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
+const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider.unauthorized;
 
 test('requireParamsIsSubset caveat throws if params is not a subset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
@@ -757,7 +757,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          'foo.bar.xyz', 'testMethod', 'a', [0, 1]
+          'foo.bar.xyz', 'testMethod', 'a', [0, 1],
         );
 
         t.notOk(true, 'should have thrown');
@@ -773,7 +773,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'doesNotExist', 'a', [0, 1]
+          domain.origin, 'doesNotExist', 'a', [0, 1],
         );
 
         t.notOk(true, 'should have thrown');
@@ -810,7 +810,7 @@ test('updateCaveatFor', async (t) => {
         cav1.value = [0, 1, 2];
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'a', cav1.value
+          domain.origin, 'testMethod', 'a', cav1.value,
         );
 
         req = {
@@ -833,7 +833,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'b', [0, 1]
+          domain.origin, 'testMethod', 'b', [0, 1],
         );
 
         t.notOk(true, 'should have thrown');
@@ -849,7 +849,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'b', 'foo'
+          domain.origin, 'testMethod', 'b', 'foo',
         );
 
         t.notOk(true, 'should have thrown');
@@ -955,7 +955,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: [0, 1],
             name: 'a',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -975,7 +975,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: [0, 1],
             name: 'a',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -1014,7 +1014,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: cav1.value,
             name: 'b',
-          }
+          },
         );
 
         req = {
@@ -1041,7 +1041,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: [0, 1],
             name: 'b',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -1061,7 +1061,7 @@ test('addCaveatFor', async (t) => {
             type: 'NON_EXISTING_TYPE',
             value: [0, 1],
             name: 'NOT_PREVIOUSLY_ADDED',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -1165,7 +1165,7 @@ test('caveat getters', async (t) => {
       try {
 
         const cav = ctrl.getCaveat(
-          domain.origin, 'testMethod', 'a'
+          domain.origin, 'testMethod', 'a',
         );
 
         t.deepEqual(cav, cav1);
@@ -1181,7 +1181,7 @@ test('caveat getters', async (t) => {
       try {
 
         const caveats = ctrl.getCaveats(
-          domain.origin, 'testMethod'
+          domain.origin, 'testMethod',
         );
 
         t.ok(caveats.length === 2, 'has expected number of caveats');
@@ -1201,11 +1201,11 @@ test('caveat getters', async (t) => {
       try {
 
         let cav = ctrl.getCaveat(
-          'not.a.known.domain', 'testMethod', 'a'
+          'not.a.known.domain', 'testMethod', 'a',
         );
         t.ok(cav === undefined, 'getCaveat returned undefined');
         cav = ctrl.getCaveats(
-          'not.a.known.domain', 'testMethod'
+          'not.a.known.domain', 'testMethod',
         );
         t.ok(cav === undefined, 'getCaveats returned undefined');
 
@@ -1220,11 +1220,11 @@ test('caveat getters', async (t) => {
       try {
 
         let cav = ctrl.getCaveat(
-          domain.origin, 'unknownMethod', 'a'
+          domain.origin, 'unknownMethod', 'a',
         );
         t.ok(cav === undefined, 'getCaveat returned undefined');
         cav = ctrl.getCaveats(
-          domain.origin, 'unknownMethod'
+          domain.origin, 'unknownMethod',
         );
         t.ok(cav === undefined, 'getCaveats returned undefined');
 
@@ -1239,7 +1239,7 @@ test('caveat getters', async (t) => {
       try {
 
         const cav = ctrl.getCaveat(
-          domain.origin, 'testMethod', 'unknownName'
+          domain.origin, 'testMethod', 'unknownName',
         );
         t.ok(cav === undefined, 'getCaveat returned undefined');
 

@@ -3,8 +3,8 @@ const equal = require('fast-deep-equal');
 const rpcErrors = require('eth-rpc-errors');
 const { CapabilitiesController } = require('../dist');
 
-const USER_REJECTION_CODE = rpcErrors.ERROR_CODES.provider.userRejectedRequest;
-const INVALID_REQUEST_CODE = rpcErrors.ERROR_CODES.rpc.invalidRequest;
+const USER_REJECTION_CODE = rpcErrors.errorCodes.provider.userRejectedRequest;
+const INVALID_REQUEST_CODE = rpcErrors.errorCodes.rpc.invalidRequest;
 
 test('requestPermissions with user rejection creates no permissions', async (t) => {
   const expected = [];
@@ -182,7 +182,7 @@ test('uses req.id as metadata.id of pending permissions request object', async (
     requestUserApproval: (permissionsRequest) => {
       t.equal(
         permissionsRequest.metadata.id, requestIds[index].toString(),
-        'permissions request object should have expected metadata.id'
+        'permissions request object should have expected metadata.id',
       );
       if (index === requestIds.length - 1) {
         t.end();

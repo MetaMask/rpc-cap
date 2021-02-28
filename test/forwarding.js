@@ -1,8 +1,9 @@
 const test = require('tape');
+const { errorCodes } = require('eth-rpc-errors');
 const { CapabilitiesController } = require('../dist');
 
-const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
-const METHOD_NOT_FOUND_CODE = require('eth-rpc-errors').ERROR_CODES.rpc.methodNotFound;
+const UNAUTHORIZED_CODE = errorCodes.provider.unauthorized;
+const METHOD_NOT_FOUND_CODE = errorCodes.rpc.methodNotFound;
 
 test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result';
@@ -70,9 +71,7 @@ test('requesting restricted method is rejected', async (t) => {
 
   function end(reason) {
     t.ok(reason, 'error should be thrown');
-    t.ok(res.error, 'should have error object');
     t.equal(reason.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`);
-    t.equal(res.error.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`);
     t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.');
     t.end();
   }
@@ -118,9 +117,7 @@ test('requesting unknown method is rejected', async (t) => {
 
   function end(reason) {
     t.ok(reason, 'error should be thrown');
-    t.ok(res.error, 'should have error object');
     t.equal(reason.code, METHOD_NOT_FOUND_CODE, `error code should be ${METHOD_NOT_FOUND_CODE}.`);
-    t.equal(res.error.code, METHOD_NOT_FOUND_CODE, `error code should be ${METHOD_NOT_FOUND_CODE}.`);
     t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.');
     t.end();
   }

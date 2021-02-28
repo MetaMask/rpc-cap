@@ -5,13 +5,14 @@ import {
   JsonRpcMiddleware,
   JsonRpcRequest,
   JsonRpcResponse,
+  PendingJsonRpcResponse,
 } from 'json-rpc-engine';
 import { IOcapLdCapability } from './ocap-ld';
 
 export type AuthenticatedJsonRpcMiddleware = (
   domain: IOriginMetadata,
   req: JsonRpcRequest<any>,
-  res: JsonRpcResponse<any>,
+  res: PendingJsonRpcResponse<any>,
   next: JsonRpcEngineNextCallback,
   end: JsonRpcEngineEndCallback,
 ) => void;
@@ -77,17 +78,17 @@ export interface CapabilitiesState {
   domains: RpcCapDomainRegistry;
 }
 
-export interface RestrictedMethodEntry {
+export interface RestrictedMethodEntry<T, U> {
   description: string;
-  method: PermittedJsonRpcMiddleware;
+  method: PermittedJsonRpcMiddleware<T, U>;
 }
 
-export interface PermittedJsonRpcMiddleware extends JsonRpcMiddleware {
-  (req: JsonRpcRequest<any>, res: JsonRpcResponse<any>, next: JsonRpcEngineNextCallback, end: JsonRpcEngineEndCallback, engine?: JsonRpcEngine): void;
+export interface PermittedJsonRpcMiddleware<T, U> extends JsonRpcMiddleware<T, U> {
+  (req: JsonRpcRequest<T>, res: PendingJsonRpcResponse<U>, next: JsonRpcEngineNextCallback, end: JsonRpcEngineEndCallback, engine?: JsonRpcEngine): void;
 }
 
 export interface RestrictedMethodMap {
-  [key: string]: RestrictedMethodEntry;
+  [key: string]: RestrictedMethodEntry<unknown, unknown>;
 }
 
 export interface RpcCapInterface {
@@ -113,7 +114,7 @@ export interface RpcCapInterface {
     }
   ) => void;
   removePermissionsFor: (domain: string, permissionsToRemove: IOcapLdCapability[]) => void;
-  createBoundMiddleware: (domain: string) => PermittedJsonRpcMiddleware;
+  createBoundMiddleware: <T, U>(domain: string) => PermittedJsonRpcMiddleware<T, U>;
   createPermissionedEngine: (domain: string) => JsonRpcEngine;
 
   // Injected permissions-handling methods:
