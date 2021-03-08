@@ -1,10 +1,9 @@
 // / <reference path="../index.ts" />
 
 const test = require('tape');
+const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider.unauthorized;
 const { CapabilitiesController } = require('../dist');
 const { sendRpcMethodWithResponse } = require('./lib/utils');
-
-const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider.unauthorized;
 
 test('requireParamsIsSubset caveat throws if params is not a subset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
@@ -610,7 +609,7 @@ test('named caveats', async (t) => {
   });
 
   try {
-    const req = {
+    const initialReq = {
       method: 'requestPermissions',
       params: [
         {
@@ -627,7 +626,7 @@ test('named caveats', async (t) => {
       ],
     };
 
-    await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, initialReq);
 
     test('can add caveats with different names', async (t) => {
       try {

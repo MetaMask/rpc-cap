@@ -31,6 +31,23 @@ module.exports = {
         '@typescript-eslint/no-var-requires': 'off',
       },
     },
+    {
+      files: [
+        '**/*.d.ts',
+      ],
+      rules: {
+        'import/unambiguous': 'off',
+      },
+    },
+    // TODO: remove after migrating to jest
+    {
+      files: [
+        '**/test/*.js',
+      ],
+      rules: {
+        'no-shadow': ['error', { allow: ['t'] }],
+      },
+    },
   ],
   ignorePatterns: [
     '!.eslintrc.js',

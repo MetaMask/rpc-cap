@@ -30,7 +30,7 @@ test('restricted permission gets restricted provider', async (t) => {
             }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
-            end();
+            return end();
           });
         },
       },
@@ -81,7 +81,7 @@ test('restricted permission gets domain permissions', async (t) => {
             }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
-            end();
+            return end();
           });
         },
       },
@@ -149,7 +149,7 @@ test('permitted provider can pass through to other methods', async (t) => {
             }
             const gotName = nameRes.result;
             res.result = `Greetings, ${gotName}`;
-            end();
+            return end();
           });
         },
       },
@@ -202,7 +202,7 @@ async function sendRpcMethodWithResponse(ctrl, domain, req) {
     ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
     function next() {
-      reject();
+      reject(new Error('Should not call next.'));
     }
 
     function end(reason) {

@@ -2,7 +2,7 @@ const test = require('tape');
 const clone = require('clone');
 const { CapabilitiesController } = require('../dist');
 
-function noop() {}
+const noop = () => undefined;
 
 const domain1 = 'foo.com';
 const domain2 = 'bar.io';

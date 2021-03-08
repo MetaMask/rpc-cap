@@ -178,7 +178,7 @@ async function sendRpcMethodWithResponse(ctrl, domain, req) {
     ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
     function next() {
-      reject();
+      reject(new Error('Should not call next.'));
     }
 
     function end(reason) {

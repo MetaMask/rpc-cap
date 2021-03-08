@@ -2,7 +2,7 @@ const test = require('tape');
 const equal = require('fast-deep-equal');
 const { CapabilitiesController } = require('../dist');
 
-function noop() {}
+const noop = () => undefined;
 
 const arbitraryCaps = [
   {

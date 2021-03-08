@@ -10,7 +10,7 @@ async function sendRpcMethodWithResponse(ctrl, domain, req) {
         return reject(err);
       }
 
-      resolve(res.result);
+      return resolve(res.result);
     });
   });
 }
