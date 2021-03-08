@@ -1,27 +1,16 @@
 {
-  "include": ["src/", "index.ts"],
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "*": ["definitions/*"]
-    },
     "declaration": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "downlevelIteration": true,
-    "experimentalDecorators": true,
-    "importHelpers": false,
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "noImplicitAny": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "outDir": "dist",
-    "removeComments": false,
-    "sourceMap": true,
-    "inlineSources": true,
+    "forceConsistentCasingInFileNames": true,
+    "inlineSourceMap": true,
+    "module": "CommonJS",
+    "outDir": "./dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": false,
     "strict": true,
-    "target": "es6",
+    "target": "ES2017",
     "typeRoots": ["./node_modules/@types", "./typings"]
-  }
+  },
+  "include": ["./src", "index.ts"]
 }

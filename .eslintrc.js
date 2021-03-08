@@ -2,26 +2,56 @@ module.exports = {
   extends: [
     '@metamask/eslint-config',
     '@metamask/eslint-config/config/nodejs',
-    '@metamask/eslint-config/config/typescript',
   ],
-  rules: {
-    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-    '@typescript-eslint/interface-name-prefix': 'off',
+  parserOptions: {
+    ecmaVersion: 2018,
   },
+  plugins: [
+    'json',
+  ],
+  overrides: [
+    {
+      files: [
+        '**/*.ts',
+      ],
+      extends: [
+        '@metamask/eslint-config/config/typescript',
+      ],
+    },
+    {
+      files: [
+        '*.js',
+        '*.json',
+      ],
+      parserOptions: {
+        sourceType: 'script',
+      },
+      rules: {
+        '@typescript-eslint/no-require-imports': 'off',
+        '@typescript-eslint/no-var-requires': 'off',
+      },
+    },
+    {
+      files: [
+        '**/*.d.ts',
+      ],
+      rules: {
+        'import/unambiguous': 'off',
+      },
+    },
+    // TODO: remove after migrating to jest
+    {
+      files: [
+        '**/test/*.js',
+      ],
+      rules: {
+        'no-shadow': ['error', { allow: ['t'] }],
+      },
+    },
+  ],
   ignorePatterns: [
     '!.eslintrc.js',
     'node_modules/',
     'dist/',
-  ],
-  overrides: [
-    {
-      files: ['*.js'],
-      rules: {
-        '@typescript-eslint/explicit-function-return-type': 'off',
-        '@typescript-eslint/no-var-requires': 'off',
-        '@typescript-eslint/no-empty-function': 'off',
-        '@typescript-eslint/camelcase': 'off',
-      },
-    },
   ],
 };

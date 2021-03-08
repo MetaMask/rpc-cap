@@ -9,7 +9,7 @@
  * in that direction at digitalbazaar:
  * https://github.com/digitalbazaar/ocapld.js/
  */
-interface IOcapLdCapability {
+interface OcapLdCapability {
   '@context': string[];
   // A GUID representing this method.
   id: string;
@@ -21,11 +21,11 @@ interface IOcapLdCapability {
   // The issuing date, in UNIX epoch time
   date?: number;
   // An optional array of caveat objects.
-  caveats?: IOcapLdCaveat[];
-  proof?: IOcapLdProof;
+  caveats?: OcapLdCaveat[];
+  proof?: OcapLdProof;
 }
 
-export interface IOcapLdCaveat {
+export interface OcapLdCaveat {
   // A type identifying the type of caveat.
   type: string;
   // Any additional data required to enforce the caveat type.
@@ -34,7 +34,7 @@ export interface IOcapLdCaveat {
   name?: string;
 }
 
-export interface IOcapLdProof {
+export interface OcapLdProof {
   type: string;
   proofPurpose: 'capabilityDelegation' | 'capabilityInvocation';
   // A date string

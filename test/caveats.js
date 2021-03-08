@@ -1,10 +1,9 @@
 // / <reference path="../index.ts" />
 
 const test = require('tape');
+const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider.unauthorized;
 const { CapabilitiesController } = require('../dist');
 const { sendRpcMethodWithResponse } = require('./lib/utils');
-
-const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
 
 test('requireParamsIsSubset caveat throws if params is not a subset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
@@ -13,7 +12,7 @@ test('requireParamsIsSubset caveat throws if params is not a subset of the cavea
     restrictedMethods: {
       'write': {
         method: (req, res, _next, end) => {
-          const params = req.params;
+          const { params } = req;
           res.result = params;
           end();
         },
@@ -130,7 +129,7 @@ test('requireParamsIsSuperset caveat throws if params is not a superset of the c
     restrictedMethods: {
       'write': {
         method: (req, res, _next, end) => {
-          const params = req.params;
+          const { params } = req;
           res.result = params;
           end();
         },
@@ -531,7 +530,6 @@ test('limitResponseLength caveat returns only the specified number of values whe
   t.end();
 });
 
-
 test('forceParams caveat overwrites', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
@@ -611,7 +609,7 @@ test('named caveats', async (t) => {
   });
 
   try {
-    const req = {
+    const initialReq = {
       method: 'requestPermissions',
       params: [
         {
@@ -628,7 +626,7 @@ test('named caveats', async (t) => {
       ],
     };
 
-    await sendRpcMethodWithResponse(ctrl, domain, req);
+    await sendRpcMethodWithResponse(ctrl, domain, initialReq);
 
     test('can add caveats with different names', async (t) => {
       try {
@@ -758,7 +756,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          'foo.bar.xyz', 'testMethod', 'a', [0, 1]
+          'foo.bar.xyz', 'testMethod', 'a', [0, 1],
         );
 
         t.notOk(true, 'should have thrown');
@@ -774,7 +772,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'doesNotExist', 'a', [0, 1]
+          domain.origin, 'doesNotExist', 'a', [0, 1],
         );
 
         t.notOk(true, 'should have thrown');
@@ -811,7 +809,7 @@ test('updateCaveatFor', async (t) => {
         cav1.value = [0, 1, 2];
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'a', cav1.value
+          domain.origin, 'testMethod', 'a', cav1.value,
         );
 
         req = {
@@ -834,7 +832,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'b', [0, 1]
+          domain.origin, 'testMethod', 'b', [0, 1],
         );
 
         t.notOk(true, 'should have thrown');
@@ -850,7 +848,7 @@ test('updateCaveatFor', async (t) => {
       try {
 
         ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'b', 'foo'
+          domain.origin, 'testMethod', 'b', 'foo',
         );
 
         t.notOk(true, 'should have thrown');
@@ -878,9 +876,9 @@ test('updateCaveatFor', async (t) => {
         t.ok(perms.length === 1, 'expected number of permissions remain');
         const { caveats } = perms[0];
         t.ok(caveats.length === 2, 'expected number of caveats remain');
-        const c1 = caveats.find(p => p.name === 'a');
+        const c1 = caveats.find((p) => p.name === 'a');
         t.deepEqual(c1, cav1, 'caveat "a" as expected');
-        const c2 = caveats.find(p => p.name === 'c');
+        const c2 = caveats.find((p) => p.name === 'c');
         t.deepEqual(c2, cav2, 'caveat "b" as expected');
 
       } catch (err) {
@@ -956,7 +954,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: [0, 1],
             name: 'a',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -976,7 +974,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: [0, 1],
             name: 'a',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -1015,7 +1013,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: cav1.value,
             name: 'b',
-          }
+          },
         );
 
         req = {
@@ -1042,7 +1040,7 @@ test('addCaveatFor', async (t) => {
             type: 'forceParams',
             value: [0, 1],
             name: 'b',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -1062,7 +1060,7 @@ test('addCaveatFor', async (t) => {
             type: 'NON_EXISTING_TYPE',
             value: [0, 1],
             name: 'NOT_PREVIOUSLY_ADDED',
-          }
+          },
         );
 
         t.notOk(true, 'should have thrown');
@@ -1090,11 +1088,11 @@ test('addCaveatFor', async (t) => {
         t.ok(perms.length === 1, 'has expected number of permissions');
         const { caveats } = perms[0];
         t.ok(caveats.length === 3, 'has expected number of caveats');
-        let cav = caveats.find(p => p.name === 'a');
+        let cav = caveats.find((p) => p.name === 'a');
         t.deepEqual(cav, cav1, 'caveat "a" as expected');
-        cav = caveats.find(p => p.name === 'b');
+        cav = caveats.find((p) => p.name === 'b');
         t.deepEqual(cav, { ...cav1, name: 'b' }, 'caveat "b" as expected');
-        cav = caveats.find(p => p.name === 'c');
+        cav = caveats.find((p) => p.name === 'c');
         t.deepEqual(cav, cav2, 'caveat "c" as expected');
 
       } catch (err) {
@@ -1166,7 +1164,7 @@ test('caveat getters', async (t) => {
       try {
 
         const cav = ctrl.getCaveat(
-          domain.origin, 'testMethod', 'a'
+          domain.origin, 'testMethod', 'a',
         );
 
         t.deepEqual(cav, cav1);
@@ -1182,13 +1180,13 @@ test('caveat getters', async (t) => {
       try {
 
         const caveats = ctrl.getCaveats(
-          domain.origin, 'testMethod'
+          domain.origin, 'testMethod',
         );
 
         t.ok(caveats.length === 2, 'has expected number of caveats');
-        let cav = caveats.find(p => p.name === 'a');
+        let cav = caveats.find((p) => p.name === 'a');
         t.deepEqual(cav, cav1, 'caveat "a" as expected');
-        cav = caveats.find(p => p.name === 'c');
+        cav = caveats.find((p) => p.name === 'c');
         t.deepEqual(cav, cav2, 'caveat "c" as expected');
 
       } catch (err) {
@@ -1202,11 +1200,11 @@ test('caveat getters', async (t) => {
       try {
 
         let cav = ctrl.getCaveat(
-          'not.a.known.domain', 'testMethod', 'a'
+          'not.a.known.domain', 'testMethod', 'a',
         );
         t.ok(cav === undefined, 'getCaveat returned undefined');
         cav = ctrl.getCaveats(
-          'not.a.known.domain', 'testMethod'
+          'not.a.known.domain', 'testMethod',
         );
         t.ok(cav === undefined, 'getCaveats returned undefined');
 
@@ -1221,11 +1219,11 @@ test('caveat getters', async (t) => {
       try {
 
         let cav = ctrl.getCaveat(
-          domain.origin, 'unknownMethod', 'a'
+          domain.origin, 'unknownMethod', 'a',
         );
         t.ok(cav === undefined, 'getCaveat returned undefined');
         cav = ctrl.getCaveats(
-          domain.origin, 'unknownMethod'
+          domain.origin, 'unknownMethod',
         );
         t.ok(cav === undefined, 'getCaveats returned undefined');
 
@@ -1240,7 +1238,7 @@ test('caveat getters', async (t) => {
       try {
 
         const cav = ctrl.getCaveat(
-          domain.origin, 'testMethod', 'unknownName'
+          domain.origin, 'testMethod', 'unknownName',
         );
         t.ok(cav === undefined, 'getCaveat returned undefined');
 

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-unassigned-import */
 require('./forwarding');
 require('./getPermissions');
 require('./hasPermissions');

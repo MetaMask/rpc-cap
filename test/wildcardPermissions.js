@@ -1,7 +1,6 @@
 const test = require('tape');
+const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider.unauthorized;
 const { CapabilitiesController } = require('../dist');
-
-const UNAUTHORIZED_CODE = require('eth-rpc-errors').ERROR_CODES.provider.unauthorized;
 
 test('requestPermissions on namespaced method with user approval creates permission', async (t) => {
 
@@ -188,16 +187,16 @@ test('requestPermissions on namespaced method with user approval does not permit
   }
 });
 
-async function sendRpcMethodWithResponse (ctrl, domain, req) {
+async function sendRpcMethodWithResponse(ctrl, domain, req) {
   const res = {};
   return new Promise((resolve, reject) => {
     ctrl.providerMiddlewareFunction(domain, req, res, next, end);
 
-    function next () {
-      reject();
+    function next() {
+      reject(new Error('Should not call next.'));
     }
 
-    function end (reason) {
+    function end(reason) {
       if (reason) {
         reject(reason);
       }
