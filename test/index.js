@@ -6,3 +6,4 @@ require('./requestPermissions');
 require('./caveats');
 require('./wildcardPermissions');
 require('./dependentPermissions');
+require('./eventPermissions');
