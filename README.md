@@ -1,4 +1,4 @@
-# `rpc-cap` [![CircleCI](https://circleci.com/gh/MetaMask/rpc-cap.svg?style=svg)](https://circleci.com/gh/MetaMask/rpc-cap)
+# `rpc-cap`
 
 ## JSON RPC Capabilities Middleware 
 
