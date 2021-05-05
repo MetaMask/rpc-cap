@@ -1,19 +1,17 @@
 const test = require('tape');
-const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider.unauthorized;
+const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider
+  .unauthorized;
 const { CapabilitiesController } = require('../dist');
 
 test('requestPermissions on namespaced method with user approval creates permission', async (t) => {
-
   const ctrl = new CapabilitiesController({
-
     // Auto fully approve:
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-
       // Underscore suffix implies namespace:
       // This namespaced method simply returns the namespace suffix:
-      'plugin_': {
+      plugin_: {
         // We need to enhance this parameter to support more open-ended display:
         description: 'Permission to install plugin',
         method: (req, res, _next, end) => {
@@ -24,7 +22,6 @@ test('requestPermissions on namespaced method with user approval creates permiss
         },
       },
     },
-
   });
 
   const domain = { origin: 'login.metamask.io' };
@@ -43,7 +40,6 @@ test('requestPermissions on namespaced method with user approval creates permiss
     res = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.equal(res.result, 'A', 'returned the segment correctly.');
     t.end();
-
   } catch (error) {
     t.error(error, 'error should not be thrown');
     t.end();
@@ -51,15 +47,12 @@ test('requestPermissions on namespaced method with user approval creates permiss
 });
 
 test('requestPermissions on twice namespaced method with user approval creates permission', async (t) => {
-
   const ctrl = new CapabilitiesController({
-
     // Auto fully approve:
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-
-      'eth_plugin_': {
+      eth_plugin_: {
         description: 'Permission to install plugin',
         method: (req, res, _next, end) => {
           const parts = req.method.split('_');
@@ -69,7 +62,6 @@ test('requestPermissions on twice namespaced method with user approval creates p
         },
       },
     },
-
   });
 
   const domain = { origin: 'login.metamask.io' };
@@ -88,7 +80,6 @@ test('requestPermissions on twice namespaced method with user approval creates p
     res = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.equal(res.result, 'A', 'returned the segment correctly.');
     t.end();
-
   } catch (error) {
     t.error(error, 'error should not be thrown');
     t.end();
@@ -96,14 +87,11 @@ test('requestPermissions on twice namespaced method with user approval creates p
 });
 
 test('requestPermissions on namespaced method ending in a wildcard with user approval creates permission', async (t) => {
-
   const ctrl = new CapabilitiesController({
-
     // Auto fully approve:
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-
       'eth_plugin_*': {
         description: 'Permission to install plugin',
         method: (req, res, _next, end) => {
@@ -114,7 +102,6 @@ test('requestPermissions on namespaced method ending in a wildcard with user app
         },
       },
     },
-
   });
 
   const domain = { origin: 'login.metamask.io' };
@@ -133,7 +120,6 @@ test('requestPermissions on namespaced method ending in a wildcard with user app
     res = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.equal(res.result, 'A', 'returned the segment correctly.');
     t.end();
-
   } catch (error) {
     t.error(error, 'error should not be thrown');
     t.end();
@@ -141,17 +127,14 @@ test('requestPermissions on namespaced method ending in a wildcard with user app
 });
 
 test('requestPermissions on namespaced method with user approval does not permit other namespaces', async (t) => {
-
   const ctrl = new CapabilitiesController({
-
     // Auto fully approve:
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-
       // Underscore suffix implies namespace:
       // This namespaced method simply returns the namespace suffix:
-      'plugin_': {
+      plugin_: {
         method: (req, res, _next, end) => {
           const parts = req.method.split('_');
           const second = parts[1];
@@ -160,7 +143,6 @@ test('requestPermissions on namespaced method with user approval does not permit
         },
       },
     },
-
   });
 
   const domain = { origin: 'login.metamask.io' };
@@ -179,7 +161,6 @@ test('requestPermissions on namespaced method with user approval does not permit
     res = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.notOk(res, 'Should be restricted');
     t.end();
-
   } catch (error) {
     t.ok(error, 'error should not be thrown');
     t.equal(error.code, UNAUTHORIZED_CODE, 'Should throw auth error');

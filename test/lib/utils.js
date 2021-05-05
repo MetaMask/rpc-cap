@@ -18,4 +18,3 @@ async function sendRpcMethodWithResponse(ctrl, domain, req) {
 module.exports = {
   sendRpcMethodWithResponse,
 };
-

@@ -8,10 +8,13 @@ const METHOD_NOT_FOUND_CODE = errorCodes.rpc.methodNotFound;
 test('safe method should pass through', async (t) => {
   const WRITE_RESULT = 'impeccable result';
 
-  const ctrl = new CapabilitiesController({
-    safeMethods: ['public_read'],
-    requestUserApproval: async (permsReq) => permsReq.permissions,
-  }, {});
+  const ctrl = new CapabilitiesController(
+    {
+      safeMethods: ['public_read'],
+      requestUserApproval: async (permsReq) => permsReq.permissions,
+    },
+    {},
+  );
 
   const domain = { origin: 'login.metamask.io' };
   const req = { method: 'public_read' };
@@ -29,36 +32,36 @@ test('safe method should pass through', async (t) => {
     t.equal(res.result, WRITE_RESULT);
     t.end();
   }
-
 });
 
 test('requesting restricted method is rejected', async (t) => {
   const WRITE_RESULT = 'impeccable result';
   const domain = { origin: 'login.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
+  const ctrl = new CapabilitiesController(
+    {
+      // safe methods never require approval,
+      // are considered trivial / no risk.
+      // maybe reading should be a permission, though!
+      safeMethods: ['eth_read'],
 
-    // safe methods never require approval,
-    // are considered trivial / no risk.
-    // maybe reading should be a permission, though!
-    safeMethods: ['eth_read'],
+      // optional prefix for internal methods
+      methodPrefix: 'wallet_',
 
-    // optional prefix for internal methods
-    methodPrefix: 'wallet_',
-
-    restrictedMethods: {
-      'eth_write': {
-        method: (_req, res, _next, _end) => {
-          res.result = WRITE_RESULT;
+      restrictedMethods: {
+        eth_write: {
+          method: (_req, res, _next, _end) => {
+            res.result = WRITE_RESULT;
+          },
         },
       },
-    },
 
-    requestUserApproval: async (permsReq) => permsReq.permissions,
-  },
-  {
-    domains: {},
-  });
+      requestUserApproval: async (permsReq) => permsReq.permissions,
+    },
+    {
+      domains: {},
+    },
+  );
 
   const req = { method: 'eth_write' };
   const res = {};
@@ -71,40 +74,44 @@ test('requesting restricted method is rejected', async (t) => {
 
   function end(reason) {
     t.ok(reason, 'error should be thrown');
-    t.equal(reason.code, UNAUTHORIZED_CODE, `error code should be ${UNAUTHORIZED_CODE}.`);
+    t.equal(
+      reason.code,
+      UNAUTHORIZED_CODE,
+      `error code should be ${UNAUTHORIZED_CODE}.`,
+    );
     t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.');
     t.end();
   }
-
 });
 
 test('requesting unknown method is rejected', async (t) => {
   const WRITE_RESULT = 'impeccable result';
   const domain = { origin: 'login.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
+  const ctrl = new CapabilitiesController(
+    {
+      // safe methods never require approval,
+      // are considered trivial / no risk.
+      // maybe reading should be a permission, though!
+      safeMethods: ['eth_read'],
 
-    // safe methods never require approval,
-    // are considered trivial / no risk.
-    // maybe reading should be a permission, though!
-    safeMethods: ['eth_read'],
+      // optional prefix for internal methods
+      methodPrefix: 'wallet_',
 
-    // optional prefix for internal methods
-    methodPrefix: 'wallet_',
-
-    restrictedMethods: {
-      'eth_write': {
-        method: (_req, res, _next, _end) => {
-          res.result = WRITE_RESULT;
+      restrictedMethods: {
+        eth_write: {
+          method: (_req, res, _next, _end) => {
+            res.result = WRITE_RESULT;
+          },
         },
       },
-    },
 
-    requestUserApproval: async (permsReq) => permsReq.permissions,
-  },
-  {
-    domains: {},
-  });
+      requestUserApproval: async (permsReq) => permsReq.permissions,
+    },
+    {
+      domains: {},
+    },
+  );
 
   const req = { method: 'fooBar' };
   const res = {};
@@ -117,48 +124,52 @@ test('requesting unknown method is rejected', async (t) => {
 
   function end(reason) {
     t.ok(reason, 'error should be thrown');
-    t.equal(reason.code, METHOD_NOT_FOUND_CODE, `error code should be ${METHOD_NOT_FOUND_CODE}.`);
+    t.equal(
+      reason.code,
+      METHOD_NOT_FOUND_CODE,
+      `error code should be ${METHOD_NOT_FOUND_CODE}.`,
+    );
     t.notEqual(res.result, WRITE_RESULT, 'should not have complete result.');
     t.end();
   }
-
 });
 
 test('requesting restricted method with permission is called', async (t) => {
   const WRITE_RESULT = 'impeccable result';
   const domain = { origin: 'login.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
+  const ctrl = new CapabilitiesController(
+    {
+      // safe methods never require approval,
+      // are considered trivial / no risk.
+      // maybe reading should be a permission, though!
+      safeMethods: ['eth_read'],
 
-    // safe methods never require approval,
-    // are considered trivial / no risk.
-    // maybe reading should be a permission, though!
-    safeMethods: ['eth_read'],
-
-    // optional prefix for internal methods
-    methodPrefix: 'wallet_',
-    restrictedMethods: {
-      'eth_write': {
-        method: (_req, res, _next, end) => {
-          res.result = WRITE_RESULT;
-          return end();
+      // optional prefix for internal methods
+      methodPrefix: 'wallet_',
+      restrictedMethods: {
+        eth_write: {
+          method: (_req, res, _next, end) => {
+            res.result = WRITE_RESULT;
+            return end();
+          },
+        },
+      },
+      requestUserApproval: async (permsReq) => permsReq.permissions,
+    },
+    {
+      domains: {
+        'login.metamask.io': {
+          permissions: [
+            {
+              parentCapability: 'eth_write',
+              date: '0',
+            },
+          ],
         },
       },
     },
-    requestUserApproval: async (permsReq) => permsReq.permissions,
-  },
-  {
-    domains: {
-      'login.metamask.io': {
-        permissions: [
-          {
-            parentCapability: 'eth_write',
-            date: '0',
-          },
-        ],
-      },
-    },
-  });
+  );
 
   const req = { method: 'eth_write', params: ['hello!'] };
   try {

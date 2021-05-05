@@ -48,12 +48,14 @@ test('hasPermission returns false if no permissions', (t) => {
 });
 
 test('hasPermissions returns true with permissions', (t) => {
-  const ctrl = new CapabilitiesController({
-    requestUserApproval: noop,
-  },
-  {
-    domains: clone(domains),
-  });
+  const ctrl = new CapabilitiesController(
+    {
+      requestUserApproval: noop,
+    },
+    {
+      domains: clone(domains),
+    },
+  );
 
   t.equal(ctrl.hasPermissions(domain1), true, 'should return true for domain1');
   t.equal(ctrl.hasPermissions(domain2), true, 'should return true for domain2');
@@ -61,12 +63,14 @@ test('hasPermissions returns true with permissions', (t) => {
 });
 
 test('hasPermission returns true with permissions and correct method', (t) => {
-  const ctrl = new CapabilitiesController({
-    requestUserApproval: noop,
-  },
-  {
-    domains: clone(domains),
-  });
+  const ctrl = new CapabilitiesController(
+    {
+      requestUserApproval: noop,
+    },
+    {
+      domains: clone(domains),
+    },
+  );
 
   t.equal(
     ctrl.hasPermission(domain1, method1),
@@ -82,27 +86,35 @@ test('hasPermission returns true with permissions and correct method', (t) => {
 });
 
 test('hasPermissions returns with permissions but wrong domain', (t) => {
-  const ctrl = new CapabilitiesController({
-    requestUserApproval: noop,
-  },
-  {
-    domains: {
-      [domain1]: clone(domains[domain1]),
+  const ctrl = new CapabilitiesController(
+    {
+      requestUserApproval: noop,
     },
-  });
+    {
+      domains: {
+        [domain1]: clone(domains[domain1]),
+      },
+    },
+  );
 
   t.equal(ctrl.hasPermissions(domain1), true, 'should return true for domain1');
-  t.equal(ctrl.hasPermissions(domain2), false, 'should return false for domain2');
+  t.equal(
+    ctrl.hasPermissions(domain2),
+    false,
+    'should return false for domain2',
+  );
   t.end();
 });
 
 test('hasPermission returns false with permissions but wrong method', (t) => {
-  const ctrl = new CapabilitiesController({
-    requestUserApproval: noop,
-  },
-  {
-    domains: clone(domains),
-  });
+  const ctrl = new CapabilitiesController(
+    {
+      requestUserApproval: noop,
+    },
+    {
+      domains: clone(domains),
+    },
+  );
 
   t.equal(
     ctrl.hasPermission(domain1, method2),

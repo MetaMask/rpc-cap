@@ -6,13 +6,11 @@ test('restricted permission gets restricted provider', async (t) => {
   const name = 'Glen Runciter';
 
   const ctrl = new CapabilitiesController({
-
     // Auto fully approve:
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-
-      'getName': {
+      getName: {
         description: 'Returns user name',
         method: (_req, res, _next, end) => {
           res.result = name;
@@ -20,7 +18,7 @@ test('restricted permission gets restricted provider', async (t) => {
         },
       },
 
-      'greet': {
+      greet: {
         description: 'Greets the current name, if allowed.',
         method: (_req, res, _next, end, engine) => {
           engine.handle({ method: 'getName' }, (err, nameRes) => {
@@ -45,7 +43,6 @@ test('restricted permission gets restricted provider', async (t) => {
 
     t.fail('should not complete successfully.');
     t.end();
-
   } catch (error) {
     t.ok(error, 'throws an error');
     t.equal(error.code, 4100, 'Throws auth error');
@@ -57,13 +54,11 @@ test('restricted permission gets domain permissions', async (t) => {
   const name = 'Glen Runciter';
 
   const ctrl = new CapabilitiesController({
-
     // Auto fully approve:
     requestUserApproval: (reqPerms) => Promise.resolve(reqPerms.permissions),
 
     restrictedMethods: {
-
-      'getName': {
+      getName: {
         description: 'Returns user name',
         method: (_req, res, _next, end) => {
           res.result = name;
@@ -71,7 +66,7 @@ test('restricted permission gets domain permissions', async (t) => {
         },
       },
 
-      'greet': {
+      greet: {
         description: 'Greets the current name, if allowed.',
         method: (_req, res, _next, end, engine) => {
           engine.handle({ method: 'getName' }, (err, nameRes) => {
@@ -110,7 +105,6 @@ test('restricted permission gets domain permissions', async (t) => {
     t.ok(res.result.includes(name), 'greeting included name');
     t.notEqual(res.result.indexOf(name), 0, 'Name is not beginning.');
     t.end();
-
   } catch (error) {
     t.notOk(error, 'should not throw an error');
     t.end();
@@ -139,7 +133,7 @@ test('permitted provider can pass through to other methods', async (t) => {
     safeMethods: ['getName'],
 
     restrictedMethods: {
-      'greet': {
+      greet: {
         description: 'Greets the current name, if allowed.',
         method: (_req, res, _next, end, engine) => {
           engine.handle({ method: 'getName' }, (err, nameRes) => {
@@ -189,7 +183,6 @@ test('permitted provider can pass through to other methods', async (t) => {
     t.ok(res.result.includes(name), 'greeting included name');
     t.notEqual(res.result.indexOf(name), 0, 'Name is not beginning.');
     t.end();
-
   } catch (error) {
     t.notOk(error, 'should not throw an error');
     t.end();

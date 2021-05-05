@@ -1,24 +1,14 @@
 module.exports = {
-  extends: [
-    '@metamask/eslint-config',
-    '@metamask/eslint-config-nodejs',
-  ],
+  extends: ['@metamask/eslint-config', '@metamask/eslint-config-nodejs'],
 
   overrides: [
     {
-      files: [
-        '**/*.ts',
-      ],
-      extends: [
-        '@metamask/eslint-config-typescript',
-      ],
+      files: ['**/*.ts'],
+      extends: ['@metamask/eslint-config-typescript'],
     },
 
     {
-      files: [
-        '*.js',
-        '*.json',
-      ],
+      files: ['*.js', '*.json'],
       parserOptions: {
         sourceType: 'script',
       },
@@ -29,9 +19,7 @@ module.exports = {
     },
 
     {
-      files: [
-        '**/*.d.ts',
-      ],
+      files: ['**/*.d.ts'],
       rules: {
         'import/unambiguous': 'off',
       },
@@ -39,17 +27,12 @@ module.exports = {
 
     // TODO: remove after migrating to jest
     {
-      files: [
-        '**/test/*.js',
-      ],
+      files: ['**/test/*.js'],
       rules: {
         'no-shadow': ['error', { allow: ['t'] }],
       },
     },
   ],
 
-  ignorePatterns: [
-    '!.eslintrc.js',
-    'dist/',
-  ],
+  ignorePatterns: ['!.eslintrc.js', 'dist/'],
 };

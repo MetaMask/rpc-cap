@@ -52,17 +52,21 @@ export type AnnotatedJsonRpcEngine = {
 class Capability implements OcapLdCapability {
   public '@context': string[] = ['https://github.com/MetaMask/rpc-cap'];
 
-  public parentCapability: string;
+  public 'parentCapability': string;
 
-  public caveats: OcapLdCaveat[] | undefined;
+  public 'caveats': OcapLdCaveat[] | undefined;
 
-  public id: string;
+  public 'id': string;
 
-  public date: number;
+  public 'date': number;
 
-  public invoker: OriginString;
+  public 'invoker': OriginString;
 
-  constructor({ method, caveats, invoker }: {
+  'constructor'({
+    method,
+    caveats,
+    invoker,
+  }: {
     method: string;
     caveats?: OcapLdCaveat[];
     invoker: OriginString;
@@ -76,32 +80,38 @@ class Capability implements OcapLdCapability {
     }
   }
 
-  toJSON(): OcapLdCapability {
+  'toJSON'(): OcapLdCapability {
     return {
       '@context': this['@context'],
-      invoker: this.invoker,
-      parentCapability: this.parentCapability,
-      id: this.id,
-      date: this.date,
-      caveats: this.caveats,
+      'invoker': this.invoker,
+      'parentCapability': this.parentCapability,
+      'id': this.id,
+      'date': this.date,
+      'caveats': this.caveats,
     };
   }
 
-  toString(): string {
+  'toString'(): string {
     return JSON.stringify(this.toJSON());
   }
 }
 
-export class CapabilitiesController extends BaseController<any, any> implements RpcCapInterface {
+export class CapabilitiesController
+  extends BaseController<any, any>
+  implements RpcCapInterface {
   private safeMethods: string[];
 
   private restrictedMethods: RestrictedMethodMap;
 
   private requestUserApproval: UserApprovalPrompt;
 
-  private internalMethods: { [methodName: string]: AuthenticatedJsonRpcMiddleware };
+  private internalMethods: {
+    [methodName: string]: AuthenticatedJsonRpcMiddleware;
+  };
 
-  private caveats: { [ name: string]: CaveatFunctionGenerator<any, any> } = { ...caveatFunctions };
+  private caveats: { [name: string]: CaveatFunctionGenerator<any, any> } = {
+    ...caveatFunctions,
+  };
 
   private methodPrefix: string;
 
@@ -122,20 +132,21 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     this.defaultState = {
       permissionsRequests: [],
-      permissionsDescriptions: Object.keys(
-        this.restrictedMethods,
-      ).reduce<{[key: string]: string}>(
-        (acc, methodName) => {
-          acc[methodName] = this.restrictedMethods[methodName].description;
-          return acc;
-        },
-        {},
-      ),
+      permissionsDescriptions: Object.keys(this.restrictedMethods).reduce<{
+        [key: string]: string;
+      }>((acc, methodName) => {
+        acc[methodName] = this.restrictedMethods[methodName].description;
+        return acc;
+      }, {}),
     };
 
     this.internalMethods = {};
-    this.internalMethods[`${this.methodPrefix}getPermissions`] = this.getPermissionsMiddleware.bind(this);
-    this.internalMethods[`${this.methodPrefix}requestPermissions`] = this.requestPermissionsMiddleware.bind(this);
+    this.internalMethods[
+      `${this.methodPrefix}getPermissions`
+    ] = this.getPermissionsMiddleware.bind(this);
+    this.internalMethods[
+      `${this.methodPrefix}requestPermissions`
+    ] = this.requestPermissionsMiddleware.bind(this);
 
     this.initialize();
   }
@@ -150,7 +161,9 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * first argument.
    * @param  {string} domain the domain to bind the middleware to
    */
-  createBoundMiddleware(domain: string): PermittedJsonRpcMiddleware<unknown, unknown> {
+  createBoundMiddleware(
+    domain: string,
+  ): PermittedJsonRpcMiddleware<unknown, unknown> {
     return this.providerMiddlewareFunction.bind(this, { origin: domain });
   }
 
@@ -230,13 +243,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return method;
     }
 
-    const wildCardMethodsWithoutWildCard = managedMethods.reduce<{[key: string]: boolean}>(
-      (acc, methodName) => {
-        const wildCardMatch = methodName.match(/(.+)\*$/u);
-        return wildCardMatch ? { ...acc, [wildCardMatch[1]]: true } : acc;
-      },
-      {},
-    );
+    const wildCardMethodsWithoutWildCard = managedMethods.reduce<{
+      [key: string]: boolean;
+    }>((acc, methodName) => {
+      const wildCardMatch = methodName.match(/(.+)\*$/u);
+      return wildCardMatch ? { ...acc, [wildCardMatch[1]]: true } : acc;
+    }, {});
 
     // Check for potentially nested namespaces:
     // Ex: wildzone_
@@ -245,7 +257,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const segments = method.split('_');
     let managed = '';
 
-    while (segments.length > 0 && !managedMethods.includes(managed) && !wildCardMethodsWithoutWildCard[managed]) {
+    while (
+      segments.length > 0 &&
+      !managedMethods.includes(managed) &&
+      !wildCardMethodsWithoutWildCard[managed]
+    ) {
       managed += `${segments.shift()}_`;
     }
 
@@ -268,7 +284,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const methodKey = this.getMethodKeyFor(req.method);
     const permission = this.getPermission(domain.origin, req.method);
 
-    if (methodKey && typeof this.restrictedMethods[methodKey].method === 'function') {
+    if (
+      methodKey &&
+      typeof this.restrictedMethods[methodKey].method === 'function'
+    ) {
       const virtualEngine = this.createVirtualEngineFor(domain);
 
       // Check for Caveats:
@@ -277,21 +296,38 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
         permission.caveats.forEach((serializedCaveat: OcapLdCaveat) => {
           const caveatFnGens = this.caveats;
-          const caveatFnGen: CaveatFunctionGenerator<unknown, unknown> = caveatFnGens[serializedCaveat.type];
-          const caveatFn: CaveatFunction<unknown, unknown> = caveatFnGen(serializedCaveat);
+          const caveatFnGen: CaveatFunctionGenerator<unknown, unknown> =
+            caveatFnGens[serializedCaveat.type];
+          const caveatFn: CaveatFunction<unknown, unknown> = caveatFnGen(
+            serializedCaveat,
+          );
           engine.push(caveatFn);
         });
 
         engine.push((_req, _res, _next, _end) => {
-          return this.restrictedMethods[methodKey].method(_req, _res, _next, _end, virtualEngine);
+          return this.restrictedMethods[methodKey].method(
+            _req,
+            _res,
+            _next,
+            _end,
+            virtualEngine,
+          );
         });
 
-        const middleware: JsonRpcMiddleware<unknown, unknown> = engine.asMiddleware();
+        const middleware: JsonRpcMiddleware<
+          unknown,
+          unknown
+        > = engine.asMiddleware();
         return middleware(req, res, next, end);
-
       }
 
-      return this.restrictedMethods[methodKey].method(req, res, next, end, virtualEngine);
+      return this.restrictedMethods[methodKey].method(
+        req,
+        res,
+        next,
+        end,
+        virtualEngine,
+      );
     }
 
     return end(methodNotFound({ methodName: req.method, data: req }));
@@ -336,10 +372,11 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} method - The method of the permission to retrieve.
    */
   getPermission(domain: string, method: string): OcapLdCapability | undefined {
-    const permissions = this.getPermissionsForDomain(domain)
-      .filter((permission) => {
+    const permissions = this.getPermissionsForDomain(domain).filter(
+      (permission) => {
         return permission.parentCapability === method;
-      });
+      },
+    );
     if (permissions.length > 0) {
       return permissions.shift();
     }
@@ -392,9 +429,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     this.setPermissionsRequests(reqs);
   }
 
-  setPermissionsRequests(
-    permissionsRequests: PermissionsRequest[],
-  ): void {
+  setPermissionsRequests(permissionsRequests: PermissionsRequest[]): void {
     this.update({ permissionsRequests });
   }
 
@@ -427,7 +462,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const permissions: { [methodName: string]: OcapLdCapability } = {};
 
     for (const method of Object.keys(approved)) {
-
       const newPerm = new Capability({
         method,
         invoker: domain,
@@ -435,11 +469,12 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       });
 
       if (newPerm.caveats && !this.validateCaveats(newPerm.caveats)) {
-
-        return end(ethErrors.rpc.internal({
-          message: 'Invalid caveats.',
-          data: newPerm,
-        }));
+        return end(
+          ethErrors.rpc.internal({
+            message: 'Invalid caveats.',
+            data: newPerm,
+          }),
+        );
       }
 
       permissions[method] = newPerm;
@@ -473,7 +508,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return { permissions: [] };
     }
     return entry;
-
   }
 
   /**
@@ -496,9 +530,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {OriginString} domain - The origin string of the domain.
    * @param {RpcCapDomainEntry} domainSettings - The associated domain settings.
    */
-  setDomain(
-    domain: OriginString, domainSettings: RpcCapDomainEntry,
-  ): void {
+  setDomain(domain: OriginString, domainSettings: RpcCapDomainEntry): void {
     const domains = this.getDomains();
     if (domainSettings.permissions.length > 0) {
       domains[domain] = domainSettings;
@@ -520,13 +552,17 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     domainName: string,
     newPermissions: { [methodName: string]: OcapLdCapability },
   ): void {
-    const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(domainName);
+    const domain: RpcCapDomainEntry = this.getOrCreateDomainSettings(
+      domainName,
+    );
     const newKeys = Object.keys(newPermissions);
 
     // remove old permissions so that they will be overwritten
-    domain.permissions = domain.permissions.filter((oldPerm: OcapLdCapability) => {
-      return !newKeys.includes(oldPerm.parentCapability);
-    });
+    domain.permissions = domain.permissions.filter(
+      (oldPerm: OcapLdCapability) => {
+        return !newKeys.includes(oldPerm.parentCapability);
+      },
+    );
 
     for (const methodName of Object.keys(newPermissions)) {
       domain.permissions.push(newPermissions[methodName]);
@@ -546,7 +582,6 @@ export class CapabilitiesController extends BaseController<any, any> implements 
     const seenNames: { [key: string]: boolean } = {};
 
     for (const caveat of caveats) {
-
       if (
         !this.validateCaveat(caveat) ||
         (caveat.name && seenNames[caveat.name]) // names must be unique
@@ -574,9 +609,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       Array.isArray(caveat) ||
       !(caveat.type in this.caveats) ||
       // name may be omitted, but not empty
-      (
-        'name' in caveat && (!caveat.name || typeof caveat.name !== 'string')
-      )
+      ('name' in caveat && (!caveat.name || typeof caveat.name !== 'string'))
     ) {
       return false;
     }
@@ -591,10 +624,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
    * @param {string} domainName - The grantee domain.
    * @param {string} methodName - The name of the method identifying the permission.
    */
-  getCaveats(
-    domainName: string,
-    methodName: string,
-  ): OcapLdCaveat[] | void {
+  getCaveats(domainName: string, methodName: string): OcapLdCaveat[] | void {
     return this.getPermission(domainName, methodName)?.caveats;
   }
 
@@ -640,17 +670,10 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       });
     }
 
-    const perm = this._getPermissionForCaveat(
-      domainName, methodName,
-    );
+    const perm = this._getPermissionForCaveat(domainName, methodName);
 
-    const newCaveats =
-      perm.caveats
-        ? [...perm.caveats, caveat]
-        : [caveat];
-    this._validateAndUpdateCaveats(
-      domainName, methodName, newCaveats, perm,
-    );
+    const newCaveats = perm.caveats ? [...perm.caveats, caveat] : [caveat];
+    this._validateAndUpdateCaveats(domainName, methodName, newCaveats, perm);
   }
 
   /**
@@ -677,9 +700,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       });
     }
 
-    const perm = this._getPermissionForCaveat(
-      domainName, methodName,
-    );
+    const perm = this._getPermissionForCaveat(domainName, methodName);
 
     // get target caveat
     const targetCaveat = perm.caveats?.find(
@@ -711,9 +732,7 @@ export class CapabilitiesController extends BaseController<any, any> implements 
 
     newCaveats.push({ ...targetCaveat, value: caveatValue });
 
-    this._validateAndUpdateCaveats(
-      domainName, methodName, newCaveats, perm,
-    );
+    this._validateAndUpdateCaveats(domainName, methodName, newCaveats, perm);
   }
 
   /**
@@ -778,16 +797,14 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return;
     }
 
-    domain.permissions = domain.permissions.filter(
-      (perm: OcapLdCapability) => {
-        for (const r of permissionsToRemove) {
-          if (r.parentCapability === perm.parentCapability) {
-            return false;
-          }
+    domain.permissions = domain.permissions.filter((perm: OcapLdCapability) => {
+      for (const r of permissionsToRemove) {
+        if (r.parentCapability === perm.parentCapability) {
+          return false;
         }
-        return true;
-      },
-    );
+      }
+      return true;
+    });
 
     this.setDomain(domainName, domain);
   }
@@ -860,9 +877,8 @@ export class CapabilitiesController extends BaseController<any, any> implements 
       return end(error);
     }
 
-    const id = typeof req.id === 'number' || req.id
-      ? req.id.toString()
-      : uuid();
+    const id =
+      typeof req.id === 'number' || req.id ? req.id.toString() : uuid();
 
     const permissions: RequestedPermissions = req.params[0];
     const requests = this.getPermissionsRequests();
