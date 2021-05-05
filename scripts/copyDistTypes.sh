@@ -5,13 +5,12 @@ set -o pipefail
 
 # constants
 
-NO_DIST_MSG='Please run `yarn build:typescript` before continuing.'
+NO_DIST_MSG="Please run \`yarn build:typescript\` before continuing."
 
 DIST='dist'
 DIST_SRC='dist/src'
-DIST_TYPES='dist/src/@types'
 
-SRC_TYPES='src/@types'
+SRC_TYPES='src/types'
 
 # error func
 function abort {

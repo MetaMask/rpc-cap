@@ -13,7 +13,7 @@ import {
 
 import uuid from 'uuid/v4';
 
-import {
+import type {
   RpcCapInterface,
   RestrictedMethodMap,
   UserApprovalPrompt,
@@ -27,7 +27,7 @@ import {
   RpcCapDomainRegistry,
   OriginString,
   PermittedJsonRpcMiddleware,
-} from './src/@types';
+} from './src/types';
 
 import {
   CaveatFunction,
@@ -41,7 +41,7 @@ import {
   methodNotFound,
 } from './src/errors';
 
-import { OcapLdCapability, OcapLdCaveat } from './src/@types/ocap-ld';
+import { OcapLdCapability, OcapLdCaveat } from './src/types/ocap-ld';
 
 export { CaveatTypes } from './src/caveats';
 

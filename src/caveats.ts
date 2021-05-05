@@ -1,7 +1,7 @@
 import { JsonRpcMiddleware } from 'json-rpc-engine';
 import isSubset from 'is-subset';
 import equal from 'fast-deep-equal';
-import { OcapLdCaveat } from './@types/ocap-ld';
+import { OcapLdCaveat } from './types/ocap-ld';
 import { unauthorized } from './errors';
 
 export type CaveatFunction<T, U> = JsonRpcMiddleware<T, U>;

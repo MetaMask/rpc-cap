@@ -78,7 +78,7 @@ Once initialized, it exposes a special [AuthenticatedJsonRpcMiddleware](https://
 
 It simply passes through methods that are listed in the optional `safeMethods` array, but otherwise requires the requesting domain to have a permissions entry.
 
-This module is written in TypeScript, and so type definitions can be found in [our types file](./src/@types/index.d.ts).
+This module is written in TypeScript, and so type definitions can be found in [our types file](./src/types/index.d.ts).
 
 ## API
 
@@ -154,7 +154,7 @@ Some caveat types we are looking forward to supporting eventually:
 #### requestPermissions (IRequestedPermissions)
 
 ```typescript
-// @types
+// types
 
 interface IRequestedPermissions { [methodName: string]: IMethodRequest }
 type IMethodRequest = Partial<IOcapLdCapability>;
@@ -422,7 +422,7 @@ To test against an example dapp, serve the example using `yarn serve` and explor
 
 ## Object Definitions
 
-Most object type definitions can be found in [our types file](./src/@types/index.d.ts).
+Most object type definitions can be found in [our types file](./src/types/index.d.ts).
 
 ## Architecture
 
