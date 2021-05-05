@@ -10,7 +10,7 @@
     "skipLibCheck": false,
     "strict": true,
     "target": "ES2017",
-    "typeRoots": ["./node_modules/@types", "./typings"]
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
   "include": ["./src", "index.ts"]
 }
