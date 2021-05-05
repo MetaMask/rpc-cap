@@ -6,3 +6,4 @@ dist/
 *.log
 .nyc_output
 coverage
+.eslintcache

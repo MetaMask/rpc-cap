@@ -1,23 +1,19 @@
 module.exports = {
   extends: [
     '@metamask/eslint-config',
-    '@metamask/eslint-config/config/nodejs',
+    '@metamask/eslint-config-nodejs',
   ],
-  parserOptions: {
-    ecmaVersion: 2018,
-  },
-  plugins: [
-    'json',
-  ],
+
   overrides: [
     {
       files: [
         '**/*.ts',
       ],
       extends: [
-        '@metamask/eslint-config/config/typescript',
+        '@metamask/eslint-config-typescript',
       ],
     },
+
     {
       files: [
         '*.js',
@@ -31,6 +27,7 @@ module.exports = {
         '@typescript-eslint/no-var-requires': 'off',
       },
     },
+
     {
       files: [
         '**/*.d.ts',
@@ -39,6 +36,7 @@ module.exports = {
         'import/unambiguous': 'off',
       },
     },
+
     // TODO: remove after migrating to jest
     {
       files: [
@@ -49,9 +47,9 @@ module.exports = {
       },
     },
   ],
+
   ignorePatterns: [
     '!.eslintrc.js',
-    'node_modules/',
     'dist/',
   ],
 };
