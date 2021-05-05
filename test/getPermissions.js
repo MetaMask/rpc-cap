@@ -47,16 +47,18 @@ test('getPermissions with none returns empty object', async (t) => {
 test('getPermissions with some returns them', async (t) => {
   const expected = arbitraryCaps;
 
-  const ctrl = new CapabilitiesController({
-    requestUserApproval: noop,
-  },
-  {
-    domains: {
-      'login.metamask.io': {
-        permissions: expected,
+  const ctrl = new CapabilitiesController(
+    {
+      requestUserApproval: noop,
+    },
+    {
+      domains: {
+        'login.metamask.io': {
+          permissions: expected,
+        },
       },
     },
-  });
+  );
 
   const domain = { origin: 'login.metamask.io' };
   const req = { method: 'getPermissions' };

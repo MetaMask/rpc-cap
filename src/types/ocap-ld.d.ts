@@ -12,17 +12,17 @@
 interface OcapLdCapability {
   '@context': string[];
   // A GUID representing this method.
-  id: string;
+  'id': string;
   // A pointer to the resource to invoke, like an API url,
   // or the method name (in the case of a local API).
-  parentCapability: string;
+  'parentCapability': string;
   // A globally unique identifier representing the valid holder/invoker of this capability.
-  invoker: string;
+  'invoker': string;
   // The issuing date, in UNIX epoch time
-  date?: number;
+  'date'?: number;
   // An optional array of caveat objects.
-  caveats?: OcapLdCaveat[];
-  proof?: OcapLdProof;
+  'caveats'?: OcapLdCaveat[];
+  'proof'?: OcapLdProof;
 }
 
 export interface OcapLdCaveat {

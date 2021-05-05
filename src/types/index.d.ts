@@ -22,7 +22,7 @@ export type AuthenticatedJsonRpcMiddleware = (
  * Includes information about the domain granted, as well as the permissions assigned.
  */
 export interface PermissionsRequest {
-  metadata: PermissionsRequestMetadata ;
+  metadata: PermissionsRequestMetadata;
   permissions: RequestedPermissions;
 }
 
@@ -53,7 +53,9 @@ export interface RequestedPermissions {
  */
 type MethodRequest = Partial<OcapLdCapability>;
 
-export type UserApprovalPrompt = (permissionsRequest: PermissionsRequest) => Promise<RequestedPermissions>;
+export type UserApprovalPrompt = (
+  permissionsRequest: PermissionsRequest,
+) => Promise<RequestedPermissions>;
 
 export interface RpcCapDomainEntry {
   permissions: OcapLdCapability[];
@@ -83,8 +85,15 @@ export interface RestrictedMethodEntry<T, U> {
   method: PermittedJsonRpcMiddleware<T, U>;
 }
 
-export interface PermittedJsonRpcMiddleware<T, U> extends JsonRpcMiddleware<T, U> {
-  (req: JsonRpcRequest<T>, res: PendingJsonRpcResponse<U>, next: JsonRpcEngineNextCallback, end: JsonRpcEngineEndCallback, engine?: JsonRpcEngine): void;
+export interface PermittedJsonRpcMiddleware<T, U>
+  extends JsonRpcMiddleware<T, U> {
+  (
+    req: JsonRpcRequest<T>,
+    res: PendingJsonRpcResponse<U>,
+    next: JsonRpcEngineNextCallback,
+    end: JsonRpcEngineEndCallback,
+    engine?: JsonRpcEngine,
+  ): void;
 }
 
 export interface RestrictedMethodMap {
@@ -93,14 +102,17 @@ export interface RestrictedMethodMap {
 
 export interface RpcCapInterface {
   getPermissionsForDomain: (domain: string) => OcapLdCapability[];
-  getPermission: (domain: string, method: string) => OcapLdCapability | undefined;
+  getPermission: (
+    domain: string,
+    method: string,
+  ) => OcapLdCapability | undefined;
   getPermissionsRequests: () => PermissionsRequest[];
-  grantNewPermissions (
+  grantNewPermissions(
     domain: string,
     approved: RequestedPermissions,
     res: JsonRpcResponse<any>,
     end: JsonRpcEngineEndCallback,
-    granter?: string
+    granter?: string,
   ): void;
   getDomains: () => RpcCapDomainRegistry;
   setDomains: (domains: RpcCapDomainRegistry) => void;
@@ -111,10 +123,15 @@ export interface RpcCapInterface {
     domainName: string,
     newPermissions: {
       [methodName: string]: OcapLdCapability;
-    }
+    },
   ) => void;
-  removePermissionsFor: (domain: string, permissionsToRemove: OcapLdCapability[]) => void;
-  createBoundMiddleware: <T, U>(domain: string) => PermittedJsonRpcMiddleware<T, U>;
+  removePermissionsFor: (
+    domain: string,
+    permissionsToRemove: OcapLdCapability[],
+  ) => void;
+  createBoundMiddleware: <T, U>(
+    domain: string,
+  ) => PermittedJsonRpcMiddleware<T, U>;
   createPermissionedEngine: (domain: string) => JsonRpcEngine;
 
   // Injected permissions-handling methods:

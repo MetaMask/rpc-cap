@@ -1,6 +1,6 @@
 # `rpc-cap`
 
-## JSON RPC Capabilities Middleware 
+## JSON RPC Capabilities Middleware
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine), to instantly add a user-consent based permissions system on top of any JSON-RPC API.
 
@@ -63,8 +63,8 @@ server.on('connection', (socket) => {
 
 Once this middleware is added to a server that is directing requests to a [JsonRpcEngine](https://github.com/MetaMask/json-rpc-engine), it adds some new methods to the RPC server:
 
-- `getPermissions`: For listing the currently available restricted methods.
-- `requestPermissions`: For requesting additional permissions from the user.
+-   `getPermissions`: For listing the currently available restricted methods.
+-   `requestPermissions`: For requesting additional permissions from the user.
 
 ## Installation
 
@@ -89,45 +89,48 @@ Here is a more detailed look at the methods that are added to a JSON-RPC service
 #### getPermissions() => IOcapLdCapability[]
 
 ```typescript
-engine.handle({
-  method: 'getPermissions'
-}, (err, result) => {
-  console.log(result);
-  /**
-   * [{ parentCapability: 'sendEmail' ... }]
-   **/
-})
+engine.handle(
+    {
+        method: 'getPermissions',
+    },
+    (err, result) => {
+        console.log(result);
+        /**
+         * [{ parentCapability: 'sendEmail' ... }]
+         **/
+    }
+);
 ```
 
 If the `method` requested is `getPermissions` (optionally preceded by `methodPrefix`), the response will be an array of capability objects, which each represent the permission to call a function, with the key `parentCapability` to indicate the restricted method's name.
 
 ```typescript
 interface IOcapLdCapability {
-  // An array of strings describing this resource, and pointing at this documentation.
-  "@context": string[];
+    // An array of strings describing this resource, and pointing at this documentation.
+    '@context': string[];
 
-  // A GUID representing this method.
-  id: string;
+    // A GUID representing this method.
+    id: string;
 
-  // The restrictedMethod name:
-  parentCapability: string;
+    // The restrictedMethod name:
+    parentCapability: string;
 
-  // The recipient's internal domain identifier:
-  invoker: string;
+    // The recipient's internal domain identifier:
+    invoker: string;
 
-  // The issuing date, in UNIX epoch time
-  date?: number;
+    // The issuing date, in UNIX epoch time
+    date?: number;
 
-  // An optional array of caveat objects.
-  caveats?: IOcapLdCaveat[];
+    // An optional array of caveat objects.
+    caveats?: IOcapLdCaveat[];
 }
 
 export type IOcapLdCaveat = {
-  // A type identifying the type of caveat.
-  type: string,
-  // Any additional data required to enforce the caveat type.
-  value?: any;
-}
+    // A type identifying the type of caveat.
+    type: string;
+    // Any additional data required to enforce the caveat type.
+    value?: any;
+};
 ```
 
 Of particular interest will be the `caveats` array, which will eventually be customizable by the platform, and describe possible limitations being imposed on the way that particular method is called:
@@ -138,63 +141,65 @@ Currently all supported caveats can be found in the [Caveats.ts file](./src/cave
 
 Right now the supported caveat types are simple, to demonstrate the concept:
 
-- requireParamsIsSubset: Ensures that the method can only be called with a subset of some predefined parameters.
-- requireParamsIsSuperset: Ensures that the method can only be called with a superset of some predefined parameters.
-- filterResponse: Ensures that the response will only include explicitly permitted values in it (if an array).
-- limitResponse: Ensures that the response will only include a maximum number of entries as defined by the value (if an array).
-- forceParams: Overwrites the params of all calls to the method with a specified list of params.
+-   requireParamsIsSubset: Ensures that the method can only be called with a subset of some predefined parameters.
+-   requireParamsIsSuperset: Ensures that the method can only be called with a superset of some predefined parameters.
+-   filterResponse: Ensures that the response will only include explicitly permitted values in it (if an array).
+-   limitResponse: Ensures that the response will only include a maximum number of entries as defined by the value (if an array).
+-   forceParams: Overwrites the params of all calls to the method with a specified list of params.
 
 Some caveat types we are looking forward to supporting eventually:
 
-- Expiration caveat
-- Invocation limit
-- Total sum caveat
-- ???
+-   Expiration caveat
+-   Invocation limit
+-   Total sum caveat
+-   ???
 
 #### requestPermissions (IRequestedPermissions)
 
 ```typescript
 // types
 
-interface IRequestedPermissions { [methodName: string]: IMethodRequest }
+interface IRequestedPermissions {
+    [methodName: string]: IMethodRequest;
+}
 type IMethodRequest = Partial<IOcapLdCapability>;
 
 // Here is the relevant subset of this object:
 interface IOcapLdCapability {
-  // An optional array of caveat objects.
-  caveats?: IOcapLdCaveat[];
+    // An optional array of caveat objects.
+    caveats?: IOcapLdCaveat[];
 }
 
 type IOcapLdCaveat = {
-  // A type identifying the type of caveat.
-  type: string,
-  // Any additional data required to enforce the caveat type.
-  value?: any;
-}
+    // A type identifying the type of caveat.
+    type: string;
+    // Any additional data required to enforce the caveat type.
+    value?: any;
+};
 ```
 
 A sample permissions request:
 
 ```typescript
 engine.handle({
-  method: 'requestPermissions',
-  params: [
-    {
-      unlockDoor: {},
-      composeMessage: {},
-      sendEmail: {
-        caveats: [
-          {
-            type: 'requireParamsIsSuperset',
-            value: {
-              to: 'only@my-address.com',
-            }
-          }
-        ]
-      },
-    }
-  ]
-})
+    method: 'requestPermissions',
+    params: [
+        {
+            unlockDoor: {},
+            composeMessage: {},
+            sendEmail: {
+                caveats: [
+                    {
+                        type: 'requireParamsIsSuperset',
+                        value: {
+                            to: 'only@my-address.com',
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+});
 ```
 
 As you can see, each requested permission includes an options object, which can specify `caveats` that the requestor is willing to work within.
@@ -217,8 +222,8 @@ Note this does mean each restricted engine's state is stored in a single blob, a
 
 An optional string that will be prepended to the automatically-inserted permissions methods, to allow namespacing and avoid name collisions.
 
-- `getPermissions`: For listing the currently available restricted methods.
-- `requestPermissions`: For requesting additional permissions from the user.
+-   `getPermissions`: For listing the currently available restricted methods.
+-   `requestPermissions`: For requesting additional permissions from the user.
 
 #### safeMethods?: string[]
 
@@ -268,16 +273,22 @@ The `PermittedJsonRpcMiddleware` is just like a normal `json-rpc-engine` middlew
 
 ```typescript
 interface RestrictedMethodMap {
-  [key: string]: RestrictedMethodEntry;
+    [key: string]: RestrictedMethodEntry;
 }
 
 interface RestrictedMethodEntry {
-  description: string;
-  method: PermittedJsonRpcMiddleware;
+    description: string;
+    method: PermittedJsonRpcMiddleware;
 }
 
 interface PermittedJsonRpcMiddleware extends JsonRpcMiddleware {
-  (req: JsonRpcRequest<any>, res: JsonRpcResponse<any>, next: JsonRpcEngineNextCallback, end: JsonRpcEngineEndCallback, engine?: JsonRpcEngine): void;
+    (
+        req: JsonRpcRequest<any>,
+        res: JsonRpcResponse<any>,
+        next: JsonRpcEngineNextCallback,
+        end: JsonRpcEngineEndCallback,
+        engine?: JsonRpcEngine
+    ): void;
 }
 ```
 
@@ -285,42 +296,44 @@ interface PermittedJsonRpcMiddleware extends JsonRpcMiddleware {
 
 ```typescript
 interface UserApprovalPrompt {
-  (permissionsRequest: IPermissionsRequest): Promise<IRequestedPermissions>;
+    (permissionsRequest: IPermissionsRequest): Promise<IRequestedPermissions>;
 }
 
 interface IPermissionsRequest {
-  origin: string;
-  metadata: IOriginMetadata;
-  permissions: IRequestedPermissions;
+    origin: string;
+    metadata: IOriginMetadata;
+    permissions: IRequestedPermissions;
 }
 
 interface IOriginMetadata {
-  id?: string;
-  origin: IOriginString;
-  site?: {
-    name?: string,
-    icon?: any,
-  }
+    id?: string;
+    origin: IOriginString;
+    site?: {
+        name?: string;
+        icon?: any;
+    };
 }
 
-interface IRequestedPermissions { [methodName: string]: IMethodRequest }
+interface IRequestedPermissions {
+    [methodName: string]: IMethodRequest;
+}
 
-type IMethodRequest = Partial<IOcapLdCapability>
+type IMethodRequest = Partial<IOcapLdCapability>;
 
 interface IOcapLdCapability {
-  "@context": string[];
-  // A GUID representing this method.
-  id: string;
-  // A pointer to the resource to invoke, like an API url,
-  // or the method name (in the case of a local API).
-  parentCapability: string;
-  // A globally unique identifier representing the valid holder/invoker of this capability.
-  invoker: string;
-  // The issuing date, in UNIX epoch time
-  date?: number;
-  // An optional array of caveat objects.
-  caveats?: IOcapLdCaveat[];
-  proof?: IOcapLdProof;
+    '@context': string[];
+    // A GUID representing this method.
+    id: string;
+    // A pointer to the resource to invoke, like an API url,
+    // or the method name (in the case of a local API).
+    parentCapability: string;
+    // A globally unique identifier representing the valid holder/invoker of this capability.
+    invoker: string;
+    // The issuing date, in UNIX epoch time
+    date?: number;
+    // An optional array of caveat objects.
+    caveats?: IOcapLdCaveat[];
+    proof?: IOcapLdProof;
 }
 ```
 
@@ -328,8 +341,8 @@ A promise-returning function representing
 
 You can see our `IMethodRequest` objects, along with our internal permissions storage, are in a schema based on the [ocap-ld](https://w3c-ccg.github.io/ocap-ld/) proposal, which may allow us to add signatures to these permissions in the future. That would allow:
 
-- Clients to back up their own permissions instead of the server storing permissions tables.
-- Unauthenticated, stateless connections, which are authenticated by signed "invocations" by the keys that these permissions would be signed "to".
+-   Clients to back up their own permissions instead of the server storing permissions tables.
+-   Unauthenticated, stateless connections, which are authenticated by signed "invocations" by the keys that these permissions would be signed "to".
 
 None of these features are used yet, but we've used this schema internally to provide an interesting possible future path for the project.
 

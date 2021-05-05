@@ -1,44 +1,47 @@
 // / <reference path="../index.ts" />
 
 const test = require('tape');
-const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider.unauthorized;
+const UNAUTHORIZED_CODE = require('eth-rpc-errors').errorCodes.provider
+  .unauthorized;
 const { CapabilitiesController } = require('../dist');
 const { sendRpcMethodWithResponse } = require('./lib/utils');
 
 test('requireParamsIsSubset caveat throws if params is not a subset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'write': {
-        method: (req, res, _next, end) => {
-          const { params } = req;
-          res.result = params;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        write: {
+          method: (req, res, _next, end) => {
+            const { params } = req;
+            res.result = params;
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'requireParamsIsSubset', value: ['foo', { bar: 'baz' }] },
-      ];
-      return perms;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.write.caveats = [
+          { type: 'requireParamsIsSubset', value: ['foo', { bar: 'baz' }] },
+        ];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          write: {},
         },
       ],
     };
@@ -48,15 +51,11 @@ test('requireParamsIsSubset caveat throws if params is not a subset of the cavea
     // Now let's call that restricted method:
     req = {
       method: 'write',
-      params: [
-        'foo',
-        { bar: 'baz', definitely: 'restricted' },
-      ],
+      params: ['foo', { bar: 'baz', definitely: 'restricted' }],
     };
 
     await sendRpcMethodWithResponse(ctrl, domain, req);
     t.notOk(true, 'should have thrown');
-
   } catch (err) {
     t.ok(err, 'should throw');
     t.equal(err.code, UNAUTHORIZED_CODE, 'Auth error code.');
@@ -67,36 +66,38 @@ test('requireParamsIsSubset caveat throws if params is not a subset of the cavea
 test('requireParamsIsSubset caveat passes through if params is a subset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'write': {
-        method: (_req, res, _next, end) => {
-          res.result = 'Success';
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        write: {
+          method: (_req, res, _next, end) => {
+            res.result = 'Success';
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'requireParamsIsSubset', value: [{ bar: 'baz' }, 'foo'] },
-      ];
-      return perms;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.write.caveats = [
+          { type: 'requireParamsIsSubset', value: [{ bar: 'baz' }, 'foo'] },
+        ];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          write: {},
         },
       ],
     };
@@ -106,16 +107,13 @@ test('requireParamsIsSubset caveat passes through if params is a subset of the c
     // Now let's call that restricted method:
     req = {
       method: 'write',
-      params: [
-        { bar: 'baz' },
-      ],
+      params: [{ bar: 'baz' }],
     };
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
 
     t.ok(result, 'should succeed');
     t.equal(result, 'Success', 'Just returned the request');
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -125,37 +123,39 @@ test('requireParamsIsSubset caveat passes through if params is a subset of the c
 test('requireParamsIsSuperset caveat throws if params is not a superset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'write': {
-        method: (req, res, _next, end) => {
-          const { params } = req;
-          res.result = params;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        write: {
+          method: (req, res, _next, end) => {
+            const { params } = req;
+            res.result = params;
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'requireParamsIsSuperset', value: ['foo', { bar: 'baz' }] },
-      ];
-      return perms;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.write.caveats = [
+          { type: 'requireParamsIsSuperset', value: ['foo', { bar: 'baz' }] },
+        ];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          write: {},
         },
       ],
     };
@@ -165,15 +165,11 @@ test('requireParamsIsSuperset caveat throws if params is not a superset of the c
     // Now let's call that restricted method:
     req = {
       method: 'write',
-      params: [
-        'foo',
-        { definitely: 'restricted' },
-      ],
+      params: ['foo', { definitely: 'restricted' }],
     };
 
     await sendRpcMethodWithResponse(ctrl, domain, req);
     t.notOk(true, 'should have thrown');
-
   } catch (err) {
     t.ok(err, 'should throw');
     t.equal(err.code, UNAUTHORIZED_CODE, 'Auth error code.');
@@ -184,36 +180,38 @@ test('requireParamsIsSuperset caveat throws if params is not a superset of the c
 test('requireParamsIsSuperset caveat passes through if params is a superset of the caveat value.', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'write': {
-        method: (_req, res, _next, end) => {
-          res.result = 'Success';
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        write: {
+          method: (_req, res, _next, end) => {
+            res.result = 'Success';
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'requireParamsIsSuperset', value: ['foo', { bar: 'baz' }] },
-      ];
-      return perms;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.write.caveats = [
+          { type: 'requireParamsIsSuperset', value: ['foo', { bar: 'baz' }] },
+        ];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          write: {},
         },
       ],
     };
@@ -223,17 +221,13 @@ test('requireParamsIsSuperset caveat passes through if params is a superset of t
     // Now let's call that restricted method:
     req = {
       method: 'write',
-      params: [
-        'foo',
-        { bar: 'baz', also: 'bonusParams!' },
-      ],
+      params: ['foo', { bar: 'baz', also: 'bonusParams!' }],
     };
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
 
     t.ok(result, 'should succeed');
     t.equal(result, 'Success', 'Just returned the request');
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -248,34 +242,36 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
     '0x30476e1d96ae0ebaae94558afa146b0023df2d07',
   ];
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'readAccounts': {
-        method: (_req, res, _next, end) => {
-          res.result = items;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        readAccounts: {
+          method: (_req, res, _next, end) => {
+            res.result = items;
+            end();
+          },
         },
       },
-    },
 
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.readAccounts.caveats = [
-        { type: 'filterResponse', value: [items[1], '123'] },
-      ];
-      return perms;
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.readAccounts.caveats = [
+          { type: 'filterResponse', value: [items[1], '123'] },
+        ];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'readAccounts': {},
+          readAccounts: {},
         },
       ],
     };
@@ -285,16 +281,12 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
     // Now let's call that restricted method:
     req = {
       method: 'readAccounts',
-      params: [
-        'notAllowed',
-        { definitely: 'restricted' },
-      ],
+      params: ['notAllowed', { definitely: 'restricted' }],
     };
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.equal(result.length, 1, 'A single item');
     t.equal(result[0], items[1], 'returns the single intersecting item');
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -304,36 +296,41 @@ test('filterResponse caveat returns empty if params are not a subset.', async (t
 test('filterResponse caveat passes through subset portion of response when objects are used', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'write': {
-        method: (_req, res, _next, end) => {
-          res.result = [{ foo: 'bar' }, { baz: 'boo' }, 3, 4, 5];
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        write: {
+          method: (_req, res, _next, end) => {
+            res.result = [{ foo: 'bar' }, { baz: 'boo' }, 3, 4, 5];
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'filterResponse', value: [{ foo: 'bar' }, { baz: 'boo' }, 3] },
-      ];
-      return perms;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.write.caveats = [
+          {
+            type: 'filterResponse',
+            value: [{ foo: 'bar' }, { baz: 'boo' }, 3],
+          },
+        ];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          write: {},
         },
       ],
     };
@@ -349,8 +346,11 @@ test('filterResponse caveat passes through subset portion of response when objec
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
 
     t.ok(result, 'should succeed');
-    t.deepEqual(result, [{ foo: 'bar' }, { baz: 'boo' }, 3], 'returned the correct subset');
-
+    t.deepEqual(
+      result,
+      [{ foo: 'bar' }, { baz: 'boo' }, 3],
+      'returned the correct subset',
+    );
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -360,36 +360,36 @@ test('filterResponse caveat passes through subset portion of response when objec
 test('filterResponse caveat passes through subset portion of response', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'write': {
-        method: (_req, res, _next, end) => {
-          res.result = [1, 2, 3, 4, 5];
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        write: {
+          method: (_req, res, _next, end) => {
+            res.result = [1, 2, 3, 4, 5];
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'filterResponse', value: [0, 1, 2, 3] },
-      ];
-      return perms;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.write.caveats = [{ type: 'filterResponse', value: [0, 1, 2, 3] }];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          write: {},
         },
       ],
     };
@@ -406,7 +406,6 @@ test('filterResponse caveat passes through subset portion of response', async (t
 
     t.ok(result, 'should succeed');
     t.deepEqual(result, [1, 2, 3], 'returned the correct subset');
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -421,34 +420,36 @@ test('limitResponseLength caveat returns all results if less than value.', async
     '0x30476e1d96ae0ebaae94558afa146b0023df2d07',
   ];
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'readAccounts': {
-        method: (_req, res, _next, end) => {
-          res.result = items;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        readAccounts: {
+          method: (_req, res, _next, end) => {
+            res.result = items;
+            end();
+          },
         },
       },
-    },
 
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.readAccounts.caveats = [
-        { type: 'limitResponseLength', value: 10 },
-      ];
-      return perms;
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.readAccounts.caveats = [
+          { type: 'limitResponseLength', value: 10 },
+        ];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'readAccounts': {},
+          readAccounts: {},
         },
       ],
     };
@@ -458,16 +459,12 @@ test('limitResponseLength caveat returns all results if less than value.', async
     // Now let's call that restricted method:
     req = {
       method: 'readAccounts',
-      params: [
-        'notAllowed',
-        { definitely: 'restricted' },
-      ],
+      params: ['notAllowed', { definitely: 'restricted' }],
     };
 
     const result = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.equal(result.length, 3, 'All(3) items');
     t.equal(result[0], items[0], 'Returns in original order');
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -477,36 +474,36 @@ test('limitResponseLength caveat returns all results if less than value.', async
 test('limitResponseLength caveat returns only the specified number of values when original exceeds that number', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'write': {
-        method: (_req, res, _next, end) => {
-          res.result = [1, 2, 3, 4, 5];
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        write: {
+          method: (_req, res, _next, end) => {
+            res.result = [1, 2, 3, 4, 5];
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      const perms = permissionsRequest.permissions;
-      perms.write.caveats = [
-        { type: 'limitResponseLength', value: 3 },
-      ];
-      return perms;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        const perms = permissionsRequest.permissions;
+        perms.write.caveats = [{ type: 'limitResponseLength', value: 3 }];
+        return perms;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'write': {},
+          write: {},
         },
       ],
     };
@@ -523,7 +520,6 @@ test('limitResponseLength caveat returns only the specified number of values whe
 
     t.ok(result, 'should succeed');
     t.deepEqual(result, [1, 2, 3], 'returned the correct subset');
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -533,35 +529,35 @@ test('limitResponseLength caveat returns only the specified number of values whe
 test('forceParams caveat overwrites', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'testMethod': {
-        method: (req, res, _next, end) => {
-          res.result = req.params;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        testMethod: {
+          method: (req, res, _next, end) => {
+            res.result = req.params;
+            end();
+          },
         },
       },
-    },
 
-    // User approves on condition of first arg being 'foo',
-    // and second arg having the 'bar': 'baz' value.
-    requestUserApproval: async (permissionsRequest) => {
-      return permissionsRequest.permissions;
+      // User approves on condition of first arg being 'foo',
+      // and second arg having the 'bar': 'baz' value.
+      requestUserApproval: async (permissionsRequest) => {
+        return permissionsRequest.permissions;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'testMethod': {
-            caveats: [
-              { type: 'forceParams', value: [0, 1, 2, 3] },
-            ],
+          testMethod: {
+            caveats: [{ type: 'forceParams', value: [0, 1, 2, 3] }],
           },
         },
       ],
@@ -579,7 +575,6 @@ test('forceParams caveat overwrites', async (t) => {
 
     t.ok(result, 'should succeed');
     t.deepEqual(result, [0, 1, 2, 3], 'returned the correct subset');
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -589,31 +584,33 @@ test('forceParams caveat overwrites', async (t) => {
 test('named caveats', async (t) => {
   const domain = { origin: 'www.metamask.io' };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'testMethod': {
-        method: (req, res, _next, end) => {
-          res.result = req.params;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        testMethod: {
+          method: (req, res, _next, end) => {
+            res.result = req.params;
+            end();
+          },
         },
       },
-    },
 
-    // All permissions automatically approved
-    requestUserApproval: async (permissionsRequest) => {
-      return permissionsRequest.permissions;
+      // All permissions automatically approved
+      requestUserApproval: async (permissionsRequest) => {
+        return permissionsRequest.permissions;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
     const initialReq = {
       method: 'requestPermissions',
       params: [
         {
-          'testMethod': {
+          testMethod: {
             caveats: [
               {
                 type: 'forceParams',
@@ -634,7 +631,7 @@ test('named caveats', async (t) => {
           method: 'requestPermissions',
           params: [
             {
-              'testMethod': {
+              testMethod: {
                 caveats: [
                   {
                     type: 'forceParams',
@@ -654,7 +651,6 @@ test('named caveats', async (t) => {
 
         const res = await sendRpcMethodWithResponse(ctrl, domain, req);
         t.ok(res, 'received response');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -667,7 +663,7 @@ test('named caveats', async (t) => {
           method: 'requestPermissions',
           params: [
             {
-              'testMethod': {
+              testMethod: {
                 caveats: [
                   {
                     type: 'forceParams',
@@ -687,9 +683,11 @@ test('named caveats', async (t) => {
 
         await sendRpcMethodWithResponse(ctrl, domain, req);
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
-        t.ok(err.message.indexOf('Invalid caveats.') !== -1, 'throws expected error');
+        t.ok(
+          err.message.indexOf('Invalid caveats.') !== -1,
+          'throws expected error',
+        );
       }
       t.end();
     });
@@ -700,7 +698,6 @@ test('named caveats', async (t) => {
 });
 
 test('updateCaveatFor', async (t) => {
-
   const domain = { origin: 'www.metamask.io' };
 
   const cav1 = {
@@ -715,35 +712,34 @@ test('updateCaveatFor', async (t) => {
     name: 'c',
   };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'testMethod': {
-        method: (req, res, _next, end) => {
-          res.result = req.params;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        testMethod: {
+          method: (req, res, _next, end) => {
+            res.result = req.params;
+            end();
+          },
         },
       },
-    },
 
-    // All permissions automatically approved
-    requestUserApproval: async (permissionsRequest) => {
-      return permissionsRequest.permissions;
+      // All permissions automatically approved
+      requestUserApproval: async (permissionsRequest) => {
+        return permissionsRequest.permissions;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
-
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'testMethod': {
-            caveats: [
-              { ...cav1 }, { ...cav2 },
-            ],
+          testMethod: {
+            caveats: [{ ...cav1 }, { ...cav2 }],
           },
         },
       ],
@@ -752,15 +748,10 @@ test('updateCaveatFor', async (t) => {
     await sendRpcMethodWithResponse(ctrl, domain, req);
 
     test('updateCaveatFor throws on non-existing domain', async (t) => {
-
       try {
-
-        ctrl.updateCaveatFor(
-          'foo.bar.xyz', 'testMethod', 'a', [0, 1],
-        );
+        ctrl.updateCaveatFor('foo.bar.xyz', 'testMethod', 'a', [0, 1]);
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -768,15 +759,10 @@ test('updateCaveatFor', async (t) => {
     });
 
     test('updateCaveatFor throws on non-existing method', async (t) => {
-
       try {
-
-        ctrl.updateCaveatFor(
-          domain.origin, 'doesNotExist', 'a', [0, 1],
-        );
+        ctrl.updateCaveatFor(domain.origin, 'doesNotExist', 'a', [0, 1]);
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -784,9 +770,7 @@ test('updateCaveatFor', async (t) => {
     });
 
     test('updateCaveatFor does not alter state after throwing', async (t) => {
-
       try {
-
         req = {
           method: 'testMethod',
           params: [],
@@ -795,7 +779,6 @@ test('updateCaveatFor', async (t) => {
 
         t.ok(result, 'should succeed');
         t.deepEqual(result, [0, 1, 2, 3], 'returned the correct subset');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -803,14 +786,10 @@ test('updateCaveatFor', async (t) => {
     });
 
     test('updateCaveatFor successfully updates caveats', async (t) => {
-
       try {
-
         cav1.value = [0, 1, 2];
 
-        ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'a', cav1.value,
-        );
+        ctrl.updateCaveatFor(domain.origin, 'testMethod', 'a', cav1.value);
 
         req = {
           method: 'testMethod',
@@ -820,7 +799,6 @@ test('updateCaveatFor', async (t) => {
 
         t.ok(result, 'should succeed');
         t.deepEqual(result, [0, 1, 2], 'returned the correct subset');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -828,15 +806,10 @@ test('updateCaveatFor', async (t) => {
     });
 
     test('updateCaveatFor throws on non-existing caveat with valid name', async (t) => {
-
       try {
-
-        ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'b', [0, 1],
-        );
+        ctrl.updateCaveatFor(domain.origin, 'testMethod', 'b', [0, 1]);
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -844,15 +817,10 @@ test('updateCaveatFor', async (t) => {
     });
 
     test('updateCaveatFor throws on existing caveat but different value type', async (t) => {
-
       try {
-
-        ctrl.updateCaveatFor(
-          domain.origin, 'testMethod', 'b', 'foo',
-        );
+        ctrl.updateCaveatFor(domain.origin, 'testMethod', 'b', 'foo');
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -860,9 +828,7 @@ test('updateCaveatFor', async (t) => {
     });
 
     test('final state after multiple updateCaveatFor calls', async (t) => {
-
       try {
-
         req = {
           method: 'testMethod',
           params: [],
@@ -880,13 +846,11 @@ test('updateCaveatFor', async (t) => {
         t.deepEqual(c1, cav1, 'caveat "a" as expected');
         const c2 = caveats.find((p) => p.name === 'c');
         t.deepEqual(c2, cav2, 'caveat "b" as expected');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
       t.end();
     });
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -894,7 +858,6 @@ test('updateCaveatFor', async (t) => {
 });
 
 test('addCaveatFor', async (t) => {
-
   const domain = { origin: 'www.metamask.io' };
 
   const cav1 = {
@@ -909,35 +872,34 @@ test('addCaveatFor', async (t) => {
     name: 'c',
   };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'testMethod': {
-        method: (req, res, _next, end) => {
-          res.result = req.params;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        testMethod: {
+          method: (req, res, _next, end) => {
+            res.result = req.params;
+            end();
+          },
         },
       },
-    },
 
-    // All permissions automatically approved
-    requestUserApproval: async (permissionsRequest) => {
-      return permissionsRequest.permissions;
+      // All permissions automatically approved
+      requestUserApproval: async (permissionsRequest) => {
+        return permissionsRequest.permissions;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
-
     let req = {
       method: 'requestPermissions',
       params: [
         {
-          'testMethod': {
-            caveats: [
-              { ...cav1 }, { ...cav2 },
-            ],
+          testMethod: {
+            caveats: [{ ...cav1 }, { ...cav2 }],
           },
         },
       ],
@@ -946,19 +908,14 @@ test('addCaveatFor', async (t) => {
     await sendRpcMethodWithResponse(ctrl, domain, req);
 
     test('addCaveatFor throws on non-existing domain', async (t) => {
-
       try {
-
-        ctrl.addCaveatFor(
-          'foo.bar.xyz', 'testMethod', {
-            type: 'forceParams',
-            value: [0, 1],
-            name: 'a',
-          },
-        );
+        ctrl.addCaveatFor('foo.bar.xyz', 'testMethod', {
+          type: 'forceParams',
+          value: [0, 1],
+          name: 'a',
+        });
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -966,19 +923,14 @@ test('addCaveatFor', async (t) => {
     });
 
     test('addCaveatFor throws on non-existing method', async (t) => {
-
       try {
-
-        ctrl.addCaveatFor(
-          domain.origin, 'doesNotExist', {
-            type: 'forceParams',
-            value: [0, 1],
-            name: 'a',
-          },
-        );
+        ctrl.addCaveatFor(domain.origin, 'doesNotExist', {
+          type: 'forceParams',
+          value: [0, 1],
+          name: 'a',
+        });
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -986,9 +938,7 @@ test('addCaveatFor', async (t) => {
     });
 
     test('addCaveatFor does not alter state after throwing', async (t) => {
-
       try {
-
         req = {
           method: 'testMethod',
           params: [],
@@ -997,7 +947,6 @@ test('addCaveatFor', async (t) => {
 
         t.ok(result, 'should succeed');
         t.deepEqual(result, [0, 1, 2, 3], 'returned the correct subset');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -1005,16 +954,12 @@ test('addCaveatFor', async (t) => {
     });
 
     test('addCaveatFor successfully adds caveats', async (t) => {
-
       try {
-
-        ctrl.addCaveatFor(
-          domain.origin, 'testMethod', {
-            type: 'forceParams',
-            value: cav1.value,
-            name: 'b',
-          },
-        );
+        ctrl.addCaveatFor(domain.origin, 'testMethod', {
+          type: 'forceParams',
+          value: cav1.value,
+          name: 'b',
+        });
 
         req = {
           method: 'testMethod',
@@ -1024,7 +969,6 @@ test('addCaveatFor', async (t) => {
 
         t.ok(result, 'should succeed');
         t.deepEqual(result, cav1.value, 'returned the correct subset');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -1032,19 +976,14 @@ test('addCaveatFor', async (t) => {
     });
 
     test('addCaveatFor throws on adding existing name', async (t) => {
-
       try {
-
-        ctrl.addCaveatFor(
-          domain.origin, 'testMethod', {
-            type: 'forceParams',
-            value: [0, 1],
-            name: 'b',
-          },
-        );
+        ctrl.addCaveatFor(domain.origin, 'testMethod', {
+          type: 'forceParams',
+          value: [0, 1],
+          name: 'b',
+        });
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -1052,19 +991,14 @@ test('addCaveatFor', async (t) => {
     });
 
     test('addCaveatFor throws on adding non-existing type', async (t) => {
-
       try {
-
-        ctrl.addCaveatFor(
-          domain.origin, 'testMethod', {
-            type: 'NON_EXISTING_TYPE',
-            value: [0, 1],
-            name: 'NOT_PREVIOUSLY_ADDED',
-          },
-        );
+        ctrl.addCaveatFor(domain.origin, 'testMethod', {
+          type: 'NON_EXISTING_TYPE',
+          value: [0, 1],
+          name: 'NOT_PREVIOUSLY_ADDED',
+        });
 
         t.notOk(true, 'should have thrown');
-
       } catch (err) {
         t.ok(err, 'did throw');
       }
@@ -1072,9 +1006,7 @@ test('addCaveatFor', async (t) => {
     });
 
     test('final state after multiple addCaveatFor calls', async (t) => {
-
       try {
-
         req = {
           method: 'testMethod',
           params: [],
@@ -1094,13 +1026,11 @@ test('addCaveatFor', async (t) => {
         t.deepEqual(cav, { ...cav1, name: 'b' }, 'caveat "b" as expected');
         cav = caveats.find((p) => p.name === 'c');
         t.deepEqual(cav, cav2, 'caveat "c" as expected');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
       t.end();
     });
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }
@@ -1108,7 +1038,6 @@ test('addCaveatFor', async (t) => {
 });
 
 test('caveat getters', async (t) => {
-
   const domain = { origin: 'www.metamask.io' };
 
   const cav1 = {
@@ -1123,35 +1052,34 @@ test('caveat getters', async (t) => {
     name: 'c',
   };
 
-  const ctrl = new CapabilitiesController({
-    restrictedMethods: {
-      'testMethod': {
-        method: (req, res, _next, end) => {
-          res.result = req.params;
-          end();
+  const ctrl = new CapabilitiesController(
+    {
+      restrictedMethods: {
+        testMethod: {
+          method: (req, res, _next, end) => {
+            res.result = req.params;
+            end();
+          },
         },
       },
-    },
 
-    // All permissions automatically approved
-    requestUserApproval: async (permissionsRequest) => {
-      return permissionsRequest.permissions;
+      // All permissions automatically approved
+      requestUserApproval: async (permissionsRequest) => {
+        return permissionsRequest.permissions;
+      },
     },
-  },
-  {
-    domains: {},
-  });
+    {
+      domains: {},
+    },
+  );
 
   try {
-
     const req = {
       method: 'requestPermissions',
       params: [
         {
-          'testMethod': {
-            caveats: [
-              { ...cav1 }, { ...cav2 },
-            ],
+          testMethod: {
+            caveats: [{ ...cav1 }, { ...cav2 }],
           },
         },
       ],
@@ -1160,15 +1088,10 @@ test('caveat getters', async (t) => {
     await sendRpcMethodWithResponse(ctrl, domain, req);
 
     test('getCaveat retrieves specific named caveat', async (t) => {
-
       try {
-
-        const cav = ctrl.getCaveat(
-          domain.origin, 'testMethod', 'a',
-        );
+        const cav = ctrl.getCaveat(domain.origin, 'testMethod', 'a');
 
         t.deepEqual(cav, cav1);
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -1176,19 +1099,14 @@ test('caveat getters', async (t) => {
     });
 
     test('getCaveats retrieves all caveats', async (t) => {
-
       try {
-
-        const caveats = ctrl.getCaveats(
-          domain.origin, 'testMethod',
-        );
+        const caveats = ctrl.getCaveats(domain.origin, 'testMethod');
 
         t.ok(caveats.length === 2, 'has expected number of caveats');
         let cav = caveats.find((p) => p.name === 'a');
         t.deepEqual(cav, cav1, 'caveat "a" as expected');
         cav = caveats.find((p) => p.name === 'c');
         t.deepEqual(cav, cav2, 'caveat "c" as expected');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -1196,18 +1114,11 @@ test('caveat getters', async (t) => {
     });
 
     test('getting caveat(s) for unknown domain returns undefined', async (t) => {
-
       try {
-
-        let cav = ctrl.getCaveat(
-          'not.a.known.domain', 'testMethod', 'a',
-        );
+        let cav = ctrl.getCaveat('not.a.known.domain', 'testMethod', 'a');
         t.ok(cav === undefined, 'getCaveat returned undefined');
-        cav = ctrl.getCaveats(
-          'not.a.known.domain', 'testMethod',
-        );
+        cav = ctrl.getCaveats('not.a.known.domain', 'testMethod');
         t.ok(cav === undefined, 'getCaveats returned undefined');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -1215,18 +1126,11 @@ test('caveat getters', async (t) => {
     });
 
     test('getting caveat(s) for unknown method returns undefined', async (t) => {
-
       try {
-
-        let cav = ctrl.getCaveat(
-          domain.origin, 'unknownMethod', 'a',
-        );
+        let cav = ctrl.getCaveat(domain.origin, 'unknownMethod', 'a');
         t.ok(cav === undefined, 'getCaveat returned undefined');
-        cav = ctrl.getCaveats(
-          domain.origin, 'unknownMethod',
-        );
+        cav = ctrl.getCaveats(domain.origin, 'unknownMethod');
         t.ok(cav === undefined, 'getCaveats returned undefined');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
@@ -1234,20 +1138,14 @@ test('caveat getters', async (t) => {
     });
 
     test('getCaveat for unknown caveat name returns undefined', async (t) => {
-
       try {
-
-        const cav = ctrl.getCaveat(
-          domain.origin, 'testMethod', 'unknownName',
-        );
+        const cav = ctrl.getCaveat(domain.origin, 'testMethod', 'unknownName');
         t.ok(cav === undefined, 'getCaveat returned undefined');
-
       } catch (err) {
         t.notOk(err, 'should not throw');
       }
       t.end();
     });
-
   } catch (err) {
     t.notOk(err, 'should not throw');
   }

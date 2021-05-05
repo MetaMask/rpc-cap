@@ -22,9 +22,7 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   const domain = { origin: 'login.metamask.io' };
   const req = {
     method: 'requestPermissions',
-    params: [
-      { restricted: {} },
-    ],
+    params: [{ restricted: {} }],
   };
   const res = {};
 
@@ -36,7 +34,10 @@ test('requestPermissions with user rejection creates no permissions', async (t) 
   const end = (reason) => {
     t.ok(reason, 'error thrown');
     t.equal(reason.code, USER_REJECTION_CODE, 'Rejection error returned');
-    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still');
+    t.ok(
+      equal(ctrl.getPermissionsForDomain(domain.origin), expected),
+      'should have no permissions still',
+    );
     t.end();
   };
 
@@ -59,9 +60,7 @@ test('requestPermissions with invalid requested permissions object fails', async
   const domain = { origin: 'login.metamask.io' };
   const req = {
     method: 'requestPermissions',
-    params: [
-      { restricted: { parentCapability: 'foo' } },
-    ],
+    params: [{ restricted: { parentCapability: 'foo' } }],
   };
   const res = {};
 
@@ -72,8 +71,15 @@ test('requestPermissions with invalid requested permissions object fails', async
 
   const end = (reason) => {
     t.ok(reason, 'error thrown');
-    t.equal(reason.code, INVALID_REQUEST_CODE, 'Invalid request error returned');
-    t.ok(equal(ctrl.getPermissionsForDomain(domain.origin), expected), 'should have no permissions still');
+    t.equal(
+      reason.code,
+      INVALID_REQUEST_CODE,
+      'Invalid request error returned',
+    );
+    t.ok(
+      equal(ctrl.getPermissionsForDomain(domain.origin), expected),
+      'should have no permissions still',
+    );
     t.end();
   };
 
@@ -81,21 +87,22 @@ test('requestPermissions with invalid requested permissions object fails', async
 });
 
 test('requestPermissions with user approval creates permission', async (t) => {
-
   const expected = {
     domains: {
       'login.metamask.io': {
-        permissions: [{
-          restricted: {},
-        }],
+        permissions: [
+          {
+            restricted: {},
+          },
+        ],
       },
     },
   };
 
   const ctrl = new CapabilitiesController({
-    requestUserApproval: () => Promise.resolve(expected.domains['login.metamask.io'].permissions[0]),
+    requestUserApproval: () =>
+      Promise.resolve(expected.domains['login.metamask.io'].permissions[0]),
     restrictedMethods: {
-
       restricted: (_req, res, _next, end) => {
         res.result = 'Wahoo!';
         end();
@@ -119,7 +126,6 @@ test('requestPermissions with user approval creates permission', async (t) => {
     const perms = endState.domains[domain.origin].permissions;
     t.equal(perms[0].parentCapability, 'restricted', 'permission added.');
     t.end();
-
   } catch (error) {
     t.error(error, 'error should not be thrown');
     t.end();
@@ -127,7 +133,6 @@ test('requestPermissions with user approval creates permission', async (t) => {
 });
 
 test('approving unknown permission should fail', async (t) => {
-
   const ctrl = new CapabilitiesController({
     requestUserApproval: () => Promise.resolve({ unknownPerm: {} }),
     restrictedMethods: {
@@ -152,7 +157,6 @@ test('approving unknown permission should fail', async (t) => {
     const res = await sendRpcMethodWithResponse(ctrl, domain, req);
     t.notOk(res, 'should not resolve');
     t.end();
-
   } catch (error) {
     t.ok(error, 'error should be thrown');
     t.equal(error.code, -32601, 'should throw method not found error');
@@ -161,15 +165,12 @@ test('approving unknown permission should fail', async (t) => {
 });
 
 test('uses req.id as metadata.id of pending permissions request object', async (t) => {
-
   const domain = { origin: 'login.metamask.io' };
   const getReq = (id) => {
     return {
       id,
       method: 'requestPermissions',
-      params: [
-        { restricted: {} },
-      ],
+      params: [{ restricted: {} }],
     };
   };
   const res = {};
@@ -181,7 +182,8 @@ test('uses req.id as metadata.id of pending permissions request object', async (
   const ctrl = new CapabilitiesController({
     requestUserApproval: (permissionsRequest) => {
       t.equal(
-        permissionsRequest.metadata.id, requestIds[index].toString(),
+        permissionsRequest.metadata.id,
+        requestIds[index].toString(),
         'permissions request object should have expected metadata.id',
       );
       if (index === requestIds.length - 1) {
@@ -200,7 +202,13 @@ test('uses req.id as metadata.id of pending permissions request object', async (
   });
 
   for (const id of requestIds) {
-    ctrl.providerMiddlewareFunction(domain, getReq(id), res, next, () => undefined);
+    ctrl.providerMiddlewareFunction(
+      domain,
+      getReq(id),
+      res,
+      next,
+      () => undefined,
+    );
   }
 
   function next() {
