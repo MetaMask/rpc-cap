@@ -27,23 +27,19 @@ import type {
   RpcCapDomainRegistry,
   OriginString,
   PermittedJsonRpcMiddleware,
-} from './src/types';
+} from './types/rpc-cap';
 
 import {
   CaveatFunction,
   CaveatFunctionGenerator,
   caveatFunctions,
-} from './src/caveats';
+} from './caveats';
 
-import {
-  unauthorized,
-  userRejectedRequest,
-  methodNotFound,
-} from './src/errors';
+import { unauthorized, userRejectedRequest, methodNotFound } from './errors';
 
-import { OcapLdCapability, OcapLdCaveat } from './src/types/ocap-ld';
+import { OcapLdCapability, OcapLdCaveat } from './types/ocap-ld';
 
-export { CaveatTypes } from './src/caveats';
+export { CaveatTypes } from './caveats';
 
 export type AnnotatedJsonRpcEngine = {
   domain?: OriginString;

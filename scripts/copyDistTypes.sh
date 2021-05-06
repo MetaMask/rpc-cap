@@ -1,33 +1,12 @@
 #!/usr/bin/env bash
 
-set -u
+set -e
+set -x
 set -o pipefail
 
-# constants
-
-NO_DIST_MSG="Please run \`yarn build:typescript\` before continuing."
-
-DIST='dist'
-DIST_SRC='dist/src'
-
-SRC_TYPES='src/types'
-
-# error func
-function abort {
-  local message="${1}"
-
-  printf "ERROR: %s\\n" "${message}" >&2
-
+if [[ ! -d "dist" ]]; then
+  printf "Error: %s\\n" "Please run \`yarn build:typescript\` before continuing." >&2
   exit 1
-}
+fi
 
-function main {
-
-  if [[ ! -d "${DIST}" || ! -d "${DIST_SRC}" ]]; then
-      abort "$NO_DIST_MSG"
-  fi
-
-  cp -r "${SRC_TYPES}" "${DIST_SRC}"
-}
-
-main
+cp -r "src/types" "dist/types"
