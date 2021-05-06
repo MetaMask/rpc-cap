@@ -35,11 +35,7 @@ import {
   caveatFunctions,
 } from './caveats';
 
-import {
-  unauthorized,
-  userRejectedRequest,
-  methodNotFound,
-} from './errors';
+import { unauthorized, userRejectedRequest, methodNotFound } from './errors';
 
 import { OcapLdCapability, OcapLdCaveat } from './types/ocap-ld';
 
