@@ -8,9 +8,9 @@ set -o pipefail
 NO_DIST_MSG="Please run \`yarn build:typescript\` before continuing."
 
 DIST='dist'
-DIST_SRC='dist/src'
+DIST_TYPES_PATH='dist/types'
 
-SRC_TYPES='src/types'
+SRC_TYPES_PATH='src/types'
 
 # error func
 function abort {
@@ -23,11 +23,11 @@ function abort {
 
 function main {
 
-  if [[ ! -d "${DIST}" || ! -d "${DIST_SRC}" ]]; then
+  if [[ ! -d "${DIST}" ]]; then
       abort "$NO_DIST_MSG"
   fi
 
-  cp -r "${SRC_TYPES}" "${DIST_SRC}"
+  cp -r "${SRC_TYPES_PATH}" "${DIST_TYPES_PATH}"
 }
 
 main

@@ -27,7 +27,7 @@ import type {
   RpcCapDomainRegistry,
   OriginString,
   PermittedJsonRpcMiddleware,
-} from './types';
+} from './types/rpc-cap';
 
 import {
   CaveatFunction,
