@@ -1,5 +1,9 @@
 # `rpc-cap`
 
+## 🛑 Deprecated 🛑
+
+**This packages has been deprecated in favor of a new `PermissionController`, currently residing [here](https://github.com/MetaMask/snaps-skunkworks/tree/54803e63e15732ffb561143c4197ba1de7cd019f/packages/controllers/src/permissions) and published under [@metamask/snap-controllers](https://www.npmjs.com/package/@metamask/snap-controllers/v/0.6.3).**
+
 ## JSON RPC Capabilities Middleware
 
 A module for managing basic [capability-based security](https://en.wikipedia.org/wiki/Capability-based_security) over a [JSON-RPC API](https://www.jsonrpc.org/) as a middleware function for [json-rpc-engine](https://www.npmjs.com/package/json-rpc-engine), to instantly add a user-consent based permissions system on top of any JSON-RPC API.
